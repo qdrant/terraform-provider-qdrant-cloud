@@ -1,0 +1,2280 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Qdrant Cloud API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/accounts/{account_id}/clusters/{cluster_id}": {
+      "get": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Http Get Cluster By Id",
+        "operationId": "http_get_cluster_by_id_accounts__account_id__clusters__cluster_id__get",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "cluster_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cluster Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClusterOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Http Delete Clusters",
+        "operationId": "http_delete_clusters_accounts__account_id__clusters__cluster_id__delete",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "cluster_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cluster Id"
+            }
+          },
+          {
+            "name": "delete_backups",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Delete Backups"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{account_id}/clusters": {
+      "get": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Http Get Clusters",
+        "operationId": "http_get_clusters_accounts__account_id__clusters_get",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "private_region_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Private Region Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClusterOut"
+                  },
+                  "title": "Response Http Get Clusters Accounts  Account Id  Clusters Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Http Add Clusters",
+        "operationId": "http_add_clusters_accounts__account_id__clusters_post",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClusterIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClusterOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{account_id}/auth/api-keys": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Http Get Api Keys By Account Id",
+        "operationId": "http_get_api_keys_by_account_id_accounts__account_id__auth_api_keys_get",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetApiKeyOut"
+                  },
+                  "title": "Response Http Get Api Keys By Account Id Accounts  Account Id  Auth Api Keys Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Http Add Api Key",
+        "operationId": "http_add_api_key_accounts__account_id__auth_api_keys_post",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateApiKeyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/accounts/{account_id}/auth/api-keys/{api_key_id}": {
+      "delete": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Http Delete Api Key",
+        "operationId": "http_delete_api_key_accounts__account_id__auth_api_keys__api_key_id__delete",
+        "parameters": [
+          {
+            "name": "account_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Account Id"
+            }
+          },
+          {
+            "name": "api_key_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Api Key Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/booking/packages": {
+      "get": {
+        "tags": [
+          "Booking"
+        ],
+        "summary": "Http Get Packages",
+        "operationId": "http_get_packages_booking_packages_get",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Provider"
+            }
+          },
+          {
+            "name": "region",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Region"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": true,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(?i)apikey [a-z0-9-]{36}\\|.{40,64}$",
+                  "type": "string"
+                }
+              ],
+              "title": "API Key",
+              "example": "apikey {programmatic_access_token}"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PackageOut"
+                  },
+                  "title": "Response Http Get Packages Booking Packages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AWSEncryptionConfig": {
+        "properties": {
+          "managed": {
+            "type": "boolean",
+            "title": "Managed",
+            "default": true
+          },
+          "encryption_key_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption Key Id"
+          }
+        },
+        "type": "object",
+        "title": "AWSEncryptionConfig"
+      },
+      "ApiKeyIn": {
+        "properties": {
+          "cluster_id_list": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Id List",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ApiKeyIn"
+      },
+      "BookingStatus": {
+        "type": "integer",
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "title": "BookingStatus",
+        "description": "PLANNED - 1: The booking is planned, but not yet active\nACTIVE - 2: The booking is active\nDEACTIVATED - 3: The booking is deactivated"
+      },
+      "ClusterConfigurationIn": {
+        "properties": {
+          "num_nodes": {
+            "type": "integer",
+            "title": "Num Nodes"
+          },
+          "num_nodes_max": {
+            "type": "integer",
+            "title": "Num Nodes Max"
+          },
+          "node_configuration": {
+            "$ref": "#/components/schemas/NodeConfiguration"
+          },
+          "qdrant_configuration": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qdrant Configuration"
+          },
+          "node_selector": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Selector"
+          },
+          "tolerations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tolerations"
+          },
+          "cluster_annotations": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Annotations"
+          },
+          "allowed_ip_source_ranges": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Ip Source Ranges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "num_nodes",
+          "num_nodes_max",
+          "node_configuration"
+        ],
+        "title": "ClusterConfigurationIn"
+      },
+      "ClusterConfigurationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "num_nodes": {
+            "type": "integer",
+            "title": "Num Nodes"
+          },
+          "num_nodes_max": {
+            "type": "integer",
+            "title": "Num Nodes Max"
+          },
+          "cluster_id": {
+            "type": "string",
+            "title": "Cluster Id"
+          },
+          "node_configuration": {
+            "$ref": "#/components/schemas/NodeConfiguration"
+          },
+          "qdrant_configuration": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Qdrant Configuration"
+          },
+          "node_selector": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Node Selector"
+          },
+          "tolerations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tolerations"
+          },
+          "cluster_annotations": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Annotations"
+          },
+          "allowed_ip_source_ranges": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Allowed Ip Source Ranges"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "num_nodes",
+          "num_nodes_max",
+          "cluster_id",
+          "node_configuration"
+        ],
+        "title": "ClusterConfigurationOut"
+      },
+      "ClusterIn": {
+        "properties": {
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cloud_provider": {
+            "type": "string",
+            "enum": [
+              "aws",
+              "gcp",
+              "private",
+              "azure"
+            ],
+            "title": "Cloud Provider"
+          },
+          "cloud_region": {
+            "type": "string",
+            "enum": [
+              "us-east-1",
+              "us-west-1",
+              "eu-central",
+              "eu-central-1",
+              "ap-northeast-1",
+              "ap-southeast-1",
+              "ap-southeast-2",
+              "eu-west-2",
+              "us-west-2",
+              "europe-west3",
+              "us-east4",
+              "eastus",
+              "germanywestcentral",
+              "southeastasia",
+              "uksouth",
+              "private"
+            ],
+            "title": "Cloud Region"
+          },
+          "cloud_region_az": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloud Region Az"
+          },
+          "cloud_region_setup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloud Region Setup"
+          },
+          "private_region_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Private Region Id"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "const": "latest"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version",
+            "default": "latest"
+          },
+          "configuration": {
+            "$ref": "#/components/schemas/ClusterConfigurationIn"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "encryption_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EncryptionConfigIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "cloud_provider",
+          "cloud_region",
+          "configuration"
+        ],
+        "title": "ClusterIn"
+      },
+      "ClusterOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cloud_provider": {
+            "type": "string",
+            "enum": [
+              "aws",
+              "gcp",
+              "private",
+              "azure"
+            ],
+            "title": "Cloud Provider"
+          },
+          "cloud_region": {
+            "type": "string",
+            "enum": [
+              "us-east-1",
+              "us-west-1",
+              "eu-central",
+              "eu-central-1",
+              "ap-northeast-1",
+              "ap-southeast-1",
+              "ap-southeast-2",
+              "eu-west-2",
+              "us-west-2",
+              "europe-west3",
+              "us-east4",
+              "eastus",
+              "germanywestcentral",
+              "southeastasia",
+              "uksouth",
+              "private"
+            ],
+            "title": "Cloud Region"
+          },
+          "cloud_region_az": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloud Region Az"
+          },
+          "cloud_region_setup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloud Region Setup"
+          },
+          "current_configuration_id": {
+            "type": "string",
+            "title": "Current Configuration Id"
+          },
+          "private_region_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Private Region Id"
+          },
+          "encryption_key_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Encryption Key Id"
+          },
+          "marked_for_deletion_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked For Deletion At"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QdrantClusterState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "configuration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClusterConfigurationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resources": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClusterResourcesSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "total_extra_disk": {
+            "type": "integer",
+            "title": "Total Extra Disk",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "name",
+          "cloud_provider",
+          "cloud_region",
+          "current_configuration_id",
+          "url"
+        ],
+        "title": "ClusterOut"
+      },
+      "ClusterResources": {
+        "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Base",
+            "default": 0
+          },
+          "extra": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Extra",
+            "default": 0
+          },
+          "complimentary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Complimentary",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ClusterResources"
+      },
+      "ClusterResourcesSummary": {
+        "properties": {
+          "disk": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClusterResources"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ram": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClusterResources"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cpu": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClusterResources"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ClusterResourcesSummary"
+      },
+      "ClusterState": {
+        "type": "string",
+        "enum": [
+          "Creating",
+          "FailedToCreate",
+          "Updating",
+          "FailedToUpdate",
+          "Scaling",
+          "FailedToScale",
+          "Restarting",
+          "FailedToRestart",
+          "Upgrading",
+          "FailedToUpgrade",
+          "BackupRunning",
+          "FailedToBackup",
+          "Restoring",
+          "FailedToRestore",
+          "Suspending",
+          "Suspended",
+          "FailedToSuspend",
+          "Resuming",
+          "FailedToResume",
+          "Healthy",
+          "NotReady",
+          "RecoveryMode",
+          "ManualMaintenance",
+          "FailedToSync",
+          "NotFound",
+          "Unknown"
+        ],
+        "title": "ClusterState",
+        "description": "Cluster states replicated from Qdrant operator"
+      },
+      "CreateApiKeyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "cluster_id_list": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Id List",
+            "default": []
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "prefix",
+          "token"
+        ],
+        "title": "CreateApiKeyOut"
+      },
+      "Currency": {
+        "type": "string",
+        "enum": [
+          "usd",
+          "eur"
+        ],
+        "title": "Currency"
+      },
+      "EncryptionConfigIn": {
+        "properties": {
+          "aws_encryption_config": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AWSEncryptionConfig"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "title": "EncryptionConfigIn"
+      },
+      "GetApiKeyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "prefix": {
+            "type": "string",
+            "title": "Prefix"
+          },
+          "cluster_id_list": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Id List",
+            "default": []
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "prefix"
+        ],
+        "title": "GetApiKeyOut"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NodeConfiguration": {
+        "properties": {
+          "package_id": {
+            "type": "string",
+            "title": "Package Id"
+          },
+          "package": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PackageOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resource_configurations": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ResourceConfiguration"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Configurations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "package_id"
+        ],
+        "title": "NodeConfiguration"
+      },
+      "PackageOut": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "resource_configuration": {
+            "items": {
+              "$ref": "#/components/schemas/ResourceConfiguration"
+            },
+            "type": "array",
+            "title": "Resource Configuration"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "unit_int_price_per_hour": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Hour"
+          },
+          "unit_int_price_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Day"
+          },
+          "unit_int_price_per_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Month"
+          },
+          "unit_int_price_per_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Year"
+          },
+          "regional_mapping_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regional Mapping Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_configuration",
+          "name",
+          "status",
+          "currency"
+        ],
+        "title": "PackageOut"
+      },
+      "QdrantClusterNodeState": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "State",
+            "default": {}
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "default": ""
+          },
+          "endpoint": {
+            "type": "string",
+            "title": "Endpoint",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "QdrantClusterNodeState"
+      },
+      "QdrantClusterState": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "const": "UNKNOWN"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          },
+          "replicationStatus": {
+            "$ref": "#/components/schemas/ReplicationStatus"
+          },
+          "replicas": {
+            "type": "integer",
+            "title": "Replicas"
+          },
+          "available_replicas": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Replicas"
+          },
+          "restarted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restarted At"
+          },
+          "nodes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/QdrantClusterNodeState"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nodes"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClusterState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Endpoint"
+          },
+          "current": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QdrantClusterStatus"
+              }
+            ],
+            "description": "Whether the cluster is running.",
+            "default": "running"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "replicationStatus",
+          "replicas",
+          "nodes"
+        ],
+        "title": "QdrantClusterState"
+      },
+      "QdrantClusterStatus": {
+        "type": "string",
+        "enum": [
+          "suspended",
+          "running"
+        ],
+        "title": "QdrantClusterStatus"
+      },
+      "ReplicationStatus": {
+        "type": "string",
+        "enum": [
+          "down",
+          "under_replicated",
+          "healthy"
+        ],
+        "title": "ReplicationStatus"
+      },
+      "ResourceConfiguration": {
+        "properties": {
+          "resource_option_id": {
+            "type": "string",
+            "title": "Resource Option Id"
+          },
+          "resource_option": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResourceOptionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "title": "Amount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource_option_id",
+          "amount"
+        ],
+        "title": "ResourceConfiguration"
+      },
+      "ResourceOptionOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "resource_type": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/BookingStatus"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "resource_unit": {
+            "type": "string",
+            "title": "Resource Unit"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "unit_int_price_per_hour": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Hour"
+          },
+          "unit_int_price_per_day": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Day"
+          },
+          "unit_int_price_per_month": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Month"
+          },
+          "unit_int_price_per_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Int Price Per Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "resource_type",
+          "status",
+          "resource_unit",
+          "currency"
+        ],
+        "title": "ResourceOptionOut"
+      },
+      "ResourceType": {
+        "type": "string",
+        "enum": [
+          "cpu",
+          "ram",
+          "disk",
+          "snapshot",
+          "complimentary_disk"
+        ],
+        "title": "ResourceType"
+      },
+      "ScheduleIn": {
+        "properties": {
+          "creator_user_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Creator User Id"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "cron": {
+            "type": "string",
+            "title": "Cron"
+          },
+          "retention": {
+            "type": "integer",
+            "title": "Retention"
+          },
+          "private_region_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Private Region Id"
+          },
+          "marked_for_deletion_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marked For Deletion At"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScheduleState"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cron",
+          "retention"
+        ],
+        "title": "ScheduleIn"
+      },
+      "ScheduleState": {
+        "type": "string",
+        "enum": [
+          "Active",
+          "FailedToSync",
+          "NotFound",
+          "Unknown"
+        ],
+        "title": "ScheduleState"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "QdrantErrorCode": {
+        "type": "string",
+        "title": "QdrantErrorCode",
+        "description": "Error codes internal to the API",
+        "oneOf": [
+          {
+            "enum": [
+              "E1000"
+            ],
+            "description": "User with this email already exists"
+          },
+          {
+            "enum": [
+              "E1001"
+            ],
+            "description": "Only one account per user is allowed"
+          },
+          {
+            "enum": [
+              "E1002"
+            ],
+            "description": "User already assigned to account"
+          },
+          {
+            "enum": [
+              "E1003"
+            ],
+            "description": "Owner user cannot be removed from account"
+          },
+          {
+            "enum": [
+              "E1004"
+            ],
+            "description": "Invalid account owner id"
+          },
+          {
+            "enum": [
+              "E1005"
+            ],
+            "description": "User is not member of account"
+          },
+          {
+            "enum": [
+              "E1006"
+            ],
+            "description": "User not found"
+          },
+          {
+            "enum": [
+              "E1007"
+            ],
+            "description": "Account not found"
+          },
+          {
+            "enum": [
+              "E1008"
+            ],
+            "description": "Role not found"
+          },
+          {
+            "enum": [
+              "E1009"
+            ],
+            "description": "Invite not found"
+          },
+          {
+            "enum": [
+              "E1010"
+            ],
+            "description": "Invite state conflicts with action"
+          },
+          {
+            "enum": [
+              "E1011"
+            ],
+            "description": "Invite action not allowed for user"
+          },
+          {
+            "enum": [
+              "E1012"
+            ],
+            "description": "Mailjet send error - status code <> 200"
+          },
+          {
+            "enum": [
+              "E1013"
+            ],
+            "description": "Invalid auth token"
+          },
+          {
+            "enum": [
+              "E1014"
+            ],
+            "description": "Payment information not found"
+          },
+          {
+            "enum": [
+              "E1015"
+            ],
+            "description": "Cluster not found"
+          },
+          {
+            "enum": [
+              "E1016"
+            ],
+            "description": "Feature flag status is not valid"
+          },
+          {
+            "enum": [
+              "E1017"
+            ],
+            "description": "Public Feature flag status is not valid"
+          },
+          {
+            "enum": [
+              "E1018"
+            ],
+            "description": "Cluster limit reached"
+          },
+          {
+            "enum": [
+              "E1019"
+            ],
+            "description": "Free cluster limit reached"
+          },
+          {
+            "enum": [
+              "E1020"
+            ],
+            "description": "Free cluster nodes' limit reached"
+          },
+          {
+            "enum": [
+              "E1021"
+            ],
+            "description": "No region cluster available yet"
+          },
+          {
+            "enum": [
+              "E1022"
+            ],
+            "description": "Payment details missing or outdated"
+          },
+          {
+            "enum": [
+              "E1023"
+            ],
+            "description": "Booking not found"
+          },
+          {
+            "enum": [
+              "E1024"
+            ],
+            "description": "Invalid cluster scaling values"
+          },
+          {
+            "enum": [
+              "E1025"
+            ],
+            "description": "Scaling free tier clusters is not implemented yet"
+          },
+          {
+            "enum": [
+              "E1026"
+            ],
+            "description": "Failed to get cluster logs"
+          },
+          {
+            "enum": [
+              "E1027"
+            ],
+            "description": "Failed to get cluster metrics"
+          },
+          {
+            "enum": [
+              "E1028"
+            ],
+            "description": "Schedule not found"
+          },
+          {
+            "enum": [
+              "E1029"
+            ],
+            "description": "Invoice not found"
+          },
+          {
+            "enum": [
+              "E1030"
+            ],
+            "description": "Account has paid clusters"
+          },
+          {
+            "enum": [
+              "E1031"
+            ],
+            "description": "Payment information already exists"
+          },
+          {
+            "enum": [
+              "E1032"
+            ],
+            "description": "Provided Role data is not valid"
+          },
+          {
+            "enum": [
+              "E1033"
+            ],
+            "description": "Suger registration failed"
+          },
+          {
+            "enum": [
+              "E1034"
+            ],
+            "description": "Feature is not implemented"
+          },
+          {
+            "enum": [
+              "E1035"
+            ],
+            "description": "Stripe API call failed"
+          },
+          {
+            "enum": [
+              "E1036"
+            ],
+            "description": "Tax id validation error"
+          },
+          {
+            "enum": [
+              "E1037"
+            ],
+            "description": "Country or state is not supported yet"
+          },
+          {
+            "enum": [
+              "E1038"
+            ],
+            "description": "Role name already exists for the account"
+          },
+          {
+            "enum": [
+              "E1039"
+            ],
+            "description": "Invalid Qdrant version"
+          },
+          {
+            "enum": [
+              "E1040"
+            ],
+            "description": "Account is not entitled to do the requested action"
+          },
+          {
+            "enum": [
+              "E1041"
+            ],
+            "description": "User is deleted"
+          },
+          {
+            "enum": [
+              "E1042"
+            ],
+            "description": "Entitlement belongs to different account"
+          },
+          {
+            "enum": [
+              "E1043"
+            ],
+            "description": "Downscaling is currently not supported"
+          },
+          {
+            "enum": [
+              "E1044"
+            ],
+            "description": "Payment information added hidden. Please contact support to activate."
+          },
+          {
+            "enum": [
+              "E1045"
+            ],
+            "description": "Horizontal scaling is not supported for current cluster version and resource configuration."
+          },
+          {
+            "enum": [
+              "E1046"
+            ],
+            "description": "User is already a member of this account"
+          },
+          {
+            "enum": [
+              "E1047"
+            ],
+            "description": "User already has active pending invite"
+          },
+          {
+            "enum": [
+              "E1048"
+            ],
+            "description": "Account invitation limit has been reached"
+          },
+          {
+            "enum": [
+              "E1049"
+            ],
+            "description": "Cluster Encryption not allowed for this account"
+          },
+          {
+            "enum": [
+              "E1050"
+            ],
+            "description": "Cluster booking time is blocked"
+          },
+          {
+            "enum": [
+              "E1051"
+            ],
+            "description": "Entitlement not found"
+          }
+        ]
+      }
+    }
+  }
+}
