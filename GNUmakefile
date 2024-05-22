@@ -27,7 +27,7 @@ generate-client:
 
 build:
 	CGO_ENABLED=0 gox \
-		-osarch="linux/amd64 linux/arm linux/arm64 darwin/amd64 darwin/arm64" \
+		-osarch="linux/amd64 linux/arm linux/arm64 darwin/amd64 darwin/arm64 windows/amd64" \
 		-output="bin/{{.OS}}/{{.Arch}}/${BINARY}_v$(VERSION)" \
 		-tags="netgo" \
 		./...
