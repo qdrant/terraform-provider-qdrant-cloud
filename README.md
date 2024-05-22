@@ -51,6 +51,13 @@ $ $GOPATH/bin/terraform-provider-qdrant-cloud
 ...
 ```
 
+### Updating the generated Go Client to interact with the Qdrant public API
+This assumes that you cloned the qdrant-cloud-cluster-api to the same base-path as this repo (terraform-provider-qdrant-cloud)
+
+```bash
+make update-go-client
+```
+
 ## Testing
 
 In order to test the provider, you can run `make test`.
