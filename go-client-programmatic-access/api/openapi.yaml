@@ -1,0 +1,1760 @@
+openapi: 3.1.0
+info:
+  title: Qdrant Cloud API
+  version: 0.1.0
+servers:
+- url: /
+security:
+- ApiKeyAuth: []
+paths:
+  /accounts/{account_id}/clusters/{cluster_id}:
+    delete:
+      operationId: delete_cluster
+      parameters:
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          title: Account Id
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: cluster_id
+        required: true
+        schema:
+          title: Cluster Id
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: delete_backups
+        required: false
+        schema:
+          default: false
+          title: Delete Backups
+          type: boolean
+        style: form
+      responses:
+        "204":
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Delete Clusters
+      tags:
+      - Clusters
+    get:
+      operationId: get_cluster
+      parameters:
+      - explode: false
+        in: path
+        name: cluster_id
+        required: true
+        schema:
+          title: Cluster Id
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          format: uuid
+          title: Account Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterOut'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Get Cluster By Id
+      tags:
+      - Clusters
+  /accounts/{account_id}/clusters:
+    get:
+      operationId: list_clusters
+      parameters:
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          format: uuid
+          title: Account Id
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: private_region_id
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ClusterOut'
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Get Clusters
+      tags:
+      - Clusters
+    post:
+      operationId: create_cluster
+      parameters:
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          title: Account Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClusterIn'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterOut'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Add Clusters
+      tags:
+      - Clusters
+  /accounts/{account_id}/auth/api-keys:
+    get:
+      operationId: list_api_keys
+      parameters:
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          format: uuid
+          title: Account Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/GetApiKeyOut'
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Get Api Keys By Account Id
+      tags:
+      - Authentication
+    post:
+      operationId: create_api_key
+      parameters:
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          format: uuid
+          title: Account Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiKeyIn'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateApiKeyOut'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Add Api Key
+      tags:
+      - Authentication
+  /accounts/{account_id}/auth/api-keys/{api_key_id}:
+    delete:
+      operationId: delete_api_key
+      parameters:
+      - explode: false
+        in: path
+        name: api_key_id
+        required: true
+        schema:
+          title: Api Key Id
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          format: uuid
+          title: Account Id
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Delete Api Key
+      tags:
+      - Authentication
+  /booking/packages:
+    get:
+      operationId: get_packages
+      parameters:
+      - explode: true
+        in: query
+        name: provider
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: region
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/PackageOut'
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Get Packages
+      tags:
+      - Booking
+components:
+  schemas:
+    AWSEncryptionConfig:
+      example:
+        encryption_key_id: encryption_key_id
+        managed: true
+      properties:
+        managed:
+          default: true
+          title: Managed
+          type: boolean
+        encryption_key_id:
+          nullable: true
+          type: string
+      title: AWSEncryptionConfig
+    ApiKeyIn:
+      example:
+        cluster_id_list:
+        - ""
+        - ""
+      properties:
+        cluster_id_list:
+          items: {}
+          nullable: true
+      title: ApiKeyIn
+    BookingStatus:
+      description: |-
+        PLANNED - 1: The booking is planned, but not yet active
+        ACTIVE - 2: The booking is active
+        DEACTIVATED - 3: The booking is deactivated
+      enum:
+      - 1
+      - 2
+      - 3
+      title: BookingStatus
+      type: integer
+    ClusterConfigurationIn:
+      example:
+        node_selector:
+          key: node_selector
+        qdrant_configuration: "{}"
+        tolerations:
+        - key: tolerations
+        - key: tolerations
+        cluster_annotations: "{}"
+        node_configuration:
+          package:
+            resource_configuration:
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+            unit_int_price_per_day: 4
+            unit_int_price_per_hour: 2
+            regional_mapping_id: regional_mapping_id
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 1
+            currency: null
+            id: id
+            status: null
+          package_id: package_id
+          resource_configurations:
+          - amount: 3
+            resource_option_id: resource_option_id
+            resource_option:
+              resource_unit: resource_unit
+              unit_int_price_per_day: 2
+              unit_int_price_per_hour: 5
+              resource_type: null
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 9
+              currency: null
+              id: id
+              status: null
+          - amount: 3
+            resource_option_id: resource_option_id
+            resource_option:
+              resource_unit: resource_unit
+              unit_int_price_per_day: 2
+              unit_int_price_per_hour: 5
+              resource_type: null
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 9
+              currency: null
+              id: id
+              status: null
+        num_nodes: 0
+        allowed_ip_source_ranges:
+        - allowed_ip_source_ranges
+        - allowed_ip_source_ranges
+        num_nodes_max: 6
+      properties:
+        num_nodes:
+          title: Num Nodes
+          type: integer
+        num_nodes_max:
+          title: Num Nodes Max
+          type: integer
+        node_configuration:
+          $ref: '#/components/schemas/NodeConfiguration'
+        qdrant_configuration:
+          nullable: true
+          type: object
+        node_selector:
+          additionalProperties:
+            type: string
+          nullable: true
+        tolerations:
+          items:
+            additionalProperties:
+              type: string
+          nullable: true
+        cluster_annotations:
+          nullable: true
+          type: object
+        allowed_ip_source_ranges:
+          items:
+            type: string
+          nullable: true
+      required:
+      - node_configuration
+      - num_nodes
+      - num_nodes_max
+      title: ClusterConfigurationIn
+    ClusterConfigurationOut:
+      example:
+        cluster_id: cluster_id
+        node_selector:
+          key: node_selector
+        qdrant_configuration: "{}"
+        tolerations:
+        - key: tolerations
+        - key: tolerations
+        cluster_annotations: "{}"
+        created_at: 2000-01-23T04:56:07.000+00:00
+        node_configuration:
+          package:
+            resource_configuration:
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+            unit_int_price_per_day: 4
+            unit_int_price_per_hour: 2
+            regional_mapping_id: regional_mapping_id
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 1
+            currency: null
+            id: id
+            status: null
+          package_id: package_id
+          resource_configurations:
+          - amount: 3
+            resource_option_id: resource_option_id
+            resource_option:
+              resource_unit: resource_unit
+              unit_int_price_per_day: 2
+              unit_int_price_per_hour: 5
+              resource_type: null
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 9
+              currency: null
+              id: id
+              status: null
+          - amount: 3
+            resource_option_id: resource_option_id
+            resource_option:
+              resource_unit: resource_unit
+              unit_int_price_per_day: 2
+              unit_int_price_per_hour: 5
+              resource_type: null
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 9
+              currency: null
+              id: id
+              status: null
+        id: id
+        num_nodes: 1
+        allowed_ip_source_ranges:
+        - allowed_ip_source_ranges
+        - allowed_ip_source_ranges
+        num_nodes_max: 5
+      properties:
+        id:
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        num_nodes:
+          title: Num Nodes
+          type: integer
+        num_nodes_max:
+          title: Num Nodes Max
+          type: integer
+        cluster_id:
+          title: Cluster Id
+          type: string
+        node_configuration:
+          $ref: '#/components/schemas/NodeConfiguration'
+        qdrant_configuration:
+          nullable: true
+          type: object
+        node_selector:
+          additionalProperties:
+            type: string
+          nullable: true
+        tolerations:
+          items:
+            additionalProperties:
+              type: string
+          nullable: true
+        cluster_annotations:
+          nullable: true
+          type: object
+        allowed_ip_source_ranges:
+          items:
+            type: string
+          nullable: true
+      required:
+      - cluster_id
+      - created_at
+      - id
+      - node_configuration
+      - num_nodes
+      - num_nodes_max
+      title: ClusterConfigurationOut
+    ClusterIn:
+      example:
+        schedule:
+          creator_user_id: creator_user_id
+          cron: cron
+          account_id: account_id
+          marked_for_deletion_at: 2000-01-23T04:56:07.000+00:00
+          private_region_id: private_region_id
+          retention: 1
+          status: null
+        account_id: account_id
+        cloud_region: us-east-1
+        configuration:
+          node_selector:
+            key: node_selector
+          qdrant_configuration: "{}"
+          tolerations:
+          - key: tolerations
+          - key: tolerations
+          cluster_annotations: "{}"
+          node_configuration:
+            package:
+              resource_configuration:
+              - amount: 3
+                resource_option_id: resource_option_id
+                resource_option:
+                  resource_unit: resource_unit
+                  unit_int_price_per_day: 2
+                  unit_int_price_per_hour: 5
+                  resource_type: null
+                  name: name
+                  unit_int_price_per_month: 7
+                  unit_int_price_per_year: 9
+                  currency: null
+                  id: id
+                  status: null
+              - amount: 3
+                resource_option_id: resource_option_id
+                resource_option:
+                  resource_unit: resource_unit
+                  unit_int_price_per_day: 2
+                  unit_int_price_per_hour: 5
+                  resource_type: null
+                  name: name
+                  unit_int_price_per_month: 7
+                  unit_int_price_per_year: 9
+                  currency: null
+                  id: id
+                  status: null
+              unit_int_price_per_day: 4
+              unit_int_price_per_hour: 2
+              regional_mapping_id: regional_mapping_id
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 1
+              currency: null
+              id: id
+              status: null
+            package_id: package_id
+            resource_configurations:
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+          num_nodes: 0
+          allowed_ip_source_ranges:
+          - allowed_ip_source_ranges
+          - allowed_ip_source_ranges
+          num_nodes_max: 6
+        owner_id: owner_id
+        private_region_id: private_region_id
+        name: name
+        cloud_provider: aws
+        cloud_region_az: cloud_region_az
+        cloud_region_setup: cloud_region_setup
+        version: version
+        encryption_config:
+          aws_encryption_config:
+            encryption_key_id: encryption_key_id
+            managed: true
+      properties:
+        owner_id:
+          nullable: true
+          type: string
+        account_id:
+          nullable: true
+          type: string
+        name:
+          title: Name
+          type: string
+        cloud_provider:
+          enum:
+          - aws
+          - gcp
+          - private
+          - azure
+          title: Cloud Provider
+          type: string
+        cloud_region:
+          enum:
+          - us-east-1
+          - us-west-1
+          - eu-central
+          - eu-central-1
+          - ap-northeast-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - eu-west-2
+          - us-west-2
+          - europe-west3
+          - us-east4
+          - eastus
+          - germanywestcentral
+          - southeastasia
+          - uksouth
+          - private
+          title: Cloud Region
+          type: string
+        cloud_region_az:
+          nullable: true
+          type: string
+        cloud_region_setup:
+          nullable: true
+          type: string
+        private_region_id:
+          nullable: true
+          type: string
+        version:
+          nullable: true
+          type: string
+        configuration:
+          $ref: '#/components/schemas/ClusterConfigurationIn'
+        schedule:
+          $ref: '#/components/schemas/ScheduleIn'
+        encryption_config:
+          $ref: '#/components/schemas/EncryptionConfigIn'
+      required:
+      - cloud_provider
+      - cloud_region
+      - configuration
+      - name
+      title: ClusterIn
+    ClusterOut:
+      example:
+        cloud_region: us-east-1
+        encryption_key_id: encryption_key_id
+        configuration:
+          cluster_id: cluster_id
+          node_selector:
+            key: node_selector
+          qdrant_configuration: "{}"
+          tolerations:
+          - key: tolerations
+          - key: tolerations
+          cluster_annotations: "{}"
+          created_at: 2000-01-23T04:56:07.000+00:00
+          node_configuration:
+            package:
+              resource_configuration:
+              - amount: 3
+                resource_option_id: resource_option_id
+                resource_option:
+                  resource_unit: resource_unit
+                  unit_int_price_per_day: 2
+                  unit_int_price_per_hour: 5
+                  resource_type: null
+                  name: name
+                  unit_int_price_per_month: 7
+                  unit_int_price_per_year: 9
+                  currency: null
+                  id: id
+                  status: null
+              - amount: 3
+                resource_option_id: resource_option_id
+                resource_option:
+                  resource_unit: resource_unit
+                  unit_int_price_per_day: 2
+                  unit_int_price_per_hour: 5
+                  resource_type: null
+                  name: name
+                  unit_int_price_per_month: 7
+                  unit_int_price_per_year: 9
+                  currency: null
+                  id: id
+                  status: null
+              unit_int_price_per_day: 4
+              unit_int_price_per_hour: 2
+              regional_mapping_id: regional_mapping_id
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 1
+              currency: null
+              id: id
+              status: null
+            package_id: package_id
+            resource_configurations:
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+            - amount: 3
+              resource_option_id: resource_option_id
+              resource_option:
+                resource_unit: resource_unit
+                unit_int_price_per_day: 2
+                unit_int_price_per_hour: 5
+                resource_type: null
+                name: name
+                unit_int_price_per_month: 7
+                unit_int_price_per_year: 9
+                currency: null
+                id: id
+                status: null
+          id: id
+          num_nodes: 1
+          allowed_ip_source_ranges:
+          - allowed_ip_source_ranges
+          - allowed_ip_source_ranges
+          num_nodes_max: 5
+        owner_id: owner_id
+        private_region_id: private_region_id
+        created_at: 2000-01-23T04:56:07.000+00:00
+        resources:
+          disk:
+            extra: 1.4894159098541704
+            complimentary: 6.84685269835264
+            base: 1.0246457001441578
+          cpu:
+            extra: 1.4894159098541704
+            complimentary: 6.84685269835264
+            base: 1.0246457001441578
+          ram:
+            extra: 1.4894159098541704
+            complimentary: 6.84685269835264
+            base: 1.0246457001441578
+        cloud_provider: aws
+        cloud_region_az: cloud_region_az
+        version: version
+        url: url
+        account_id: account_id
+        marked_for_deletion_at: 2000-01-23T04:56:07.000+00:00
+        current_configuration_id: current_configuration_id
+        name: name
+        id: id
+        state:
+          phase: null
+          reason: reason
+          endpoint: endpoint
+          current: ""
+          nodes: ""
+          available_replicas: 6
+          replicas: 0
+          replicationStatus: null
+          restarted_at: 2000-01-23T04:56:07.000+00:00
+          id: id
+          version: version
+        total_extra_disk: 7
+        cloud_region_setup: cloud_region_setup
+      properties:
+        id:
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        owner_id:
+          nullable: true
+          type: string
+        account_id:
+          nullable: true
+          type: string
+        name:
+          title: Name
+          type: string
+        cloud_provider:
+          enum:
+          - aws
+          - gcp
+          - private
+          - azure
+          title: Cloud Provider
+          type: string
+        cloud_region:
+          enum:
+          - us-east-1
+          - us-west-1
+          - eu-central
+          - eu-central-1
+          - ap-northeast-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - eu-west-2
+          - us-west-2
+          - europe-west3
+          - us-east4
+          - eastus
+          - germanywestcentral
+          - southeastasia
+          - uksouth
+          - private
+          title: Cloud Region
+          type: string
+        cloud_region_az:
+          nullable: true
+          type: string
+        cloud_region_setup:
+          nullable: true
+          type: string
+        current_configuration_id:
+          title: Current Configuration Id
+          type: string
+        private_region_id:
+          nullable: true
+          type: string
+        encryption_key_id:
+          nullable: true
+          type: string
+        marked_for_deletion_at:
+          format: date-time
+          nullable: true
+          type: string
+        version:
+          nullable: true
+          type: string
+        url:
+          title: Url
+          type: string
+        state:
+          $ref: '#/components/schemas/QdrantClusterState'
+        configuration:
+          $ref: '#/components/schemas/ClusterConfigurationOut'
+        resources:
+          $ref: '#/components/schemas/ClusterResourcesSummary'
+        total_extra_disk:
+          default: 0
+          title: Total Extra Disk
+          type: integer
+      required:
+      - cloud_provider
+      - cloud_region
+      - created_at
+      - current_configuration_id
+      - id
+      - name
+      - url
+      title: ClusterOut
+    ClusterResources:
+      example:
+        extra: 1.4894159098541704
+        complimentary: 6.84685269835264
+        base: 1.0246457001441578
+      properties:
+        base:
+          default: 0
+          title: Base
+          type: number
+        extra:
+          default: 0
+          title: Extra
+          type: number
+        complimentary:
+          default: 0
+          title: Complimentary
+          type: number
+      title: ClusterResources
+    ClusterResourcesSummary:
+      example:
+        disk:
+          extra: 1.4894159098541704
+          complimentary: 6.84685269835264
+          base: 1.0246457001441578
+        cpu:
+          extra: 1.4894159098541704
+          complimentary: 6.84685269835264
+          base: 1.0246457001441578
+        ram:
+          extra: 1.4894159098541704
+          complimentary: 6.84685269835264
+          base: 1.0246457001441578
+      properties:
+        disk:
+          $ref: '#/components/schemas/ClusterResources'
+        ram:
+          $ref: '#/components/schemas/ClusterResources'
+        cpu:
+          $ref: '#/components/schemas/ClusterResources'
+      title: ClusterResourcesSummary
+    ClusterState:
+      description: Cluster states replicated from Qdrant operator
+      enum:
+      - Creating
+      - FailedToCreate
+      - Updating
+      - FailedToUpdate
+      - Scaling
+      - FailedToScale
+      - Restarting
+      - FailedToRestart
+      - Upgrading
+      - FailedToUpgrade
+      - BackupRunning
+      - FailedToBackup
+      - Restoring
+      - FailedToRestore
+      - Suspending
+      - Suspended
+      - FailedToSuspend
+      - Resuming
+      - FailedToResume
+      - Healthy
+      - NotReady
+      - RecoveryMode
+      - ManualMaintenance
+      - FailedToSync
+      - NotFound
+      - Unknown
+      title: ClusterState
+      type: string
+    CreateApiKeyOut:
+      example:
+        cluster_id_list:
+        - ""
+        - ""
+        account_id: account_id
+        user_id: user_id
+        prefix: prefix
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: id
+        token: token
+      properties:
+        id:
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        user_id:
+          nullable: true
+          type: string
+        prefix:
+          title: Prefix
+          type: string
+        cluster_id_list:
+          items: {}
+          nullable: true
+        account_id:
+          nullable: true
+          type: string
+        token:
+          title: Token
+          type: string
+      required:
+      - created_at
+      - id
+      - prefix
+      - token
+      title: CreateApiKeyOut
+    Currency:
+      enum:
+      - usd
+      - eur
+      title: Currency
+      type: string
+    EncryptionConfigIn:
+      example:
+        aws_encryption_config:
+          encryption_key_id: encryption_key_id
+          managed: true
+      properties:
+        aws_encryption_config:
+          $ref: '#/components/schemas/AWSEncryptionConfig'
+      title: EncryptionConfigIn
+    GetApiKeyOut:
+      example:
+        cluster_id_list:
+        - ""
+        - ""
+        account_id: account_id
+        user_id: user_id
+        prefix: prefix
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: id
+      properties:
+        id:
+          title: Id
+          type: string
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        user_id:
+          nullable: true
+          type: string
+        prefix:
+          title: Prefix
+          type: string
+        cluster_id_list:
+          items: {}
+          nullable: true
+        account_id:
+          nullable: true
+          type: string
+      required:
+      - created_at
+      - id
+      - prefix
+      title: GetApiKeyOut
+    HTTPValidationError:
+      example:
+        detail:
+        - msg: msg
+          loc:
+          - ValidationError_loc_inner
+          - ValidationError_loc_inner
+          type: type
+        - msg: msg
+          loc:
+          - ValidationError_loc_inner
+          - ValidationError_loc_inner
+          type: type
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+      title: HTTPValidationError
+    NodeConfiguration:
+      example:
+        package:
+          resource_configuration:
+          - amount: 3
+            resource_option_id: resource_option_id
+            resource_option:
+              resource_unit: resource_unit
+              unit_int_price_per_day: 2
+              unit_int_price_per_hour: 5
+              resource_type: null
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 9
+              currency: null
+              id: id
+              status: null
+          - amount: 3
+            resource_option_id: resource_option_id
+            resource_option:
+              resource_unit: resource_unit
+              unit_int_price_per_day: 2
+              unit_int_price_per_hour: 5
+              resource_type: null
+              name: name
+              unit_int_price_per_month: 7
+              unit_int_price_per_year: 9
+              currency: null
+              id: id
+              status: null
+          unit_int_price_per_day: 4
+          unit_int_price_per_hour: 2
+          regional_mapping_id: regional_mapping_id
+          name: name
+          unit_int_price_per_month: 7
+          unit_int_price_per_year: 1
+          currency: null
+          id: id
+          status: null
+        package_id: package_id
+        resource_configurations:
+        - amount: 3
+          resource_option_id: resource_option_id
+          resource_option:
+            resource_unit: resource_unit
+            unit_int_price_per_day: 2
+            unit_int_price_per_hour: 5
+            resource_type: null
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 9
+            currency: null
+            id: id
+            status: null
+        - amount: 3
+          resource_option_id: resource_option_id
+          resource_option:
+            resource_unit: resource_unit
+            unit_int_price_per_day: 2
+            unit_int_price_per_hour: 5
+            resource_type: null
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 9
+            currency: null
+            id: id
+            status: null
+      properties:
+        package_id:
+          title: Package Id
+          type: string
+        package:
+          $ref: '#/components/schemas/PackageOut'
+        resource_configurations:
+          items:
+            $ref: '#/components/schemas/ResourceConfiguration'
+          nullable: true
+      required:
+      - package_id
+      title: NodeConfiguration
+    PackageOut:
+      example:
+        resource_configuration:
+        - amount: 3
+          resource_option_id: resource_option_id
+          resource_option:
+            resource_unit: resource_unit
+            unit_int_price_per_day: 2
+            unit_int_price_per_hour: 5
+            resource_type: null
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 9
+            currency: null
+            id: id
+            status: null
+        - amount: 3
+          resource_option_id: resource_option_id
+          resource_option:
+            resource_unit: resource_unit
+            unit_int_price_per_day: 2
+            unit_int_price_per_hour: 5
+            resource_type: null
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 9
+            currency: null
+            id: id
+            status: null
+        unit_int_price_per_day: 4
+        unit_int_price_per_hour: 2
+        regional_mapping_id: regional_mapping_id
+        name: name
+        unit_int_price_per_month: 7
+        unit_int_price_per_year: 1
+        currency: null
+        id: id
+        status: null
+      properties:
+        id:
+          nullable: true
+          type: string
+        resource_configuration:
+          items:
+            $ref: '#/components/schemas/ResourceConfiguration'
+          type: array
+        name:
+          title: Name
+          type: string
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        unit_int_price_per_hour:
+          nullable: true
+          type: integer
+        unit_int_price_per_day:
+          nullable: true
+          type: integer
+        unit_int_price_per_month:
+          nullable: true
+          type: integer
+        unit_int_price_per_year:
+          nullable: true
+          type: integer
+        regional_mapping_id:
+          nullable: true
+          type: string
+      required:
+      - currency
+      - name
+      - resource_configuration
+      - status
+      title: PackageOut
+    QdrantClusterNodeState:
+      properties:
+        name:
+          title: Name
+          type: string
+        started_at:
+          format: date-time
+          nullable: true
+          type: string
+        state:
+          additionalProperties:
+            type: string
+          default: {}
+          title: State
+        version:
+          default: ""
+          title: Version
+          type: string
+        endpoint:
+          default: ""
+          title: Endpoint
+          type: string
+      required:
+      - name
+      title: QdrantClusterNodeState
+    QdrantClusterState:
+      example:
+        phase: null
+        reason: reason
+        endpoint: endpoint
+        current: ""
+        nodes: ""
+        available_replicas: 6
+        replicas: 0
+        replicationStatus: null
+        restarted_at: 2000-01-23T04:56:07.000+00:00
+        id: id
+        version: version
+      properties:
+        id:
+          title: Id
+          type: string
+        version:
+          nullable: true
+          type: string
+        replicationStatus:
+          $ref: '#/components/schemas/ReplicationStatus'
+        replicas:
+          title: Replicas
+          type: integer
+        available_replicas:
+          nullable: true
+          type: integer
+        restarted_at:
+          format: date-time
+          nullable: true
+          type: string
+        nodes:
+          additionalProperties:
+            $ref: '#/components/schemas/QdrantClusterState_nodes_value'
+          nullable: true
+        phase:
+          $ref: '#/components/schemas/ClusterState'
+        reason:
+          nullable: true
+          type: string
+        endpoint:
+          nullable: true
+          type: string
+        current:
+          allOf:
+          - $ref: '#/components/schemas/QdrantClusterStatus'
+          default: running
+          description: Whether the cluster is running.
+      required:
+      - id
+      - nodes
+      - replicas
+      - replicationStatus
+      title: QdrantClusterState
+    QdrantClusterStatus:
+      enum:
+      - suspended
+      - running
+      title: QdrantClusterStatus
+      type: string
+    ReplicationStatus:
+      enum:
+      - down
+      - under_replicated
+      - healthy
+      title: ReplicationStatus
+      type: string
+    ResourceConfiguration:
+      example:
+        amount: 3
+        resource_option_id: resource_option_id
+        resource_option:
+          resource_unit: resource_unit
+          unit_int_price_per_day: 2
+          unit_int_price_per_hour: 5
+          resource_type: null
+          name: name
+          unit_int_price_per_month: 7
+          unit_int_price_per_year: 9
+          currency: null
+          id: id
+          status: null
+      properties:
+        resource_option_id:
+          title: Resource Option Id
+          type: string
+        resource_option:
+          $ref: '#/components/schemas/ResourceOptionOut'
+        amount:
+          title: Amount
+          type: integer
+      required:
+      - amount
+      - resource_option_id
+      title: ResourceConfiguration
+    ResourceOptionOut:
+      example:
+        resource_unit: resource_unit
+        unit_int_price_per_day: 2
+        unit_int_price_per_hour: 5
+        resource_type: null
+        name: name
+        unit_int_price_per_month: 7
+        unit_int_price_per_year: 9
+        currency: null
+        id: id
+        status: null
+      properties:
+        id:
+          title: Id
+          type: string
+        resource_type:
+          $ref: '#/components/schemas/ResourceType'
+        status:
+          $ref: '#/components/schemas/BookingStatus'
+        name:
+          nullable: true
+          type: string
+        resource_unit:
+          title: Resource Unit
+          type: string
+        currency:
+          $ref: '#/components/schemas/Currency'
+        unit_int_price_per_hour:
+          nullable: true
+          type: integer
+        unit_int_price_per_day:
+          nullable: true
+          type: integer
+        unit_int_price_per_month:
+          nullable: true
+          type: integer
+        unit_int_price_per_year:
+          nullable: true
+          type: integer
+      required:
+      - currency
+      - id
+      - resource_type
+      - resource_unit
+      - status
+      title: ResourceOptionOut
+    ResourceType:
+      enum:
+      - cpu
+      - ram
+      - disk
+      - snapshot
+      - complimentary_disk
+      title: ResourceType
+      type: string
+    ScheduleIn:
+      example:
+        creator_user_id: creator_user_id
+        cron: cron
+        account_id: account_id
+        marked_for_deletion_at: 2000-01-23T04:56:07.000+00:00
+        private_region_id: private_region_id
+        retention: 1
+        status: null
+      properties:
+        creator_user_id:
+          nullable: true
+          type: string
+        account_id:
+          nullable: true
+          type: string
+        cron:
+          title: Cron
+          type: string
+        retention:
+          title: Retention
+          type: integer
+        private_region_id:
+          nullable: true
+          type: string
+        marked_for_deletion_at:
+          format: date-time
+          nullable: true
+          type: string
+        status:
+          $ref: '#/components/schemas/ScheduleState'
+      required:
+      - cron
+      - retention
+      title: ScheduleIn
+    ScheduleState:
+      enum:
+      - Active
+      - FailedToSync
+      - NotFound
+      - Unknown
+      title: ScheduleState
+      type: string
+    ValidationError:
+      example:
+        msg: msg
+        loc:
+        - ValidationError_loc_inner
+        - ValidationError_loc_inner
+        type: type
+      properties:
+        loc:
+          items:
+            $ref: '#/components/schemas/ValidationError_loc_inner'
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    QdrantErrorCode:
+      description: Error codes internal to the API
+      oneOf:
+      - description: User with this email already exists
+        enum:
+        - E1000
+        type: string
+      - description: Only one account per user is allowed
+        enum:
+        - E1001
+        type: string
+      - description: User already assigned to account
+        enum:
+        - E1002
+        type: string
+      - description: Owner user cannot be removed from account
+        enum:
+        - E1003
+        type: string
+      - description: Invalid account owner id
+        enum:
+        - E1004
+        type: string
+      - description: User is not member of account
+        enum:
+        - E1005
+        type: string
+      - description: User not found
+        enum:
+        - E1006
+        type: string
+      - description: Account not found
+        enum:
+        - E1007
+        type: string
+      - description: Role not found
+        enum:
+        - E1008
+        type: string
+      - description: Invite not found
+        enum:
+        - E1009
+        type: string
+      - description: Invite state conflicts with action
+        enum:
+        - E1010
+        type: string
+      - description: Invite action not allowed for user
+        enum:
+        - E1011
+        type: string
+      - description: Mailjet send error - status code <> 200
+        enum:
+        - E1012
+        type: string
+      - description: Invalid auth token
+        enum:
+        - E1013
+        type: string
+      - description: Payment information not found
+        enum:
+        - E1014
+        type: string
+      - description: Cluster not found
+        enum:
+        - E1015
+        type: string
+      - description: Feature flag status is not valid
+        enum:
+        - E1016
+        type: string
+      - description: Public Feature flag status is not valid
+        enum:
+        - E1017
+        type: string
+      - description: Cluster limit reached
+        enum:
+        - E1018
+        type: string
+      - description: Free cluster limit reached
+        enum:
+        - E1019
+        type: string
+      - description: Free cluster nodes' limit reached
+        enum:
+        - E1020
+        type: string
+      - description: No region cluster available yet
+        enum:
+        - E1021
+        type: string
+      - description: Payment details missing or outdated
+        enum:
+        - E1022
+        type: string
+      - description: Booking not found
+        enum:
+        - E1023
+        type: string
+      - description: Invalid cluster scaling values
+        enum:
+        - E1024
+        type: string
+      - description: Scaling free tier clusters is not implemented yet
+        enum:
+        - E1025
+        type: string
+      - description: Failed to get cluster logs
+        enum:
+        - E1026
+        type: string
+      - description: Failed to get cluster metrics
+        enum:
+        - E1027
+        type: string
+      - description: Schedule not found
+        enum:
+        - E1028
+        type: string
+      - description: Invoice not found
+        enum:
+        - E1029
+        type: string
+      - description: Account has paid clusters
+        enum:
+        - E1030
+        type: string
+      - description: Payment information already exists
+        enum:
+        - E1031
+        type: string
+      - description: Provided Role data is not valid
+        enum:
+        - E1032
+        type: string
+      - description: Suger registration failed
+        enum:
+        - E1033
+        type: string
+      - description: Feature is not implemented
+        enum:
+        - E1034
+        type: string
+      - description: Stripe API call failed
+        enum:
+        - E1035
+        type: string
+      - description: Tax id validation error
+        enum:
+        - E1036
+        type: string
+      - description: Country or state is not supported yet
+        enum:
+        - E1037
+        type: string
+      - description: Role name already exists for the account
+        enum:
+        - E1038
+        type: string
+      - description: Invalid Qdrant version
+        enum:
+        - E1039
+        type: string
+      - description: Account is not entitled to do the requested action
+        enum:
+        - E1040
+        type: string
+      - description: User is deleted
+        enum:
+        - E1041
+        type: string
+      - description: Entitlement belongs to different account
+        enum:
+        - E1042
+        type: string
+      - description: Downscaling is currently not supported
+        enum:
+        - E1043
+        type: string
+      - description: Payment information added hidden. Please contact support to activate.
+        enum:
+        - E1044
+        type: string
+      - description: Horizontal scaling is not supported for current cluster version
+          and resource configuration.
+        enum:
+        - E1045
+        type: string
+      - description: User is already a member of this account
+        enum:
+        - E1046
+        type: string
+      - description: User already has active pending invite
+        enum:
+        - E1047
+        type: string
+      - description: Account invitation limit has been reached
+        enum:
+        - E1048
+        type: string
+      - description: Cluster Encryption not allowed for this account
+        enum:
+        - E1049
+        type: string
+      - description: Cluster booking time is blocked
+        enum:
+        - E1050
+        type: string
+      - description: Entitlement not found
+        enum:
+        - E1051
+        type: string
+      - description: Please remove all the clusters before deleting the hybrid cloud
+          environment
+        enum:
+        - E1052
+        type: string
+      title: QdrantErrorCode
+    QdrantClusterState_nodes_value:
+      anyOf:
+      - $ref: '#/components/schemas/QdrantClusterNodeState'
+      nullable: true
+    ValidationError_loc_inner:
+      anyOf:
+      - type: string
+      - type: integer
+  securitySchemes:
+    ApiKeyAuth:
+      description: Qdrant cloud programmatic access key
+      in: header
+      name: Authorization
+      type: apiKey

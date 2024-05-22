@@ -26,6 +26,11 @@ generate-client:
 build:
 	go build -o ${BINARY}
 
+.PHONY: update-go-client
+update-go-client:
+	rm -r ./go-client-programmatic-access
+	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./go-client-programmatic-access
+
 install: build
 	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 	cp ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
