@@ -32,9 +32,9 @@ func Test_qdrant_cloud_programmatic_access_ClustersAPIService(t *testing.T) {
 
 	t.Run("Test ClustersAPI ListClusters", func(t *testing.T) {
 
-		//t.Skip("skip test") // remove to run test
+		t.Skip("skip test") // remove to run test
 
-		accountId := "26204515-2cbc-4150-b80f-02a787d6cf05"
+		accountId := "ACCOUNT_ID_HERE"
 
 		ctx := context.WithValue(
 			context.Background(),
@@ -42,7 +42,7 @@ func Test_qdrant_cloud_programmatic_access_ClustersAPIService(t *testing.T) {
 			map[string]openapiclient.APIKey{
 				"ApiKeyAuth": {
 					Prefix: "apikey",
-					Key:    "42c1982f-30ef-42fe-a719-16c7b1a0fd46|n-BBqnHH7pF6XPRLVS0ebhwNSUGLx_Rp-WgSYhLGyKBx76vrnaiyhA",
+					Key:    "API_KEY_HERE",
 				},
 			},
 		)

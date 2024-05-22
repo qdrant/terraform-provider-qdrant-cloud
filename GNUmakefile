@@ -29,6 +29,7 @@ build:
 .PHONY: update-go-client
 update-go-client:
 	rm -r ./go-client-programmatic-access
+	mkdir ./go-client-programmatic-access
 	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./go-client-programmatic-access
 
 install: build
