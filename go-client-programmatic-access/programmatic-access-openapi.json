@@ -14,15 +14,6 @@
                 "operationId": "get_cluster",
                 "parameters": [
                     {
-                        "name": "cluster_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Cluster Id"
-                        }
-                    },
-                    {
                         "name": "account_id",
                         "in": "path",
                         "required": true,
@@ -30,6 +21,16 @@
                             "type": "string",
                             "format": "uuid",
                             "title": "Account Id"
+                        }
+                    },
+                    {
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Cluster Id"
                         }
                     }
                 ],
@@ -64,21 +65,23 @@
                 "operationId": "delete_cluster",
                 "parameters": [
                     {
-                        "name": "account_id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "title": "Account Id"
-                        }
-                    },
-                    {
                         "name": "cluster_id",
                         "in": "path",
                         "required": true,
                         "schema": {
                             "type": "string",
+                            "format": "uuid",
                             "title": "Cluster Id"
+                        }
+                    },
+                    {
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Account Id"
                         }
                     },
                     {
@@ -95,6 +98,67 @@
                 "responses": {
                     "204": {
                         "description": "Successful Response"
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "Clusters"
+                ],
+                "summary": "Http Patch Cluster",
+                "operationId": "update_cluster",
+                "parameters": [
+                    {
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Account Id"
+                        }
+                    },
+                    {
+                        "name": "cluster_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Cluster Id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PydanticClusterPatchIn"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClusterOut"
+                                }
+                            }
+                        }
                     },
                     "422": {
                         "description": "Validation Error",
@@ -184,6 +248,7 @@
                         "required": true,
                         "schema": {
                             "type": "string",
+                            "format": "uuid",
                             "title": "Account Id"
                         }
                     }
@@ -530,10 +595,7 @@
                         "anyOf": [
                             {
                                 "items": {
-                                    "additionalProperties": {
-                                        "type": "string"
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Toleration"
                                 },
                                 "type": "array"
                             },
@@ -632,10 +694,7 @@
                         "anyOf": [
                             {
                                 "items": {
-                                    "additionalProperties": {
-                                        "type": "string"
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/Toleration"
                                 },
                                 "type": "array"
                             },
@@ -1018,17 +1077,38 @@
             "ClusterResources": {
                 "properties": {
                     "base": {
-                        "type": "number",
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
                         "title": "Base",
                         "default": 0
                     },
                     "extra": {
-                        "type": "number",
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
                         "title": "Extra",
                         "default": 0
                     },
                     "complimentary": {
-                        "type": "number",
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
                         "title": "Complimentary",
                         "default": 0
                     }
@@ -1397,6 +1477,147 @@
                 ],
                 "title": "PackageOut"
             },
+            "PydanticClusterConfigurationPatchIn": {
+                "properties": {
+                    "num_nodes": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "const": "last"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Num Nodes"
+                    },
+                    "allowed_ip_source_ranges": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Allowed Ip Source Ranges"
+                    },
+                    "node_selector": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Node Selector"
+                    },
+                    "tolerations": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/Toleration"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Tolerations"
+                    }
+                },
+                "type": "object",
+                "title": "PydanticClusterConfigurationPatchIn"
+            },
+            "PydanticClusterPatchIn": {
+                "properties": {
+                    "version": {
+                        "anyOf": [
+                            {
+                                "const": "latest"
+                            },
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Version"
+                    },
+                    "rolling": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Rolling",
+                        "default": true
+                    },
+                    "status": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PydanticClusterStatusPatchIn"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "configuration": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PydanticClusterConfigurationPatchIn"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "resource_configurations": {
+                        "anyOf": [
+                            {
+                                "items": {
+                                    "$ref": "#/components/schemas/ResourceConfiguration"
+                                },
+                                "type": "array"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Resource Configurations"
+                    }
+                },
+                "type": "object",
+                "title": "PydanticClusterPatchIn"
+            },
+            "PydanticClusterStatusPatchIn": {
+                "properties": {
+                    "restarted_at": {
+                        "type": "string",
+                        "title": "Restarted At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "restarted_at"
+                ],
+                "title": "PydanticClusterStatusPatchIn"
+            },
             "QdrantClusterNodeState": {
                 "properties": {
                     "name": {
@@ -1575,7 +1796,8 @@
                 "enum": [
                     "down",
                     "under_replicated",
-                    "healthy"
+                    "healthy",
+                    "unknown"
                 ],
                 "title": "ReplicationStatus"
             },
@@ -1786,6 +2008,72 @@
                     "Unknown"
                 ],
                 "title": "ScheduleState"
+            },
+            "Toleration": {
+                "properties": {
+                    "key": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Key"
+                    },
+                    "operator": {
+                        "type": "string",
+                        "enum": [
+                            "Exists",
+                            "Equal"
+                        ],
+                        "title": "Operator"
+                    },
+                    "value": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Value"
+                    },
+                    "effect": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "NoSchedule",
+                                    "PreferNoSchedule",
+                                    "NoExecute"
+                                ]
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Effect"
+                    },
+                    "toleration_seconds": {
+                        "anyOf": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Toleration Seconds"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "operator"
+                ],
+                "title": "Toleration"
             },
             "ValidationError": {
                 "properties": {

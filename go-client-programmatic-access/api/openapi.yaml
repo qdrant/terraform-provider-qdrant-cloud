@@ -13,18 +13,20 @@ paths:
       parameters:
       - explode: false
         in: path
-        name: account_id
+        name: cluster_id
         required: true
         schema:
-          title: Account Id
+          format: uuid
+          title: Cluster Id
           type: string
         style: simple
       - explode: false
         in: path
-        name: cluster_id
+        name: account_id
         required: true
         schema:
-          title: Cluster Id
+          format: uuid
+          title: Account Id
           type: string
         style: simple
       - explode: true
@@ -53,19 +55,20 @@ paths:
       parameters:
       - explode: false
         in: path
-        name: cluster_id
-        required: true
-        schema:
-          title: Cluster Id
-          type: string
-        style: simple
-      - explode: false
-        in: path
         name: account_id
         required: true
         schema:
           format: uuid
           title: Account Id
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: cluster_id
+        required: true
+        schema:
+          format: uuid
+          title: Cluster Id
           type: string
         style: simple
       responses:
@@ -82,6 +85,49 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Http Get Cluster By Id
+      tags:
+      - Clusters
+    patch:
+      operationId: update_cluster
+      parameters:
+      - explode: false
+        in: path
+        name: account_id
+        required: true
+        schema:
+          format: uuid
+          title: Account Id
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: cluster_id
+        required: true
+        schema:
+          format: uuid
+          title: Cluster Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PydanticClusterPatchIn'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterOut'
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Http Patch Cluster
       tags:
       - Clusters
   /accounts/{account_id}/clusters:
@@ -131,6 +177,7 @@ paths:
         name: account_id
         required: true
         schema:
+          format: uuid
           title: Account Id
           type: string
         style: simple
@@ -314,7 +361,9 @@ components:
         - ""
       properties:
         cluster_id_list:
-          items: {}
+          items: 
+            type: string
+          type: array
           nullable: true
       title: ApiKeyIn
     BookingStatus:
@@ -334,8 +383,16 @@ components:
           key: node_selector
         qdrant_configuration: "{}"
         tolerations:
-        - key: tolerations
-        - key: tolerations
+        - effect: NoSchedule
+          toleration_seconds: 1
+          value: value
+          key: key
+          operator: Exists
+        - effect: NoSchedule
+          toleration_seconds: 1
+          value: value
+          key: key
+          operator: Exists
         cluster_annotations: "{}"
         node_configuration:
           package:
@@ -425,14 +482,15 @@ components:
             type: string
           nullable: true
         tolerations:
+          type: array
           items:
-            additionalProperties:
-              type: string
+            $ref: '#/components/schemas/Toleration'
           nullable: true
         cluster_annotations:
           nullable: true
           type: object
         allowed_ip_source_ranges:
+          type: array
           items:
             type: string
           nullable: true
@@ -448,8 +506,16 @@ components:
           key: node_selector
         qdrant_configuration: "{}"
         tolerations:
-        - key: tolerations
-        - key: tolerations
+        - effect: NoSchedule
+          toleration_seconds: 1
+          value: value
+          key: key
+          operator: Exists
+        - effect: NoSchedule
+          toleration_seconds: 1
+          value: value
+          key: key
+          operator: Exists
         cluster_annotations: "{}"
         created_at: 2000-01-23T04:56:07.000+00:00
         node_configuration:
@@ -551,14 +617,15 @@ components:
             type: string
           nullable: true
         tolerations:
+          type: array
           items:
-            additionalProperties:
-              type: string
+            $ref: '#/components/schemas/Toleration'
           nullable: true
         cluster_annotations:
           nullable: true
           type: object
         allowed_ip_source_ranges:
+          type: array
           items:
             type: string
           nullable: true
@@ -587,8 +654,16 @@ components:
             key: node_selector
           qdrant_configuration: "{}"
           tolerations:
-          - key: tolerations
-          - key: tolerations
+          - effect: NoSchedule
+            toleration_seconds: 1
+            value: value
+            key: key
+            operator: Exists
+          - effect: NoSchedule
+            toleration_seconds: 1
+            value: value
+            key: key
+            operator: Exists
           cluster_annotations: "{}"
           node_configuration:
             package:
@@ -744,8 +819,16 @@ components:
             key: node_selector
           qdrant_configuration: "{}"
           tolerations:
-          - key: tolerations
-          - key: tolerations
+          - effect: NoSchedule
+            toleration_seconds: 1
+            value: value
+            key: key
+            operator: Exists
+          - effect: NoSchedule
+            toleration_seconds: 1
+            value: value
+            key: key
+            operator: Exists
           cluster_annotations: "{}"
           created_at: 2000-01-23T04:56:07.000+00:00
           node_configuration:
@@ -825,17 +908,17 @@ components:
         created_at: 2000-01-23T04:56:07.000+00:00
         resources:
           disk:
-            extra: 1.4894159098541704
-            complimentary: 6.84685269835264
-            base: 1.0246457001441578
+            extra: 6.84685269835264
+            complimentary: 7.457744773683766
+            base: 1.4894159098541704
           cpu:
-            extra: 1.4894159098541704
-            complimentary: 6.84685269835264
-            base: 1.0246457001441578
+            extra: 6.84685269835264
+            complimentary: 7.457744773683766
+            base: 1.4894159098541704
           ram:
-            extra: 1.4894159098541704
-            complimentary: 6.84685269835264
-            base: 1.0246457001441578
+            extra: 6.84685269835264
+            complimentary: 7.457744773683766
+            base: 1.4894159098541704
         cloud_provider: aws
         cloud_region_az: cloud_region_az
         version: version
@@ -857,7 +940,7 @@ components:
           restarted_at: 2000-01-23T04:56:07.000+00:00
           id: id
           version: version
-        total_extra_disk: 7
+        total_extra_disk: 1
         cloud_region_setup: cloud_region_setup
       properties:
         id:
@@ -950,37 +1033,34 @@ components:
       title: ClusterOut
     ClusterResources:
       example:
-        extra: 1.4894159098541704
-        complimentary: 6.84685269835264
-        base: 1.0246457001441578
+        extra: 6.84685269835264
+        complimentary: 7.457744773683766
+        base: 1.4894159098541704
       properties:
         base:
-          default: 0
           title: Base
           type: number
         extra:
-          default: 0
           title: Extra
           type: number
         complimentary:
-          default: 0
           title: Complimentary
           type: number
       title: ClusterResources
     ClusterResourcesSummary:
       example:
         disk:
-          extra: 1.4894159098541704
-          complimentary: 6.84685269835264
-          base: 1.0246457001441578
+          extra: 6.84685269835264
+          complimentary: 7.457744773683766
+          base: 1.4894159098541704
         cpu:
-          extra: 1.4894159098541704
-          complimentary: 6.84685269835264
-          base: 1.0246457001441578
+          extra: 6.84685269835264
+          complimentary: 7.457744773683766
+          base: 1.4894159098541704
         ram:
-          extra: 1.4894159098541704
-          complimentary: 6.84685269835264
-          base: 1.0246457001441578
+          extra: 6.84685269835264
+          complimentary: 7.457744773683766
+          base: 1.4894159098541704
       properties:
         disk:
           $ref: '#/components/schemas/ClusterResources'
@@ -1046,7 +1126,9 @@ components:
           title: Prefix
           type: string
         cluster_id_list:
-          items: {}
+          type: array
+          items: 
+            type: string
           nullable: true
         account_id:
           nullable: true
@@ -1100,7 +1182,9 @@ components:
           title: Prefix
           type: string
         cluster_id_list:
-          items: {}
+          type: array
+          items: 
+            type: string
           nullable: true
         account_id:
           nullable: true
@@ -1203,6 +1287,7 @@ components:
         package:
           $ref: '#/components/schemas/PackageOut'
         resource_configurations:
+          type: array
           items:
             $ref: '#/components/schemas/ResourceConfiguration'
           nullable: true
@@ -1283,6 +1368,122 @@ components:
       - resource_configuration
       - status
       title: PackageOut
+    PydanticClusterConfigurationPatchIn:
+      example:
+        node_selector:
+          key: node_selector
+        tolerations:
+        - effect: NoSchedule
+          toleration_seconds: 1
+          value: value
+          key: key
+          operator: Exists
+        - effect: NoSchedule
+          toleration_seconds: 1
+          value: value
+          key: key
+          operator: Exists
+        num_nodes: 0
+        allowed_ip_source_ranges:
+        - allowed_ip_source_ranges
+        - allowed_ip_source_ranges
+      properties:
+        num_nodes:
+          nullable: true
+          type: integer
+        allowed_ip_source_ranges:
+          type: array
+          items:
+            type: string
+          nullable: true
+        node_selector:
+          additionalProperties:
+            type: string
+          nullable: true
+        tolerations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Toleration'
+          nullable: true
+      title: PydanticClusterConfigurationPatchIn
+    PydanticClusterPatchIn:
+      example:
+        rolling: true
+        configuration:
+          node_selector:
+            key: node_selector
+          tolerations:
+          - effect: NoSchedule
+            toleration_seconds: 1
+            value: value
+            key: key
+            operator: Exists
+          - effect: NoSchedule
+            toleration_seconds: 1
+            value: value
+            key: key
+            operator: Exists
+          num_nodes: 0
+          allowed_ip_source_ranges:
+          - allowed_ip_source_ranges
+          - allowed_ip_source_ranges
+        resource_configurations:
+        - amount: 3
+          resource_option_id: resource_option_id
+          resource_option:
+            resource_unit: resource_unit
+            unit_int_price_per_day: 2
+            unit_int_price_per_hour: 5
+            resource_type: null
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 9
+            currency: null
+            id: id
+            status: null
+        - amount: 3
+          resource_option_id: resource_option_id
+          resource_option:
+            resource_unit: resource_unit
+            unit_int_price_per_day: 2
+            unit_int_price_per_hour: 5
+            resource_type: null
+            name: name
+            unit_int_price_per_month: 7
+            unit_int_price_per_year: 9
+            currency: null
+            id: id
+            status: null
+        version: version
+        status:
+          restarted_at: restarted_at
+      properties:
+        version:
+          nullable: true
+          type: string
+        rolling:
+          nullable: true
+          type: boolean
+        status:
+          $ref: '#/components/schemas/PydanticClusterStatusPatchIn'
+        configuration:
+          $ref: '#/components/schemas/PydanticClusterConfigurationPatchIn'
+        resource_configurations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceConfiguration'
+          nullable: true
+      title: PydanticClusterPatchIn
+    PydanticClusterStatusPatchIn:
+      example:
+        restarted_at: restarted_at
+      properties:
+        restarted_at:
+          title: Restarted At
+          type: string
+      required:
+      - restarted_at
+      title: PydanticClusterStatusPatchIn
     QdrantClusterNodeState:
       properties:
         name:
@@ -1374,6 +1575,7 @@ components:
       - down
       - under_replicated
       - healthy
+      - unknown
       title: ReplicationStatus
       type: string
     ResourceConfiguration:
@@ -1503,6 +1705,39 @@ components:
       - Unknown
       title: ScheduleState
       type: string
+    Toleration:
+      example:
+        effect: NoSchedule
+        toleration_seconds: 1
+        value: value
+        key: key
+        operator: Exists
+      properties:
+        key:
+          nullable: true
+          type: string
+        operator:
+          enum:
+          - Exists
+          - Equal
+          title: Operator
+          type: string
+        value:
+          nullable: true
+          type: string
+        effect:
+          enum:
+          - NoSchedule
+          - PreferNoSchedule
+          - NoExecute
+          nullable: true
+          type: string
+        toleration_seconds:
+          nullable: true
+          type: integer
+      required:
+      - operator
+      title: Toleration
     ValidationError:
       example:
         msg: msg
