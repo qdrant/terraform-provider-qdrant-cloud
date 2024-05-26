@@ -2,8 +2,8 @@ package qdrant
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,31 +30,44 @@ func dataBookingPackages() *schema.Resource {
 // d: The Terraform ResourceData object containing the state.
 // m: The Terraform meta object containing the client configuration.
 func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
+	apiClient, err, diagnostics, done := GetClient(m)
 
-	// Fetch the list of packages from the API.
-	req, diags := newQdrantCloudRequest(client, "GET", "/booking/packages", nil)
-	if diags.HasError() {
-		return diags
+	if done {
+		return diagnostics
 	}
 
-	// Execute the request and handle the response
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
+	params := qc.GetPackagesParams{}
+	response, err := apiClient.GetPackagesWithResponse(ctx, &params)
+	if err != nil {
+		d := diag.FromErr(fmt.Errorf("error listing packages: %v", err))
+		if d.HasError() {
+			return d
+		}
 	}
 
-	// Decode the JSON response into the result structure.
-	var packages []PackageOut
-	if err := json.NewDecoder(resp.Body).Decode(&packages); err != nil {
-		return diag.FromErr(fmt.Errorf("error decoding response: %s", err))
+	if response.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error listing packages: %v", response.JSON422))
 	}
+
+	packages := flattenPackages(*response.JSON200)
 
 	// Set the packages in the Terraform state.
-	if err := d.Set("packages", mapPackages(packages)); err != nil {
+	if err := d.Set("packages", packages); err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
+}
+
+// flattenPackages flattens the package data into a format that Terraform can understand.
+func flattenPackages(packages []qc.PackageOut) []interface{} {
+	var flattenedPackages []interface{}
+	for _, p := range packages {
+		flattenedPackages = append(flattenedPackages, map[string]interface{}{
+			"id":   p.Id,
+			"name": p.Name,
+		})
+	}
+	return flattenedPackages
 }

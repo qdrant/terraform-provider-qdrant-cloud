@@ -1,9 +1,13 @@
 package qdrant
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -27,8 +31,10 @@ func resourceAccountsAuthKeys() *schema.Resource {
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
-	accountID := d.Get("account_id").(string)
+	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	// Prepare the payload for the API request
 	var clusterIDs []string
@@ -42,44 +48,36 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 
 	// Create the request body
-	requestBody := ApiKeyCreateRequestBody{
-		ClusterIDList: clusterIDs,
+	requestBody := qc.ApiKeyIn{
+		ClusterIdList: &clusterIDs,
 	}
 
-	// Using newQdrantCloudRequest to handle HTTP request creation and error checking.
-	req, diags := newQdrantCloudRequest(client, "POST", fmt.Sprintf("/accounts/%s/auth/api-keys", accountID), requestBody)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Execute the request and handle the response
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
-	}
-
-	// Decode the response
-	var apiKeysCreate ApiKeyCreate
-	if err := json.NewDecoder(resp.Body).Decode(&apiKeysCreate); err != nil {
+	jsonData, err := json.Marshal(requestBody)
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	keys := make([]map[string]interface{}, 1)
-	keys[0] = map[string]interface{}{
-		"id":              apiKeysCreate.ID,
-		"created_at":      apiKeysCreate.CreatedAt,
-		"user_id":         GetStringOrEmpty(apiKeysCreate.UserID),
-		"prefix":          apiKeysCreate.Prefix,
-		"cluster_id_list": apiKeysCreate.ClusterIDList,
-		"account_id":      apiKeysCreate.AccountID,
-		"token":           apiKeysCreate.Token,
+	body := bytes.NewReader(jsonData)
+
+	apiClient, err, diagnostics, done := GetClient(m)
+	if done {
+		return diagnostics
 	}
 
-	if err := d.Set("keys", keys); err != nil {
+	resp, err := apiClient.CreateApiKeyWithBodyWithResponse(ctx, accountID, "application/json", body)
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(apiKeysCreate.ID)
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error creating API key: %v", resp.JSON422))
+	}
+
+	if err := d.Set("keys", resp.JSON200); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
 }
 
@@ -88,44 +86,31 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
-	accountID := d.Get("account_id").(string)
-
-	// Using newQdrantCloudRequest to handle HTTP request creation and error checking.
-	req, diags := newQdrantCloudRequest(client, "GET", fmt.Sprintf("/accounts/%s/auth/api-keys/%s", accountID, client.ApiKey), nil)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Execute the request and handle the response
-	var apiKeysCreate ApiKeyCreate
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
-	}
-
-	// Decode JSON response into apiKeysCreate struct
-	if err := json.NewDecoder(resp.Body).Decode(&apiKeysCreate); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
-	}
-
-	// Set the fields from response
-	keys := make([]map[string]interface{}, 1)
-	keys[0] = map[string]interface{}{
-		"id":              apiKeysCreate.ID,
-		"created_at":      apiKeysCreate.CreatedAt,
-		"user_id":         GetStringOrEmpty(apiKeysCreate.UserID),
-		"prefix":          apiKeysCreate.Prefix,
-		"cluster_id_list": apiKeysCreate.ClusterIDList,
-		"account_id":      apiKeysCreate.AccountID,
-		"token":           apiKeysCreate.Token,
-	}
-
-	if err := d.Set("keys", keys); err != nil {
+	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(apiKeysCreate.ID)
+	apiClient, err, diagnostics, done := GetClient(m)
+	if done {
+		return diagnostics
+	}
+
+	// Execute the request and handle the response
+	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error listing API keys: %v", resp.JSON422))
+	}
+
+	err = d.Set("keys", resp.JSON200)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(time.Now().Format(time.RFC3339))
 
 	return nil
 }
@@ -135,20 +120,23 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
-	accountID := d.Get("account_id").(string)
+	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	apiKeyID := d.Get("key_id").(string)
 
-	// Using newQdrantCloudRequest to handle HTTP request creation and error checking.
-	req, diags := newQdrantCloudRequest(client, "DELETE", fmt.Sprintf("/accounts/%s/auth/api-keys/%s", accountID, apiKeyID), nil)
-	if diags.HasError() {
-		return diags
+	apiClient, err, diagnostics, done := GetClient(m)
+	if done {
+		return diagnostics
 	}
 
-	// Execute the request and handle the response
-	_, diags = ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
+	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountID, apiKeyID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error deleting API key: %v", resp.JSON422))
 	}
 
 	// Clear the resource ID to mark as deleted

@@ -1,10 +1,7 @@
 package qdrant
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -59,6 +56,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	// Retrieve the API key and URL from the schema resource data.
 	apiKey := d.Get("api_key").(string)
 	apiURL := d.Get("api_url").(string)
+	var diags diag.Diagnostics
 
 	// Validate that the API key is not empty, returning an error diagnostic if it is.
 	if strings.TrimSpace(apiKey) == "" {
@@ -67,7 +65,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	// Validate that the API URL is not empty, returning an error diagnostic if it is.
 	if strings.TrimSpace(apiURL) == "" {
-		return nil, diag.Errorf("api_url must not be empty")
+		apiURL = "https://cloud.qdrant.io/public/v1"
+		diags = diag.Diagnostics{
+			diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "Using default URL",
+				Detail:   "No API URL was provided, using default URL " + apiURL,
+			},
+		}
 	}
 
 	// Configure the HTTP client with a 30-second timeout and custom transport settings.
@@ -86,7 +91,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		HTTPClient: client,
 	}
 
-	return config, nil
+	return config, diags
 }
 
 // ClientConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
@@ -95,35 +100,6 @@ type ClientConfig struct {
 	ApiKey     string       // ApiKey represents the authentication token used for Qdrant Cloud API access.
 	BaseURL    string       // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
 	HTTPClient *http.Client // HTTPClient is the custom configured HTTP client used for making API requests.
-}
-
-// newQdrantCloudRequest creates a new HTTP request with the appropriate headers set for Qdrant Cloud API interaction.
-// method: HTTP method (e.g., "GET", "POST", "PUT", "DELETE")
-// urlPath: The API endpoint after the base URL
-// payload: An optional interface{} that, if provided, will be serialized as JSON and set as the request body.
-func newQdrantCloudRequest(config ClientConfig, method, urlPath string, payload interface{}) (*http.Request, diag.Diagnostics) {
-	// Construct the full URL.
-	fullURL := fmt.Sprintf("%s%s", config.BaseURL, urlPath)
-
-	// Serialize the payload to JSON if it's provided.
-	var body bytes.Buffer
-	if payload != nil {
-		if err := json.NewEncoder(&body).Encode(payload); err != nil {
-			return nil, diag.FromErr(fmt.Errorf("failed to encode payload to JSON: %s", err))
-		}
-	}
-
-	// Create the HTTP request.
-	req, err := http.NewRequest(method, fullURL, &body)
-	if err != nil {
-		return nil, diag.FromErr(fmt.Errorf("failed to create new HTTP request: %s", err))
-	}
-
-	// Add the required headers.
-	req.Header.Add("Authorization", fmt.Sprintf("apikey %s", config.ApiKey))
-	req.Header.Add("Content-Type", "application/json")
-
-	return req, nil
 }
 
 // formatTime converts a time value to a standardized string format.
@@ -142,24 +118,4 @@ func formatTime(t interface{}) string {
 		// Return empty string for other types.
 		return ""
 	}
-}
-
-// ExecuteRequest executes the HTTP request and handles the response.
-// client: The client configuration including the API key and the base URL.
-// req: The HTTP request to execute.
-func ExecuteRequest(client ClientConfig, req *http.Request) (*http.Response, diag.Diagnostics) {
-	// Print the curl command equivalent of the request for debugging purposes.
-	DebugPrintCurlCommand(req)
-
-	resp, err := client.HTTPClient.Do(req)
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
-
-	// Check for non-200 status code and handle errors
-	if resp.StatusCode == http.StatusUnprocessableEntity {
-		return nil, handleNon422Response(resp)
-	}
-
-	return resp, nil
 }

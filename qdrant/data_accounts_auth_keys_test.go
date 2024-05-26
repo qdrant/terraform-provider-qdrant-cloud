@@ -16,11 +16,11 @@ provider "qdrant" {
 }
 	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
-	config := provider + fmt.Sprintf(`
+	config := provider + `
 data "qdrant_accounts_auth_keys" "test" {
-	account_id = "%s"
+	account_id = "c3e03ee1-b79b-443d-80f0-8eb8a2671978"
 }
-	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+	`
 
 	check := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttrSet("data.qdrant_accounts_auth_keys.test", "account_id"),

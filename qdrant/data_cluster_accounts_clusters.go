@@ -2,12 +2,14 @@ package qdrant
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
+	"net/http"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 // dataClusterAccountsCluster constructs a Terraform resource for
@@ -47,27 +49,35 @@ func dataClusterAccountsClusters() *schema.Resource {
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataClusterAccountsClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
 	accountID := d.Get("account_id").(string)
 	clusterID := d.Get("cluster_id").(string)
 
-	// Using newQdrantCloudRequest to handle HTTP request creation and error checking.
-	req, diags := newQdrantCloudRequest(client, "GET", fmt.Sprintf("/accounts/%s/clusters/%s", accountID, clusterID), nil)
-	if diags.HasError() {
-		return diags
+	apiClient, err, diagnostics, done := GetClient(m)
+
+	if done {
+		return diagnostics
 	}
 
-	// Execute the request and handle the response
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
+	accountUUID, err := uuid.Parse(accountID)
+	if err != nil {
+		d := diag.FromErr(fmt.Errorf("error parsing account ID: %v", err))
+		if d.HasError() {
+			return d
+		}
+	}
+	response, err := apiClient.ListClustersWithResponse(ctx, accountUUID, &qc.ListClustersParams{})
+	if err != nil {
+		d := diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
+		if d.HasError() {
+			return d
+		}
 	}
 
-	// Decode JSON response into cluster struct
-	var cluster Cluster
-	if err := json.NewDecoder(resp.Body).Decode(&cluster); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
+	if response.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error listing clusters: %v", response.JSON422))
 	}
+
+	cluster := *response.JSON200
 
 	// Update the Terraform state
 	if err := d.Set("cluster", cluster); err != nil {
@@ -84,26 +94,43 @@ func dataClusterAccountsClusterRead(ctx context.Context, d *schema.ResourceData,
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataClusterAccountsClustersRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
+	apiKey := m.(ClientConfig).ApiKey
 	accountID := d.Get("account_id").(string)
 
-	// Using newQdrantCloudRequest to handle HTTP request creation and error checking.
-	req, diags := newQdrantCloudRequest(client, "GET", fmt.Sprintf("/accounts/%s/clusters", accountID), nil)
-	if diags.HasError() {
-		return diags
+	opts := qc.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		req.Header.Add("Authorization", fmt.Sprintf("apikey %s", apiKey))
+		return nil
+	})
+
+	apiClient, err := qc.NewClientWithResponses(m.(ClientConfig).BaseURL, opts)
+	if err != nil {
+		d := diag.FromErr(fmt.Errorf("error initializing client: %v", err))
+		if d.HasError() {
+			return d
+		}
 	}
 
-	// Execute the request and handle the response
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
+	accountUUID, err := uuid.Parse(accountID)
+	if err != nil {
+		d := diag.FromErr(fmt.Errorf("error parsing account ID: %v", err))
+		if d.HasError() {
+			return d
+		}
 	}
 
-	// Decode JSON response into clusters slice
-	var clusters []Cluster
-	if err := json.NewDecoder(resp.Body).Decode(&clusters); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
+	response, err := apiClient.ListClustersWithResponse(ctx, accountUUID, &qc.ListClustersParams{})
+	if err != nil {
+		d := diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
+		if d.HasError() {
+			return d
+		}
 	}
+
+	if response.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error listing clusters: %v", response.JSON422))
+	}
+
+	clusters := *response.JSON200
 
 	// Update the Terraform state
 	if err := d.Set("clusters", clusters); err != nil {

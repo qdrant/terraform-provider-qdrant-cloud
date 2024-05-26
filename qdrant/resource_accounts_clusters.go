@@ -1,14 +1,16 @@
 package qdrant
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"github.com/google/uuid"
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	_ "github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 // resourceAccountsClusters constructs a Terraform resource for
@@ -118,7 +120,6 @@ func resourceAccountsClusters() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
-
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"package_id": {
@@ -149,94 +150,77 @@ func resourceAccountsClusters() *schema.Resource {
 
 // resourceClusterRead reads the specific cluster's data from the API.
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
-	accountId := d.Get("account_id").(string)
-	clusterId := d.Get("cluster_id").(string)
-
-	// Construct the request using the helper function.
-	req, diags := newQdrantCloudRequest(client, "GET", fmt.Sprintf("/accounts/%s/clusters/%s", accountId, clusterId), nil)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Execute the request and handle the response.
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
-	}
-
-	var raw json.RawMessage
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
-	}
-
-	fmt.Println(string(raw))
-
-	// Decode the response body into a map to match the schema structure.
-
-	if string(raw) == "[]" {
-		if err := d.Set("clusters", Cluster{}); err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-
-	var cluster Cluster
-
-	if err := json.Unmarshal(raw, &cluster); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
-	}
-
-	if err := d.Set("clusters", cluster); err != nil {
+	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	clusterID, err := uuid.Parse(d.Get("id").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	apiClient, err, diagnostics, done := GetClient(m)
+	if done {
+		return diagnostics
+	}
+
+	resp, err := apiClient.GetClusterWithResponse(ctx, accountID, clusterID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error reading cluster: %v", resp.JSON422))
+	}
+
+	if err := d.Set("clusters", resp.JSON200); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
 }
 
+// resourceClusterDelete performs a delete operation to remove a cluster associated with an account.
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
-	accountId := d.Get("account_id").(string)
-	clusterId := d.Get("cluster_id").(string)
-
-	// Utilize helper to construct the request according to OpenAPI
-	req, diags := newQdrantCloudRequest(client, "DELETE", fmt.Sprintf("/accounts/%s/clusters/%s", accountId, clusterId), nil)
-	if diags.HasError() {
-		return diags
+	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	// Execute the request and handle the response
-	_, diags = ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
+	clusterID, err := uuid.Parse(d.Get("id").(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	apiClient, err, diagnostics, done := GetClient(m)
+	if done {
+		return diagnostics
+	}
+
+	deleteBackups := true
+	params := qc.DeleteClusterParams{
+		DeleteBackups: &deleteBackups,
+	}
+	resp, err := apiClient.DeleteClusterWithResponse(ctx, accountID, clusterID, &params)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error deleting cluster: %v", resp.JSON422))
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func expandNodeConfigurationIn(v *schema.Set) *NodeConfiguration {
+func expandClusterConfigurationIn(v *schema.Set) *qc.ClusterConfigurationIn {
 	if len(v.List()) == 0 {
 		return nil
 	}
 
 	m := v.List()[0].(map[string]interface{})
-	config := NodeConfiguration{}
-
-	if v, ok := m["package_id"]; ok {
-		config.PackageID = v.(string)
-	}
-
-	return &config
-}
-
-func expandClusterConfigurationIn(v *schema.Set) *ClusterConfigurationIn {
-	if len(v.List()) == 0 {
-		return nil
-	}
-
-	m := v.List()[0].(map[string]interface{})
-	config := ClusterConfigurationIn{}
+	config := qc.ClusterConfigurationIn{}
 
 	if v, ok := m["num_nodes_max"]; ok {
 		config.NumNodesMax = v.(int)
@@ -255,19 +239,33 @@ func expandClusterConfigurationIn(v *schema.Set) *ClusterConfigurationIn {
 	return &config
 }
 
+func expandNodeConfigurationIn(v *schema.Set) *qc.NodeConfiguration {
+	if len(v.List()) == 0 {
+		return nil
+	}
+
+	m := v.List()[0].(map[string]interface{})
+	config := qc.NodeConfiguration{}
+
+	if v, ok := m["package_id"]; ok {
+		config.PackageId = v.(string)
+	}
+
+	return &config
+}
+
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	client := m.(ClientConfig)
+	accountID := d.Get("account_id").(string)
 
 	name := d.Get("name")
 	cloudProvider := d.Get("cloud_provider")
 	cloudRegion := d.Get("cloud_region")
-	accountId := d.Get("account_id")
 
-	cluster := &Cluster{
+	cluster := &qc.ClusterIn{
 		Name:          name.(string),
-		CloudProvider: cloudProvider.(string),
-		CloudRegion:   cloudRegion.(string),
-		AccountID:     accountId.(string),
+		CloudProvider: qc.ClusterInCloudProvider(cloudProvider.(string)),
+		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion.(string)),
+		AccountId:     &accountID,
 	}
 
 	var ccfg *schema.Set
@@ -277,51 +275,43 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		cluster.Configuration = *configuration
 	}
 
-	// Using newQdrantCloudRequest to handle HTTP request creation and error checking.
-	req, diags := newQdrantCloudRequest(client, "POST", fmt.Sprintf("/accounts/%s/clusters", cluster.AccountID), cluster)
-	if diags.HasError() {
-		return diags
+	requestBody, err := json.Marshal(cluster)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	resp, diags := ExecuteRequest(client, req.WithContext(ctx))
-	if diags.HasError() {
-		return diags
+	body := bytes.NewReader(requestBody)
+
+	apiClient, err, diagnostics, done := GetClient(m)
+	if done {
+		return diagnostics
 	}
 
-	var raw json.RawMessage
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
+	accID, err := uuid.Parse(accountID)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	// Decode the response body into a map to match the schema structure.
-	if strings.Contains(string(raw), "\"detail\"") {
-		return diag.FromErr(fmt.Errorf("failed to create cluster: %s", raw))
+	resp, err := apiClient.CreateClusterWithBodyWithResponse(ctx, accID, "application/json", body)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if string(raw) == "[]" {
-		if err := d.Set("clusters", Cluster{}); err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
-	}
-
-	// Decode JSON response into cluster struct
-	var clusterOut Cluster
-	if err := json.Unmarshal(raw, &clusterOut); err != nil {
-		return diag.FromErr(fmt.Errorf("failed to decode response body: %s", err))
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error creating cluster: %v", resp.JSON422))
 	}
 
 	// Set properties into Terraform state
-	if err := d.Set("id", clusterOut.ID); err != nil {
+	if err := d.Set("id", resp.JSON200.Id); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("name", cluster.Name); err != nil {
+	if err := d.Set("name", resp.JSON200.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("cloud_provider", cluster.CloudProvider); err != nil {
+	if err := d.Set("cloud_provider", resp.JSON200.CloudProvider); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("cloud_region", cluster.CloudRegion); err != nil {
+	if err := d.Set("cloud_region", resp.JSON200.CloudRegion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("configuration", ccfg); err != nil {
