@@ -9,6 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+func init() {
+	// Set descriptions to support markdown syntax, this will be used in document generation
+	// and the language server.
+	schema.DescriptionKind = schema.StringMarkdown
+}
+
 // Provider defines and returns a Terraform resource provider for Qdrant Cloud.
 // It sets up the provider schema, resources, and data sources.
 // Returns a pointer to the schema.Provider object.
@@ -37,15 +43,15 @@ func Provider() *schema.Provider {
 		},
 		// ResourcesMap defines all the resources that this provider offers.
 		ResourcesMap: map[string]*schema.Resource{
-			"qdrant_accounts_auth_keys": resourceAccountsAuthKeys(), // Resource for Qdrant Cloud accounts' authorization keys.
-			"qdrant_accounts_clusters":  resourceAccountsClusters(), // Resource for managing Qdrant Cloud account clusters.
+			"qdrant-cloud_accounts_auth_keys": resourceAccountsAuthKeys(), // Resource for Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_clusters":  resourceAccountsClusters(), // Resource for managing Qdrant Cloud account clusters.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
-			"qdrant_accounts_auth_keys":        dataAccountsAuthKeys(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys.
-			"qdrant_cluster_accounts_clusters": dataClusterAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
-			"qdrant_cluster_accounts_cluster":  dataClusterAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
-			"qdrant_booking_packages":          dataBookingPackages(),         // Data source for Qdrant booking packages.
+			"qdrant-cloud_accounts_auth_keys":        dataAccountsAuthKeys(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_cluster_accounts_clusters": dataClusterAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
+			"qdrant-cloud_cluster_accounts_cluster":  dataClusterAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
+			"qdrant-cloud_booking_packages":          dataBookingPackages(),         // Data source for Qdrant booking packages.
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,
@@ -89,7 +95,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		AccountID: accountID,
 	}
 
-	return config, diags
+	return &config, diags
 }
 
 // ClientConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
