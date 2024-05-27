@@ -2,7 +2,6 @@ package qdrant
 
 import (
 	"context"
-	"net/http"
 	"strings"
 	"time"
 
@@ -28,6 +27,12 @@ func Provider() *schema.Provider {
 				Optional:    true,                                                                               // API URL is an optional field, with a default provided.
 				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "https://cloud.qdrant.io/public/v1"), // Default API URL.
 				Description: "The URL of the Qdrant Cloud API.",                                                 // Description of the API URL.
+			},
+			"account_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_ACCOUNT_ID", ""),
+				Description: "Default Account Identifier for the Qdrant cloud",
 			},
 		},
 		// ResourcesMap defines all the resources that this provider offers.
@@ -56,6 +61,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	// Retrieve the API key and URL from the schema resource data.
 	apiKey := d.Get("api_key").(string)
 	apiURL := d.Get("api_url").(string)
+	var accountID string
+	if aid := d.Get("account_id"); aid != nil {
+		accountID = aid.(string)
+	}
 	var diags diag.Diagnostics
 
 	// Validate that the API key is not empty, returning an error diagnostic if it is.
@@ -66,29 +75,18 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	// Validate that the API URL is not empty, returning an error diagnostic if it is.
 	if strings.TrimSpace(apiURL) == "" {
 		apiURL = "https://cloud.qdrant.io/public/v1"
-		diags = diag.Diagnostics{
-			diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Using default URL",
-				Detail:   "No API URL was provided, using default URL " + apiURL,
-			},
-		}
-	}
-
-	// Configure the HTTP client with a 30-second timeout and custom transport settings.
-	client := &http.Client{
-		Timeout: time.Second * 30,
-		Transport: &http.Transport{
-			MaxIdleConns:    100,              // Max number of idle connections in the pool.
-			IdleConnTimeout: 90 * time.Second, // Max time an idle connection will remain idle before closing.
-		},
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Using default URL",
+			Detail:   "No API URL was provided, using default URL " + apiURL,
+		})
 	}
 
 	// Create and return the client configuration structure.
 	config := ClientConfig{
-		ApiKey:     apiKey,
-		BaseURL:    apiURL,
-		HTTPClient: client,
+		ApiKey:    apiKey,
+		BaseURL:   apiURL,
+		AccountID: accountID,
 	}
 
 	return config, diags
@@ -97,9 +95,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 // ClientConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
 // It encapsulates the API key, the base URL, and the HTTP client configured for API communication.
 type ClientConfig struct {
-	ApiKey     string       // ApiKey represents the authentication token used for Qdrant Cloud API access.
-	BaseURL    string       // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
-	HTTPClient *http.Client // HTTPClient is the custom configured HTTP client used for making API requests.
+	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
+	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
+	AccountID string // The default Account Identifier for the Qdrant cloud, if any
 }
 
 // formatTime converts a time value to a standardized string format.

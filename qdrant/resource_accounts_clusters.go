@@ -1,32 +1,37 @@
 package qdrant
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+)
+
+const (
+	clusterIdentifierFieldName = "id"
+	clusterCreatedAtFieldName  = "created_at"
 )
 
 // resourceAccountsClusters constructs a Terraform resource for
 // managing the creation, reading, and deletion of clusters associated with an account.
 func resourceAccountsClusters() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Account Cluster Resource",
 		CreateContext: resourceClusterCreate,
 		ReadContext:   resourceClusterRead,
 		DeleteContext: resourceClusterDelete,
 		UpdateContext: nil,
 		Schema: map[string]*schema.Schema{
-			"id": {
+			clusterIdentifierFieldName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			clusterCreatedAtFieldName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,6 +155,12 @@ func resourceAccountsClusters() *schema.Resource {
 
 // resourceClusterRead reads the specific cluster's data from the API.
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+
 	accountID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -159,12 +170,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	apiClient, err, diagnostics, done := GetClient(m)
-	if done {
-		return diagnostics
-	}
-
 	resp, err := apiClient.GetClusterWithResponse(ctx, accountID, clusterID)
 	if err != nil {
 		return diag.FromErr(err)
@@ -183,6 +188,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 
 // resourceClusterDelete performs a delete operation to remove a cluster associated with an account.
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
 	accountID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -191,11 +201,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	clusterID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
 		return diag.FromErr(err)
-	}
-
-	apiClient, err, diagnostics, done := GetClient(m)
-	if done {
-		return diagnostics
 	}
 
 	deleteBackups := true
@@ -255,13 +260,18 @@ func expandNodeConfigurationIn(v *schema.Set) *qc.NodeConfiguration {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
 	accountID := d.Get("account_id").(string)
 
 	name := d.Get("name")
 	cloudProvider := d.Get("cloud_provider")
 	cloudRegion := d.Get("cloud_region")
 
-	cluster := &qc.ClusterIn{
+	cluster := qc.ClusterIn{
 		Name:          name.(string),
 		CloudProvider: qc.ClusterInCloudProvider(cloudProvider.(string)),
 		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion.(string)),
@@ -275,24 +285,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		cluster.Configuration = *configuration
 	}
 
-	requestBody, err := json.Marshal(cluster)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	body := bytes.NewReader(requestBody)
-
-	apiClient, err, diagnostics, done := GetClient(m)
-	if done {
-		return diagnostics
-	}
-
 	accID, err := uuid.Parse(accountID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	resp, err := apiClient.CreateClusterWithBodyWithResponse(ctx, accID, "application/json", body)
+	resp, err := apiClient.CreateClusterWithResponse(ctx, accID, cluster)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -301,17 +299,22 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("error creating cluster: %v", resp.JSON422))
 	}
 
+	clusterOut := resp.JSON200
+	if clusterOut == nil {
+		return diag.FromErr(fmt.Errorf("error creating cluster: no cluter returned"))
+	}
+
 	// Set properties into Terraform state
-	if err := d.Set("id", resp.JSON200.Id); err != nil {
+	if err := d.Set("id", clusterOut.Id); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("name", resp.JSON200.Name); err != nil {
+	if err := d.Set("name", clusterOut.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("cloud_provider", resp.JSON200.CloudProvider); err != nil {
+	if err := d.Set("cloud_provider", clusterOut.CloudProvider); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("cloud_region", resp.JSON200.CloudRegion); err != nil {
+	if err := d.Set("cloud_region", clusterOut.CloudRegion); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("configuration", ccfg); err != nil {

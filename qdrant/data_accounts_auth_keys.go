@@ -3,11 +3,12 @@ package qdrant
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
@@ -15,6 +16,7 @@ import (
 // Returns a schema.Resource pointer configured with schema definitions and the read context function.
 func dataAccountsAuthKeys() *schema.Resource {
 	return &schema.Resource{
+		Description: "Account AuthKey Data Source",
 		ReadContext: dataAccountsAuthKeysRead,
 		Schema:      accountsAuthKeysSchema(),
 	}
@@ -26,15 +28,15 @@ func dataAccountsAuthKeys() *schema.Resource {
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
+
 	accountID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
-	}
-
-	apiClient, err, diagnostics, done := GetClient(m)
-
-	if done {
-		return diagnostics
 	}
 
 	response, err := apiClient.ListApiKeysWithResponse(ctx, accountID)

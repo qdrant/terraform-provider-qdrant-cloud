@@ -3,16 +3,18 @@ package qdrant
 import (
 	"context"
 	"fmt"
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 // dataBookingPackages returns the schema for the data source qdrant_booking_packages.
 func dataBookingPackages() *schema.Resource {
 	return &schema.Resource{
+		Description: "Booking packages Data Source",
 		ReadContext: dataBookingPackagesRead,
 		Schema: map[string]*schema.Schema{
 			"packages": {
@@ -30,9 +32,9 @@ func dataBookingPackages() *schema.Resource {
 // d: The Terraform ResourceData object containing the state.
 // m: The Terraform meta object containing the client configuration.
 func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	apiClient, err, diagnostics, done := GetClient(m)
-
-	if done {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
 		return diagnostics
 	}
 

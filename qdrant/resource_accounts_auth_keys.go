@@ -1,22 +1,22 @@
 package qdrant
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 // resourceAccountsAuthKeys constructs a Terraform resource for managing the creation, reading, and deletion of API keys associated with an account.
 // Returns a schema.Resource pointer configured with schema definitions and the CRuD functions.
 func resourceAccountsAuthKeys() *schema.Resource {
 	return &schema.Resource{
+		Description:   "Account AuthKeys Resource",
 		CreateContext: resourceAPIKeyCreate,
 		ReadContext:   resourceAPIKeyRead,
 		DeleteContext: resourceAPIKeyDelete,
@@ -31,6 +31,11 @@ func resourceAccountsAuthKeys() *schema.Resource {
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
 	accountID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
@@ -52,19 +57,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		ClusterIdList: &clusterIDs,
 	}
 
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	body := bytes.NewReader(jsonData)
-
-	apiClient, err, diagnostics, done := GetClient(m)
-	if done {
-		return diagnostics
-	}
-
-	resp, err := apiClient.CreateApiKeyWithBodyWithResponse(ctx, accountID, "application/json", body)
+	resp, err := apiClient.CreateApiKeyWithResponse(ctx, accountID, requestBody)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -86,16 +79,15 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
 	accountID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	apiClient, err, diagnostics, done := GetClient(m)
-	if done {
-		return diagnostics
-	}
-
 	// Execute the request and handle the response
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountID)
 	if err != nil {
@@ -120,16 +112,16 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// Get an authenticated client
+	apiClient, diagnostics := GetClient(m)
+	if diagnostics.HasError() {
+		return diagnostics
+	}
 	accountID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	apiKeyID := d.Get("key_id").(string)
-
-	apiClient, err, diagnostics, done := GetClient(m)
-	if done {
-		return diagnostics
-	}
 
 	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountID, apiKeyID)
 	if err != nil {
