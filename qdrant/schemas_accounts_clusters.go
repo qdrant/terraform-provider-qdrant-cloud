@@ -4,9 +4,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// AccountsClustersSchema defines the schema for a cluster resource.
+// AccountsClusterSchema defines the schema for a cluster resource.
 // Returns a pointer to the schema.Resource object.
-func AccountsClustersSchema() map[string]*schema.Schema {
+func AccountsClusterSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"id": {
 			Description: "TODO",

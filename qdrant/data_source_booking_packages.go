@@ -11,8 +11,8 @@ import (
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
-// dataBookingPackages returns the schema for the data source qdrant_booking_packages.
-func dataBookingPackages() *schema.Resource {
+// dataSourceBookingPackages returns the schema for the data source qdrant_booking_packages.
+func dataSourceBookingPackages() *schema.Resource {
 	return &schema.Resource{
 		Description: "Booking packages Data Source",
 		ReadContext: dataBookingPackagesRead,

@@ -13,21 +13,21 @@ import (
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
-// dataClusterAccountsCluster constructs a Terraform resource for
+// dataSourceClusterAccountsCluster constructs a Terraform resource for
 // managing the reading of a specific cluster associated with an account.
-func dataClusterAccountsCluster() *schema.Resource {
+func dataSourceClusterAccountsCluster() *schema.Resource {
 	return &schema.Resource{
 		Description: "Account Cluster Data Source",
 		ReadContext: dataClusterAccountsClusterRead,
-		Schema:      AccountsClustersSchema(),
+		Schema:      AccountsClusterSchema(),
 	}
 }
 
-// dataClusterAccountsClusters constructs a Terraform resource for
+// dataSourceClusterAccountsClusters constructs a Terraform resource for
 // managing the reading of all clusters associated with an account.
-func dataClusterAccountsClusters() *schema.Resource {
+func dataSourceClusterAccountsClusters() *schema.Resource {
 	return &schema.Resource{
-		Description: "Account Cluster Data Source",
+		Description: "Account Cluster List Data Source",
 		ReadContext: dataClusterAccountsClustersRead,
 		Schema: map[string]*schema.Schema{
 			"account_id": {
@@ -39,7 +39,7 @@ func dataClusterAccountsClusters() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: AccountsClustersSchema(),
+					Schema: AccountsClusterSchema(),
 				},
 			},
 		},

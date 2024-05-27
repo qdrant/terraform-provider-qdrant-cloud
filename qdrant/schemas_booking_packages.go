@@ -32,22 +32,6 @@ func packageSchema() map[string]*schema.Schema {
 	}
 }
 
-// resourceOptionSchema returns the schema for individual resource options.
-func resourceOptionSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"id":                       {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"resource_type":            {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"status":                   {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"name":                     {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"resource_unit":            {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"currency":                 {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"unit_int_price_per_hour":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_day":   {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_month": {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_year":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
-	}
-}
-
 // resourceConfigurationSchema defines the schema structure for resource configurations.
 func resourceConfigurationSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
@@ -61,5 +45,21 @@ func resourceConfigurationSchema() map[string]*schema.Schema {
 				Schema:      resourceOptionSchema(),
 			},
 		},
+	}
+}
+
+// resourceOptionSchema returns the schema for individual resource options.
+func resourceOptionSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"id":                       {Description: "TODO", Type: schema.TypeString, Computed: true},
+		"resource_type":            {Description: "TODO", Type: schema.TypeString, Computed: true},
+		"status":                   {Description: "TODO", Type: schema.TypeInt, Computed: true},
+		"name":                     {Description: "TODO", Type: schema.TypeString, Computed: true},
+		"resource_unit":            {Description: "TODO", Type: schema.TypeString, Computed: true},
+		"currency":                 {Description: "TODO", Type: schema.TypeString, Computed: true},
+		"unit_int_price_per_hour":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
+		"unit_int_price_per_day":   {Description: "TODO", Type: schema.TypeInt, Computed: true},
+		"unit_int_price_per_month": {Description: "TODO", Type: schema.TypeInt, Computed: true},
+		"unit_int_price_per_year":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
 	}
 }

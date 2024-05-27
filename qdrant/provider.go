@@ -48,10 +48,10 @@ func Provider() *schema.Provider {
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_keys":        dataAccountsAuthKeys(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_cluster_accounts_clusters": dataClusterAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
-			"qdrant-cloud_cluster_accounts_cluster":  dataClusterAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
-			"qdrant-cloud_booking_packages":          dataBookingPackages(),         // Data source for Qdrant booking packages.
+			"qdrant-cloud_accounts_auth_keys":        dataSourceAccountsAuthKeys(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_cluster_accounts_clusters": dataSourceClusterAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
+			"qdrant-cloud_cluster_accounts_cluster":  dataSourceClusterAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
+			"qdrant-cloud_booking_packages":          dataSourceBookingPackages(),         // Data source for Qdrant booking packages.
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,

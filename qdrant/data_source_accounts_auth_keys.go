@@ -12,9 +12,9 @@ import (
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
-// dataAccountsAuthKeys constructs a Terraform resource for managing the reading of API keys associated with an account.
+// dataSourceAccountsAuthKeys constructs a Terraform resource for managing the reading of API keys associated with an account.
 // Returns a schema.Resource pointer configured with schema definitions and the read context function.
-func dataAccountsAuthKeys() *schema.Resource {
+func dataSourceAccountsAuthKeys() *schema.Resource {
 	return &schema.Resource{
 		Description: "Account AuthKey Data Source",
 		ReadContext: dataAccountsAuthKeysRead,
