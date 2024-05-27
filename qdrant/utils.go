@@ -10,10 +10,10 @@ import (
 	api "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
-// GetClient creates a client from the provided interface
+// getClient creates a client from the provided interface
 // This client already contains the Authorization needed to invoke the API
 // Returns: The client to call the backend API, TF Diagnostics
-func GetClient(m interface{}) (*api.ClientWithResponses, diag.Diagnostics) {
+func getClient(m interface{}) (*api.ClientWithResponses, diag.Diagnostics) {
 	clientConfig, ok := m.(ClientConfig)
 	if !ok {
 		return nil, diag.FromErr(fmt.Errorf("error initializing client: provided interface cannot be casted to ClientConfig"))

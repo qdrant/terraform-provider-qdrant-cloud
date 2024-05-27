@@ -18,8 +18,9 @@ func dataBookingPackages() *schema.Resource {
 		ReadContext: dataBookingPackagesRead,
 		Schema: map[string]*schema.Schema{
 			"packages": {
-				Type:     schema.TypeList,
-				Computed: true,
+				Description: "TODO",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: packageSchema(),
 				},
@@ -33,7 +34,7 @@ func dataBookingPackages() *schema.Resource {
 // m: The Terraform meta object containing the client configuration.
 func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}

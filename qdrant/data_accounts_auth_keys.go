@@ -29,7 +29,7 @@ func dataAccountsAuthKeys() *schema.Resource {
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}

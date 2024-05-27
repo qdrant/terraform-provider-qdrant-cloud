@@ -32,7 +32,7 @@ func resourceAccountsAuthKeys() *schema.Resource {
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
@@ -80,7 +80,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 // m: The interface where the configured client is passed.
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
@@ -113,7 +113,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 // m: The interface where the configured client is passed.
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}

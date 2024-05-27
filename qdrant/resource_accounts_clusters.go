@@ -13,6 +13,8 @@ import (
 )
 
 const (
+	clusterFieldTemplate = "Cluster Resource %s field"
+
 	clusterIdentifierFieldName = "id"
 	clusterCreatedAtFieldName  = "created_at"
 )
@@ -28,109 +30,130 @@ func resourceAccountsClusters() *schema.Resource {
 		UpdateContext: nil,
 		Schema: map[string]*schema.Schema{
 			clusterIdentifierFieldName: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the cluster"),
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			clusterCreatedAtFieldName: {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp then the cluster is created"),
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the owner"),
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
-			"account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+			"account_id": { // If set here, overrides account ID in provider
+				Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the account"),
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Name of the cluster"),
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			"cloud_provider": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Cloud provider of the cluster"),
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"cloud_region": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region of the cluster"),
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			"cloud_region_az": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region availability zone of the cluster"),
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
 			"cloud_region_setup": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region setup of the cluster"),
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
 			"private_region_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Private Region"),
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
 			"current_configuration_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "TODO",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"encryption_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: "TODO",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
 			"marked_for_deletion_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: "TODO",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
 			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
+				Description: "TODO",
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
 			},
 			"url": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "TODO",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"state": {
-				Type:     schema.TypeMap,
-				Computed: true,
+				Description: "TODO",
+				Type:        schema.TypeMap,
+				Computed:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"configuration": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
+				Description: "TODO",
+				Type:        schema.TypeSet,
+				Required:    true,
+				ForceNew:    true,
 				Elem: &schema.Resource{
+					Description: "TODO",
 					Schema: map[string]*schema.Schema{
 						"num_nodes_max": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+							Description: "TODO",
+							Type:        schema.TypeInt,
+							Required:    true,
+							ForceNew:    true,
 						},
 						"num_nodes": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+							Description: "TODO",
+							Type:        schema.TypeInt,
+							Required:    true,
+							ForceNew:    true,
 						},
 						"node_configuration": {
-							Type:     schema.TypeSet,
-							Required: true,
-							ForceNew: true,
+							Description: "TODO",
+							Type:        schema.TypeSet,
+							Required:    true,
+							ForceNew:    true,
 							Elem: &schema.Resource{
+								Description: "TODO",
 								Schema: map[string]*schema.Schema{
 									"package_id": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+										Description: "TODO",
+										Type:        schema.TypeString,
+										Required:    true,
+										ForceNew:    true,
 									},
 								},
 							},
@@ -139,15 +162,18 @@ func resourceAccountsClusters() *schema.Resource {
 				},
 			},
 			"resources": {
-				Type:     schema.TypeMap,
-				Computed: true,
+				Description: "TODO",
+				Type:        schema.TypeMap,
+				Computed:    true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Description: "TODO",
+					Type:        schema.TypeString,
 				},
 			},
 			"total_extra_disk": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Description: "TODO",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 		},
 	}
@@ -156,7 +182,7 @@ func resourceAccountsClusters() *schema.Resource {
 // resourceClusterRead reads the specific cluster's data from the API.
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
@@ -189,7 +215,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 // resourceClusterDelete performs a delete operation to remove a cluster associated with an account.
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
@@ -261,7 +287,7 @@ func expandNodeConfigurationIn(v *schema.Set) *qc.NodeConfiguration {
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// Get an authenticated client
-	apiClient, diagnostics := GetClient(m)
+	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
