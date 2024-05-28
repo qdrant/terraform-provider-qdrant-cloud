@@ -3,7 +3,6 @@ package qdrant
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -129,7 +128,7 @@ func resourceAccountsClusters() *schema.Resource {
 			},
 			"configuration": {
 				Description: "TODO",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList, // There is a single required item only, no need for a set.
 				Required:    true,
 				MaxItems:    1,
 				Elem: &schema.Resource{
@@ -147,9 +146,8 @@ func resourceAccountsClusters() *schema.Resource {
 						},
 						"node_configuration": {
 							Description: "TODO",
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Required:    true,
-							ForceNew:    true,
 							MaxItems:    1,
 							Elem: &schema.Resource{
 								Description: "TODO",
@@ -208,11 +206,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(fmt.Errorf("error reading cluster: %s", getError(resp.JSON422)))
 	}
 
-	if err := d.Set("clusters", resp.JSON200); err != nil {
-		return diag.FromErr(err)
+	clusterOut := resp.JSON200
+	if clusterOut == nil {
+		return diag.FromErr(fmt.Errorf("error reading cluster: no cluster returned"))
 	}
-
-	d.SetId(time.Now().Format(time.RFC3339))
+	// Flatten cluster and store in Terraform state
+	for k, v := range flattenCluster(clusterOut) {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return nil
 }
 
@@ -230,6 +233,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 
+	// Set required version to 'latest' if not provided
+	if cluster.Version == nil {
+		version := "latest"
+		cluster.Version = &version
+	}
+
 	resp, err := apiClient.CreateClusterWithResponse(ctx, accID, cluster)
 	if err != nil {
 		return diag.FromErr(err)
@@ -237,6 +246,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error creating cluster: %s", getError(resp.JSON422)))
+	}
+	if resp.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf("error creating cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
 	}
 
 	clusterOut := resp.JSON200
@@ -250,6 +262,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 			return diag.FromErr(err)
 		}
 	}
+	d.SetId(clusterOut.Id)
 	return nil
 }
 
@@ -270,7 +283,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	if d.HasChange("configuration") {
-		conf := expandClusterConfigurationIn(d.Get("configuration").(*schema.Set))
+		conf := expandClusterConfigurationIn(d.Get("configuration").([]interface{}))
 
 		resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, qc.PydanticClusterPatchIn{
 			Configuration: &qc.PydanticClusterConfigurationPatchIn{
@@ -282,6 +295,19 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		}
 		if resp.JSON422 != nil {
 			return diag.FromErr(fmt.Errorf("error updating cluster: %s", getError(resp.JSON422)))
+		}
+		if resp.StatusCode() != 200 {
+			return diag.FromErr(fmt.Errorf("error updating cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+		}
+		clusterOut := resp.JSON200
+		if clusterOut == nil {
+			return diag.FromErr(fmt.Errorf("error updating cluster: no cluster returned"))
+		}
+		// Flatten cluster and store in Terraform state
+		for k, v := range flattenCluster(clusterOut) {
+			if err := d.Set(k, v); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 	return nil
@@ -295,28 +321,30 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	accountUUID, err := uuid.Parse(d.Get("account_id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	clusterID, err := uuid.Parse(d.Get("id").(string))
+	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	deleteBackups := true
-	params := qc.DeleteClusterParams{
+	params := &qc.DeleteClusterParams{
 		DeleteBackups: &deleteBackups,
 	}
-	resp, err := apiClient.DeleteClusterWithResponse(ctx, accountID, clusterID, &params)
+	resp, err := apiClient.DeleteClusterWithResponse(ctx, accountUUID, clusterUUID, params)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error deleting cluster: %s", getError(resp.JSON422)))
 	}
-
+	if resp.StatusCode() != 204 {
+		return diag.FromErr(fmt.Errorf("error deleting cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+	}
 	d.SetId("")
 	return nil
 }
@@ -335,49 +363,40 @@ func expandClusterIn(d *schema.ResourceData) qc.ClusterIn {
 		AccountId:     &accountID,
 	}
 	if v, ok := d.GetOk("configuration"); ok {
-		configuration := expandClusterConfigurationIn(v.(*schema.Set))
+		configuration := expandClusterConfigurationIn(v.([]interface{}))
 		cluster.Configuration = *configuration
 	}
 	return cluster
 }
 
-func expandClusterConfigurationIn(v *schema.Set) *qc.ClusterConfigurationIn {
-	if len(v.List()) == 0 {
-		return nil
-	}
-
-	m := v.List()[0].(map[string]interface{})
+func expandClusterConfigurationIn(v []interface{}) *qc.ClusterConfigurationIn {
 	config := qc.ClusterConfigurationIn{}
-
-	if v, ok := m["num_nodes_max"]; ok {
-		config.NumNodesMax = v.(int)
-	}
-	if v, ok := m["num_nodes"]; ok {
-		config.NumNodes = v.(int)
-	}
-
-	if v, ok := m["node_configuration"]; ok {
-		nodeConfig := expandNodeConfigurationIn(v.(*schema.Set))
-		if nodeConfig != nil {
-			config.NodeConfiguration = *nodeConfig
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		if v, ok := item["num_nodes_max"]; ok {
+			config.NumNodesMax = v.(int)
+		}
+		if v, ok := item["num_nodes"]; ok {
+			config.NumNodes = v.(int)
+		}
+		if v, ok := item["node_configuration"]; ok {
+			nodeConfig := expandNodeConfigurationIn(v.([]interface{}))
+			if nodeConfig != nil {
+				config.NodeConfiguration = *nodeConfig
+			}
 		}
 	}
-
 	return &config
 }
 
-func expandNodeConfigurationIn(v *schema.Set) *qc.NodeConfiguration {
-	if len(v.List()) == 0 {
-		return nil
-	}
-
-	m := v.List()[0].(map[string]interface{})
+func expandNodeConfigurationIn(v []interface{}) *qc.NodeConfiguration {
 	config := qc.NodeConfiguration{}
-
-	if v, ok := m["package_id"]; ok {
-		config.PackageId = v.(string)
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		if v, ok := item["package_id"]; ok {
+			config.PackageId = v.(string)
+		}
 	}
-
 	return &config
 }
 
@@ -394,11 +413,13 @@ func flattenCluster(cluster *qc.ClusterOut) map[string]interface{} {
 }
 
 // flattenClusterConfiguration creates a map from a cluster for easy storage on terraform.
-func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) map[string]interface{} {
-	result := map[string]interface{}{
-		"id":            clusterConfig.Id,
-		"num_nodes":     clusterConfig.NumNodes,
-		"num_nodes_max": clusterConfig.NumNodesMax,
+func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) []interface{} {
+	result := []interface{}{
+		map[string]interface{}{
+			//"id":            clusterConfig.Id,
+			"num_nodes":     clusterConfig.NumNodes,
+			"num_nodes_max": clusterConfig.NumNodesMax,
+		},
 	}
 	return result
 }

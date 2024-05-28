@@ -84,10 +84,12 @@ func TestResourceClusterFlatten(t *testing.T) {
 		"name":           cluster.Name,
 		"cloud_provider": cluster.CloudProvider,
 		"cloud_region":   cluster.CloudRegion,
-		"configuration": map[string]interface{}{
-			"id":            "", // ConfigurationOut contains an ID
-			"num_nodes":     cluster.Configuration.NumNodes,
-			"num_nodes_max": cluster.Configuration.NumNodesMax,
+		"configuration": []interface{}{
+			map[string]interface{}{
+				"id":            "", // ConfigurationOut contains an ID
+				"num_nodes":     cluster.Configuration.NumNodes,
+				"num_nodes_max": cluster.Configuration.NumNodesMax,
+			},
 		},
 	}
 

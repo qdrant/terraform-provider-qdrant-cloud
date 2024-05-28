@@ -49,7 +49,7 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	}
 
 	if response.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing packages: %v", response.JSON422))
+		return diag.FromErr(fmt.Errorf("error listing packages: %v", getError(response.JSON422)))
 	}
 
 	packages := flattenPackages(*response.JSON200)

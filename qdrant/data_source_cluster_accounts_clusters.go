@@ -65,29 +65,29 @@ func dataClusterAccountsClusterRead(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error parsing account ID: %v", err))
 	}
-	clusterUUID, err := uuid.Parse(accountID)
+	clusterUUID, err := uuid.Parse(clusterID)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error parsing cluster ID: %v", err))
 	}
 	// Fetch the cluster
 	response, err := apiClient.GetClusterWithResponse(ctx, accountUUID, clusterUUID)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
+		return diag.FromErr(fmt.Errorf("error getting cluster: %v", err))
 	}
 	// Inspect result and get the resulting cluster
 	if response.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing clusters: %v", response.JSON422))
+		return diag.FromErr(fmt.Errorf("error getting cluster: %s", getError(response.JSON422)))
 	}
 	clusterOut := response.JSON200
 	if clusterOut == nil {
 		return diag.FromErr(fmt.Errorf("ListCluster didn't return clusters"))
 	}
-	// Update the Terraform state (TODO: Introduce flattenClusterObject)
-	if err := d.Set("cluster", clusterOut); err != nil {
-		return diag.FromErr(err)
+	// Flatten cluster and store in Terraform state
+	for k, v := range flattenCluster(clusterOut) {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
+		}
 	}
-
-	d.SetId(clusterID)
 	return nil
 }
 
@@ -128,13 +128,11 @@ func dataClusterAccountsClustersRead(ctx context.Context, d *schema.ResourceData
 			return d
 		}
 	}
-
 	if response.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing clusters: %v", response.JSON422))
+		return diag.FromErr(fmt.Errorf("error listing clusters: %s", getError(response.JSON422)))
 	}
 
 	clusters := *response.JSON200
-
 	// Update the Terraform state
 	if err := d.Set("clusters", clusters); err != nil {
 		return diag.FromErr(err)

@@ -41,16 +41,14 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 
 	response, err := apiClient.ListApiKeysWithResponse(ctx, accountID)
 	if err != nil {
-		d := diag.FromErr(fmt.Errorf("error listing packages: %v", err))
+		d := diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
 		if d.HasError() {
 			return d
 		}
 	}
-
 	if response.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing packages: %v", response.JSON422))
+		return diag.FromErr(fmt.Errorf("error listing API Keys: %s", getError(response.JSON422)))
 	}
-
 	// Set the keys attribute in the Terraform state
 	if err := d.Set("keys", flattenAuthKeys(*response.JSON200)); err != nil {
 		return diag.FromErr(err)
