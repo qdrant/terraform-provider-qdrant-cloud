@@ -17,21 +17,21 @@ Account Cluster Resource
 
 ### Required
 
-- `cloud_provider` (String) Cluster Resource Cloud provider of the cluster field
-- `cloud_region` (String) Cluster Resource Cloud region of the cluster field
-- `configuration` (Block Set, Min: 1) TODO (see [below for nested schema](#nestedblock--configuration))
+- `cloud_provider` (String) Cluster Resource Cloud provider where the cluster resides field
+- `cloud_region` (String) Cluster Resource Cloud region where the cluster resides field
+- `configuration` (Block Set, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration))
 - `name` (String) Cluster Resource Name of the cluster field
 
 ### Optional
 
 - `account_id` (String) Cluster Resource Identifier of the account field
-- `cloud_region_az` (String) Cluster Resource Cloud region availability zone of the cluster field
+- `cloud_region_az` (String) Cluster Resource Cloud region availability zone where the cluster resides field
 - `cloud_region_setup` (String) Cluster Resource Cloud region setup of the cluster field
 - `encryption_key_id` (String) TODO
 - `marked_for_deletion_at` (String) TODO
 - `owner_id` (String) Cluster Resource Identifier of the owner field
 - `private_region_id` (String) Cluster Resource Identifier of the Private Region field
-- `version` (String) TODO
+- `version` (String) Cluster Resource Version of the qdrant cluster field
 
 ### Read-Only
 
@@ -48,8 +48,11 @@ Account Cluster Resource
 
 Required:
 
-- `node_configuration` (Block Set, Min: 1) TODO (see [below for nested schema](#nestedblock--configuration--node_configuration))
+- `node_configuration` (Block Set, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration--node_configuration))
 - `num_nodes` (Number) TODO
+
+Read-Only:
+
 - `num_nodes_max` (Number) TODO
 
 <a id="nestedblock--configuration--node_configuration"></a>

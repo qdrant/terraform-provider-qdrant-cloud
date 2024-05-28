@@ -3,12 +3,12 @@
 page_title: "qdrant-cloud_cluster_accounts_clusters Data Source - terraform-provider-qdrant-cloud"
 subcategory: ""
 description: |-
-  Account Cluster Data Source
+  Account Cluster List Data Source
 ---
 
 # qdrant-cloud_cluster_accounts_clusters (Data Source)
 
-Account Cluster Data Source
+Account Cluster List Data Source
 
 ## Example Usage
 
