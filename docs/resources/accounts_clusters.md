@@ -19,7 +19,7 @@ Account Cluster Resource
 
 - `cloud_provider` (String) Cluster Resource Cloud provider where the cluster resides field
 - `cloud_region` (String) Cluster Resource Cloud region where the cluster resides field
-- `configuration` (Block Set, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration))
+- `configuration` (Block List, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration))
 - `name` (String) Cluster Resource Name of the cluster field
 
 ### Optional
@@ -48,11 +48,8 @@ Account Cluster Resource
 
 Required:
 
-- `node_configuration` (Block Set, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration--node_configuration))
+- `node_configuration` (Block List, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration--node_configuration))
 - `num_nodes` (Number) TODO
-
-Read-Only:
-
 - `num_nodes_max` (Number) TODO
 
 <a id="nestedblock--configuration--node_configuration"></a>
