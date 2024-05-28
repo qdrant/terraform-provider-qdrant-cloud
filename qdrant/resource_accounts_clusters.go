@@ -138,7 +138,7 @@ func resourceAccountsClusters() *schema.Resource {
 						"num_nodes_max": {
 							Description: "TODO",
 							Type:        schema.TypeInt,
-							Computed:    true,
+							Required:    true,
 						},
 						"num_nodes": {
 							Description: "TODO",
@@ -205,7 +205,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error reading cluster: %v", resp.JSON422))
+		return diag.FromErr(fmt.Errorf("error reading cluster: %s", getError(resp.JSON422)))
 	}
 
 	if err := d.Set("clusters", resp.JSON200); err != nil {
@@ -236,7 +236,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error creating cluster: %v", resp.JSON422))
+		return diag.FromErr(fmt.Errorf("error creating cluster: %s", getError(resp.JSON422)))
 	}
 
 	clusterOut := resp.JSON200
@@ -281,7 +281,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			return diag.FromErr(err)
 		}
 		if resp.JSON422 != nil {
-			return diag.FromErr(fmt.Errorf("error updating cluster: %v", resp.JSON422))
+			return diag.FromErr(fmt.Errorf("error updating cluster: %s", getError(resp.JSON422)))
 		}
 	}
 	return nil
@@ -314,7 +314,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error deleting cluster: %v", resp.JSON422))
+		return diag.FromErr(fmt.Errorf("error deleting cluster: %s", getError(resp.JSON422)))
 	}
 
 	d.SetId("")

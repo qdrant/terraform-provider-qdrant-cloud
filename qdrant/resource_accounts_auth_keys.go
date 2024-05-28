@@ -63,7 +63,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error creating API key: %v", resp.JSON422))
+		return diag.FromErr(fmt.Errorf("error creating API key: %s", getError(resp.JSON422)))
 	}
 
 	if err := d.Set("keys", resp.JSON200); err != nil {
@@ -94,7 +94,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing API keys: %v", resp.JSON422))
+		return diag.FromErr(fmt.Errorf("error listing API keys: %s", getError(resp.JSON422)))
 	}
 
 	err = d.Set("keys", resp.JSON200)
@@ -128,7 +128,7 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error deleting API key: %v", resp.JSON422))
+		return diag.FromErr(fmt.Errorf("error deleting API key: %s", getError(resp.JSON422)))
 	}
 
 	// Clear the resource ID to mark as deleted
