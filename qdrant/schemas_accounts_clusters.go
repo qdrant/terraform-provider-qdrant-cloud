@@ -70,6 +70,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the account"),
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		clusterNameFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Name of the cluster"),

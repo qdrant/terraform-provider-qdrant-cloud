@@ -32,17 +32,19 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-
-	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
+	}
+	// Get the cluster ID as UUID
+	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	clusterID, err := uuid.Parse(d.Get("id").(string))
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	resp, err := apiClient.GetClusterWithResponse(ctx, accountID, clusterID)
+	// Fetch the cluster
+	resp, err := apiClient.GetClusterWithResponse(ctx, accountUUID, clusterUUID)
+	// Inspect the results
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -91,7 +93,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error creating cluster: %s", getError(resp.JSON422)))
 	}
@@ -103,13 +104,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	if clusterOut == nil {
 		return diag.FromErr(fmt.Errorf("error creating cluster: no cluster returned"))
 	}
-
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(err)
 		}
 	}
+	// Set the ID
 	d.SetId(clusterOut.Id)
 	return nil
 }
@@ -120,16 +121,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	accountUUID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
 	}
-
+	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
+	// Check what has been changed
 	if d.HasChange("configuration") {
 		conf := expandClusterConfigurationIn(d.Get("configuration").([]interface{}))
 
@@ -169,20 +171,22 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	accountUUID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
 	}
-
+	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
+	// Delete with all backups as well.
 	deleteBackups := true
 	params := &qc.DeleteClusterParams{
 		DeleteBackups: &deleteBackups,
 	}
+	// Delete the cluster
 	resp, err := apiClient.DeleteClusterWithResponse(ctx, accountUUID, clusterUUID, params)
 	if err != nil {
 		return diag.FromErr(err)

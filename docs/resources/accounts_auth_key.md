@@ -22,11 +22,11 @@ Account AuthKey Resource
 ### Optional
 
 - `account_id` (String) Auth Keys Keys Schema Account Identifiers where this Auth Key belongs to field
-- `prefix` (String) Auth Keys Keys Schema Prefix of the Auth Key field
 
 ### Read-Only
 
 - `created_at` (String) Auth Keys Keys Schema Timestamp when the Auth Key is created field
 - `id` (String) Auth Keys Keys Schema Auth Key Identifier field
+- `prefix` (String) Auth Keys Keys Schema Prefix of the Auth Key (the first few bytes from the token) field
 - `token` (String) Auth Keys Keys Schema Secret token for this Auth Key (handle with care!) field
 - `user_id` (String) Auth Keys Keys Schema User Idetifier from whom the Auth Key has been created field

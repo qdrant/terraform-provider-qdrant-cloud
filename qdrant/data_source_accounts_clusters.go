@@ -46,7 +46,7 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
+		return diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
 	}
 	// List all clusters for the provided account
 	resp, err := apiClient.ListClustersWithResponse(ctx, accountUUID, &qc.ListClustersParams{})

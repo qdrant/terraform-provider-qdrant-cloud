@@ -151,7 +151,7 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error deleting API key: %s", getError(resp.JSON422)))
 	}
-	if resp.StatusCode() != 203 {
+	if resp.StatusCode() != 204 {
 		return diag.FromErr(fmt.Errorf("error deleting API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
 	}
 	// Clear the resource ID to mark as deleted
