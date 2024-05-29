@@ -17,12 +17,12 @@ Account AuthKey Data Source
 
 ### Optional
 
-- `account_id` (String) Auth Keys Schema Account Identifier field
+- `account_id` (String) Auth Keys Schema Account Identifier where all those Auth Keys belongs to field
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `keys` (List of Object) TODO (see [below for nested schema](#nestedatt--keys))
+- `keys` (List of Object) Auth Keys Schema List of Auth Keys field (see [below for nested schema](#nestedatt--keys))
 
 <a id="nestedatt--keys"></a>
 ### Nested Schema for `keys`
@@ -30,7 +30,7 @@ Account AuthKey Data Source
 Read-Only:
 
 - `account_id` (String)
-- `cluster_id_list` (List of String)
+- `cluster_ids` (List of String)
 - `created_at` (String)
 - `id` (String)
 - `prefix` (String)
