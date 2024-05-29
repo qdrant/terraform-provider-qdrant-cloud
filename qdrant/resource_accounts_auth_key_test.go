@@ -10,7 +10,7 @@ import (
 )
 
 func TestAccResourceAccountsAuthKeys(t *testing.T) {
-	provider := fmt.Sprintf(`
+	provider := fmt.Sprintf(`	  
 provider "qdrant-cloud" {
   api_key = "%s"
 }
@@ -24,8 +24,8 @@ resource "qdrant-cloud_accounts_auth_key" "test" {
 	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet("qdrant_accounts_auth_keys.test", "account_id"),
-		resource.TestCheckResourceAttrSet("qdrant_accounts_auth_keys.test", "keys.#"),
+		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_auth_key.test", "account_id"),
+		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_auth_key.test", "keys.#"),
 	)
 
 	resource.Test(t, resource.TestCase{

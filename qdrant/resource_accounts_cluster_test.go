@@ -34,7 +34,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 }
 
 output "cluster_id" {
-	value = qdrant-cloud_accounts_clusters.test.id
+	value = qdrant-cloud_accounts_cluster.test.id
 }
 
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
@@ -43,7 +43,7 @@ output "cluster_id" {
 		testCase := func(t *testing.T, mode string) {
 			resource.Test(t, resource.TestCase{
 				ProviderFactories: map[string]func() (*schema.Provider, error){
-					"qdrant": func() (*schema.Provider, error) {
+					"qdrant-cloud": func() (*schema.Provider, error) {
 						return Provider(), nil
 					},
 				},

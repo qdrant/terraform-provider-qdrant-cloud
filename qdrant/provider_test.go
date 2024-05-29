@@ -14,7 +14,7 @@ import (
 func TestProvider(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
-			"qdrant": func() (*schema.Provider, error) {
+			"qdrant-cloud": func() (*schema.Provider, error) {
 				return Provider(), nil
 			},
 		},

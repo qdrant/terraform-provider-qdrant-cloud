@@ -23,8 +23,8 @@ data "qdrant-cloud_accounts_auth_keys" "test" {
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet("data.qdrant_accounts_auth_keys.test", "account_id"),
-		resource.TestCheckResourceAttrSet("data.qdrant_accounts_auth_keys.test", "keys.#"),
+		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_auth_keys.test", "account_id"),
+		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_auth_keys.test", "keys.#"),
 	)
 
 	resource.Test(t, resource.TestCase{
