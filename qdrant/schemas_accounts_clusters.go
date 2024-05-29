@@ -131,14 +131,14 @@ func accountsClusterSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
-		"state": {
+		/*"state": {
 			Description: "TODO",
 			Type:        schema.TypeMap,
 			Computed:    true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
-		},
+		},*/
 		"configuration": {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The configuration options of a cluster"),
 			Type:        schema.TypeList, // There is a single required item only, no need for a set.
@@ -174,7 +174,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"resources": {
+		/*"resources": {
 			Description: "TODO",
 			Type:        schema.TypeMap,
 			Computed:    true,
@@ -182,7 +182,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 				Description: "TODO",
 				Type:        schema.TypeString,
 			},
-		},
+		},*/
 		"total_extra_disk": {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The total ammount of extra disk in relation to the choosen package (in Gib)"),
 			Type:        schema.TypeInt,
@@ -260,13 +260,24 @@ func flattenCluster(cluster *qc.ClusterOut) map[string]interface{} {
 	return result
 }
 
-// flattenClusterConfiguration creates a map from a cluster for easy storage on terraform.
+// flattenClusterConfiguration creates a map from a cluster configuration for easy storage on terraform.
 func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) []interface{} {
 	result := []interface{}{
 		map[string]interface{}{
 			//"id":            clusterConfig.Id,
-			"num_nodes":     clusterConfig.NumNodes,
-			"num_nodes_max": clusterConfig.NumNodesMax,
+			"num_nodes":          clusterConfig.NumNodes,
+			"num_nodes_max":      clusterConfig.NumNodesMax,
+			"node_configuration": flattenNodeConfiguration(clusterConfig.NodeConfiguration),
+		},
+	}
+	return result
+}
+
+// flattenClusterConfiguration creates a map from a node configuration for easy storage on terraform.
+func flattenNodeConfiguration(nodeConfig qc.NodeConfiguration) []interface{} {
+	result := []interface{}{
+		map[string]interface{}{
+			"package_id": nodeConfig.PackageId,
 		},
 	}
 	return result

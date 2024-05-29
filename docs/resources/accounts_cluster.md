@@ -39,8 +39,6 @@ Account Cluster Resource
 - `current_configuration_id` (String) Cluster Schema Identifier of the current configuration field
 - `id` (String) Cluster Schema Identifier of the cluster field
 - `marked_for_deletion_at` (String) Cluster Schema Timstamp when this cluster was marked for deletion field
-- `resources` (Map of String) TODO
-- `state` (Map of String) TODO
 - `url` (String) Cluster Schema The URL of the endpoint of the qdrant cluster field
 
 <a id="nestedblock--configuration"></a>

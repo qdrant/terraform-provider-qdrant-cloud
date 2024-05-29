@@ -43,8 +43,6 @@ Read-Only:
 - `name` (String)
 - `owner_id` (String)
 - `private_region_id` (String)
-- `resources` (Map of String)
-- `state` (Map of String)
 - `total_extra_disk` (Number)
 - `url` (String)
 - `version` (String)
