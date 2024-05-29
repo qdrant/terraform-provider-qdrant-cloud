@@ -92,17 +92,17 @@ func accountsAuthKeySchema() map[string]*schema.Schema {
 	}
 }
 
-// flattenAuthKeys flattens the API keys response into a slice of map[string]interface{}.
-func flattenAuthKeys(keys []qc.GetApiKeyOut) []interface{} {
+// flattenGetAuthKeys flattens the API keys response into a slice of map[string]interface{}.
+func flattenGetAuthKeys(keys []qc.GetApiKeyOut) []interface{} {
 	var flattenedKeys []interface{}
 	for _, key := range keys {
-		flattenedKeys = append(flattenedKeys, flattenAuthKey(key))
+		flattenedKeys = append(flattenedKeys, flattenGetAuthKey(key))
 	}
 	return flattenedKeys
 }
 
-// flattenAuthKey flattens the API key response into a slice of map[string]interface{}.
-func flattenAuthKey(key qc.GetApiKeyOut) map[string]interface{} {
+// flattenGetAuthKey flattens the API key response into a slice of map[string]interface{}.
+func flattenGetAuthKey(key qc.GetApiKeyOut) map[string]interface{} {
 	result := map[string]interface{}{
 		authKeysKeysIDFieldName:         key.Id,
 		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
@@ -110,6 +110,20 @@ func flattenAuthKey(key qc.GetApiKeyOut) map[string]interface{} {
 		authKeysKeysAccountIDFieldName:  key.AccountId,
 		authKeysKeysClusterIDsFieldName: key.ClusterIdList,
 		authKeysKeysPrefixFieldName:     key.Prefix,
+	}
+	return result
+}
+
+// flattenCreateAuthKey flattens the API key response into a slice of map[string]interface{}.
+func flattenCreateAuthKey(key qc.CreateApiKeyOut) map[string]interface{} {
+	result := map[string]interface{}{
+		authKeysKeysIDFieldName:         key.Id,
+		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
+		authKeysKeysUserIDFieldName:     key.UserId,
+		authKeysKeysAccountIDFieldName:  key.AccountId,
+		authKeysKeysClusterIDsFieldName: key.ClusterIdList,
+		authKeysKeysPrefixFieldName:     key.Prefix,
+		authKeysKeysTokenFieldName:      key.Token,
 	}
 	return result
 }

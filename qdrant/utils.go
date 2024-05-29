@@ -7,7 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
@@ -29,6 +31,23 @@ func getClient(m interface{}) (*qc.ClientWithResponses, diag.Diagnostics) {
 		return nil, diag.FromErr(fmt.Errorf("error initializing client: %v", err))
 	}
 	return apiClient, nil
+}
+
+// getAccountUUID get the Account ID as UUID, if defined at resouce level that is used, otherwise it fallback to the default on, specified on provider level.
+// if no account ID can be found an error will be returned.
+func getAccountUUID(d *schema.ResourceData, m interface{}) (uuid.UUID, error) {
+	// Get The account ID as UUID from the resource data
+	if v, ok := d.GetOk("account_id"); ok {
+		id := v.(string)
+		if id != "" {
+			return uuid.Parse(id)
+		}
+	}
+	// Get From default (if any)
+	if id := getDefaultAccountID(m); id != "" {
+		return uuid.Parse(id)
+	}
+	return uuid.Nil, fmt.Errorf("cannot find account ID")
 }
 
 // getDefaultAccountID fetches the default account ID from the provided interface (containing the ClientConfig)

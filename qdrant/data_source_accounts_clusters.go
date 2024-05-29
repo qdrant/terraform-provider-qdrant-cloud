@@ -43,16 +43,12 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-
-	accountID := d.Get("account_id").(string)
-	accountUUID, err := uuid.Parse(accountID)
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		d := diag.FromErr(fmt.Errorf("error parsing account ID: %v", err))
-		if d.HasError() {
-			return d
-		}
+		return diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
 	}
-
+	// List all clusters for the provided account
 	resp, err := apiClient.ListClustersWithResponse(ctx, accountUUID, &qc.ListClustersParams{})
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
@@ -69,7 +65,7 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 	}
 	clustersOut := resp.JSON200
 	if clustersOut == nil {
-		return diag.FromErr(fmt.Errorf("ListCluster didn't return clusters"))
+		return diag.FromErr(fmt.Errorf("error listing clusters: ListCluster didn't return clusters"))
 	}
 	// Update the Terraform state (TODO: Flatten)
 	if err := d.Set("clusters", clustersOut); err != nil {
@@ -91,14 +87,13 @@ func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, 
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	// Get the identifiers reflecting the cluster
-	accountID := d.Get("account_id").(string)
-	clusterID := d.Get("cluster_id").(string)
-	// Convert the indentifiers into UUID format
-	accountUUID, err := uuid.Parse(accountID)
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error parsing account ID: %v", err))
+		return diag.FromErr(fmt.Errorf("error getting cluster: %v", err))
 	}
+	// Get the cluster ID as UUID
+	clusterID := d.Get("cluster_id").(string)
 	clusterUUID, err := uuid.Parse(clusterID)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error parsing cluster ID: %v", err))

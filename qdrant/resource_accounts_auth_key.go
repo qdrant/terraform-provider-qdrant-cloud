@@ -3,9 +3,7 @@ package qdrant
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -35,27 +33,43 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
 	}
+	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Execute the request and handle the response
-	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountID)
+	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing API keys: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("error getting API key: %s", getError(resp.JSON422)))
 	}
-
-	err = d.Set("keys", resp.JSON200)
-	if err != nil {
-		return diag.FromErr(err)
+	if resp.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf("error getting API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
 	}
-
-	d.SetId(time.Now().Format(time.RFC3339))
-
-	return nil
+	// Get the actual response
+	apiKeys := resp.JSON200
+	if apiKeys == nil {
+		return diag.FromErr(fmt.Errorf("error getting API Key: no keys returned"))
+	}
+	for _, apiKey := range *apiKeys {
+		if apiKey.Id != apiKeyID {
+			// Skip incorrect ones
+			continue
+		}
+		// Process the correect one,
+		for k, v := range flattenGetAuthKey(apiKey) {
+			if err := d.Set(k, v); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		d.SetId(apiKeyID)
+		return nil
+	}
+	return diag.Errorf("error getting API Key: API key ID cannot be found anymore")
 }
 
 // resourceAPIKeyCreate performs a create operation to generate a new API key associated with an account.
@@ -69,14 +83,14 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error creating API Key: %v", err))
 	}
-
 	// Prepare the payload for the API request
 	var clusterIDs []string
-	if clusterIDList, ok := d.GetOk("cluster_id_list"); ok {
+	if clusterIDList, ok := d.GetOk(authKeysKeysClusterIDsFieldName); ok {
 		// Prepare the payload for the API request
 		clusterIDList := clusterIDList.([]interface{})
 		clusterIDs = make([]string, len(clusterIDList))
@@ -84,26 +98,32 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			clusterIDs[i] = v.(string)
 		}
 	}
-
 	// Create the request body
-	requestBody := qc.ApiKeyIn{
+	resp, err := apiClient.CreateApiKeyWithResponse(ctx, accountUUID, qc.ApiKeyIn{
 		ClusterIdList: &clusterIDs,
-	}
-
-	resp, err := apiClient.CreateApiKeyWithResponse(ctx, accountID, requestBody)
+	})
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error creating API key: %s", getError(resp.JSON422)))
 	}
-
-	if err := d.Set("keys", resp.JSON200); err != nil {
-		return diag.FromErr(err)
+	if resp.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf("error creating API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
 	}
-
-	d.SetId(time.Now().Format(time.RFC3339))
+	// Get the actual response
+	apiKey := resp.JSON200
+	if apiKey == nil {
+		return diag.FromErr(fmt.Errorf("error listing API Keys: no keys returned"))
+	}
+	// Flatten cluster and store in Terraform state
+	for k, v := range flattenCreateAuthKey(*apiKey) {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	// Set the ID
+	d.SetId(apiKey.Id)
 	return nil
 }
 
@@ -117,22 +137,24 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error deleting API key: %v", err))
 	}
-	apiKeyID := d.Get("key_id").(string)
+	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 
-	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountID, apiKeyID)
+	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountUUID, apiKeyID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error deleting API key: %s", getError(resp.JSON422)))
 	}
-
+	if resp.StatusCode() != 203 {
+		return diag.FromErr(fmt.Errorf("error deleting API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
+	}
 	// Clear the resource ID to mark as deleted
 	d.SetId("")
-
 	return nil
 }

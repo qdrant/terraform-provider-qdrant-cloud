@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -32,9 +31,9 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diagnostics
 	}
 	// Get The account ID as UUID
-	accountUUID, err := uuid.Parse(d.Get(authKeysAccountIDFieldName).(string))
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
 	}
 	// List the API Keys for the provided account
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
@@ -57,10 +56,9 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(fmt.Errorf("error listing API Keys: no keys returned"))
 	}
 	// Flatten cluster and store in Terraform state
-	if err := d.Set(authKeysKeysFieldName, flattenAuthKeys(*apiKeys)); err != nil {
+	if err := d.Set(authKeysKeysFieldName, flattenGetAuthKeys(*apiKeys)); err != nil {
 		return diag.FromErr(err)
 	}
-
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
 }
