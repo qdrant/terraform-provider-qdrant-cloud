@@ -61,18 +61,16 @@ func accountsAuthKeySchema() map[string]*schema.Schema {
 			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "User Idetifier from whom the Auth Key has been created"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
 		},
 		authKeysKeysPrefixFieldName: {
 			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Prefix of the Auth Key"),
 			Type:        schema.TypeString,
-			Computed:    true,
+			Optional:    true,
 		},
 		authKeysKeysClusterIDsFieldName: {
 			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Cluster Identifiers for which this Auth Key is attached"),
 			Type:        schema.TypeList,
-			Computed:    true,
-			Optional:    true,
+			Required:    true,
 			Elem: &schema.Schema{
 				Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Single Cluster Identifier for which this Auth Key is attached"),
 				Type:        schema.TypeString,
@@ -81,7 +79,6 @@ func accountsAuthKeySchema() map[string]*schema.Schema {
 		authKeysKeysAccountIDFieldName: {
 			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Account Identifiers where this Auth Key belongs to"),
 			Type:        schema.TypeString,
-			Computed:    true,
 			Optional:    true,
 		},
 		authKeysKeysTokenFieldName: {

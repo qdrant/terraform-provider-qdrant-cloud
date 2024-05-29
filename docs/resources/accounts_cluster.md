@@ -19,7 +19,7 @@ Account Cluster Resource
 
 - `cloud_provider` (String) Cluster Schema Cloud provider where the cluster resides field
 - `cloud_region` (String) Cluster Schema Cloud region where the cluster resides field
-- `configuration` (Block List, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration))
+- `configuration` (Block List, Min: 1, Max: 1) Cluster Schema The configuration options of a cluster field (see [below for nested schema](#nestedblock--configuration))
 - `name` (String) Cluster Schema Name of the cluster field
 
 ### Optional
@@ -27,34 +27,34 @@ Account Cluster Resource
 - `account_id` (String) Cluster Schema Identifier of the account field
 - `cloud_region_az` (String) Cluster Schema Cloud region availability zone where the cluster resides field
 - `cloud_region_setup` (String) Cluster Schema Cloud region setup of the cluster field
-- `encryption_key_id` (String) TODO
-- `marked_for_deletion_at` (String) TODO
+- `encryption_key_id` (String) Cluster Schema Identifier of the encrption key field
 - `owner_id` (String) Cluster Schema Identifier of the owner field
 - `private_region_id` (String) Cluster Schema Identifier of the Private Region field
+- `total_extra_disk` (Number) Cluster Schema The total ammount of extra disk in relation to the choosen package (in Gib) field
 - `version` (String) Cluster Schema Version of the qdrant cluster field
 
 ### Read-Only
 
 - `created_at` (String) Cluster Schema Timestamp then the cluster is created field
-- `current_configuration_id` (String) TODO
+- `current_configuration_id` (String) Cluster Schema Identifier of the current configuration field
 - `id` (String) Cluster Schema Identifier of the cluster field
+- `marked_for_deletion_at` (String) Cluster Schema Timstamp when this cluster was marked for deletion field
 - `resources` (Map of String) TODO
 - `state` (Map of String) TODO
-- `total_extra_disk` (Number) TODO
-- `url` (String) TODO
+- `url` (String) Cluster Schema The URL of the endpoint of the qdrant cluster field
 
 <a id="nestedblock--configuration"></a>
 ### Nested Schema for `configuration`
 
 Required:
 
-- `node_configuration` (Block List, Min: 1, Max: 1) TODO (see [below for nested schema](#nestedblock--configuration--node_configuration))
-- `num_nodes` (Number) TODO
-- `num_nodes_max` (Number) TODO
+- `node_configuration` (Block List, Min: 1, Max: 1) Cluster Schema The node configuration options of a cluster field (see [below for nested schema](#nestedblock--configuration--node_configuration))
+- `num_nodes` (Number) Cluster Schema The number of nodes from the cluster field
+- `num_nodes_max` (Number) Cluster Schema The maximum number of nodes from the cluster field
 
 <a id="nestedblock--configuration--node_configuration"></a>
 ### Nested Schema for `configuration.node_configuration`
 
 Required:
 
-- `package_id` (String) TODO
+- `package_id` (String) Cluster Schema The package identifier (specifying: CPU, Memory and disk size) field

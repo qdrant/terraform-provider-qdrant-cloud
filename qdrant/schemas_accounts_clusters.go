@@ -97,40 +97,36 @@ func accountsClusterSchema() map[string]*schema.Schema {
 		"cloud_region_setup": {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region setup of the cluster"),
 			Type:        schema.TypeString,
-			Computed:    true,
 			Optional:    true,
 		},
 		"private_region_id": {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Private Region"),
 			Type:        schema.TypeString,
-			Computed:    true,
 			Optional:    true,
 		},
 		"current_configuration_id": {
-			Description: "TODO",
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the current configuration"),
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
 		"encryption_key_id": {
-			Description: "TODO",
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the encrption key"),
 			Type:        schema.TypeString,
 			Computed:    true,
 			Optional:    true,
 		},
 		"marked_for_deletion_at": {
-			Description: "TODO",
+			Description: fmt.Sprintf(clusterFieldTemplate, "Timstamp when this cluster was marked for deletion"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
 		},
 		clusterVersionFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the qdrant cluster"),
 			Type:        schema.TypeString,
-			Computed:    true,
 			Optional:    true,
 		},
 		"url": {
-			Description: "TODO",
+			Description: fmt.Sprintf(clusterFieldTemplate, "The URL of the endpoint of the qdrant cluster"),
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
@@ -143,33 +139,31 @@ func accountsClusterSchema() map[string]*schema.Schema {
 			},
 		},
 		"configuration": {
-			Description: "TODO",
+			Description: fmt.Sprintf(clusterFieldTemplate, "The configuration options of a cluster"),
 			Type:        schema.TypeList, // There is a single required item only, no need for a set.
 			Required:    true,
 			MaxItems:    1,
 			Elem: &schema.Resource{
-				Description: "TODO",
 				Schema: map[string]*schema.Schema{
 					"num_nodes_max": {
-						Description: "TODO",
+						Description: fmt.Sprintf(clusterFieldTemplate, "The maximum number of nodes from the cluster"),
 						Type:        schema.TypeInt,
 						Required:    true,
 					},
 					"num_nodes": {
-						Description: "TODO",
+						Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes from the cluster"),
 						Type:        schema.TypeInt,
 						Required:    true,
 					},
 					"node_configuration": {
-						Description: "TODO",
+						Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
 						Type:        schema.TypeList,
 						Required:    true,
 						MaxItems:    1,
 						Elem: &schema.Resource{
-							Description: "TODO",
 							Schema: map[string]*schema.Schema{
 								"package_id": {
-									Description: "TODO",
+									Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory and disk size)"),
 									Type:        schema.TypeString,
 									Required:    true,
 								},
@@ -189,9 +183,9 @@ func accountsClusterSchema() map[string]*schema.Schema {
 			},
 		},
 		"total_extra_disk": {
-			Description: "TODO",
+			Description: fmt.Sprintf(clusterFieldTemplate, "The total ammount of extra disk in relation to the choosen package (in Gib)"),
 			Type:        schema.TypeInt,
-			Computed:    true,
+			Optional:    true,
 		},
 	}
 }

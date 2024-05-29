@@ -29,9 +29,8 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-
-	params := qc.GetPackagesParams{}
-	response, err := apiClient.GetPackagesWithResponse(ctx, &params)
+	// Get all packages
+	response, err := apiClient.GetPackagesWithResponse(ctx, &qc.GetPackagesParams{})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing packages: %v", err))
 	}
@@ -41,14 +40,12 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	if response.StatusCode() != 200 {
 		return diag.FromErr(fmt.Errorf("error listing packages: [%d] - %s", response.StatusCode(), response.Status()))
 	}
-
+	// Flatten packages
 	packages := flattenPackages(*response.JSON200)
-
 	// Set the packages in the Terraform state.
 	if err := d.Set("packages", packages); err != nil {
 		return diag.FromErr(err)
 	}
-
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
 }
