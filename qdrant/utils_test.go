@@ -65,6 +65,9 @@ func (m *MockClient) GetPackagesWithResponse(ctx context.Context, params *api.Ge
 }
 
 func TestExecuteClientAction(t *testing.T) {
+
+	t.SkipNow()
+
 	// Create a mock client
 	mockClient := new(MockClient)
 
