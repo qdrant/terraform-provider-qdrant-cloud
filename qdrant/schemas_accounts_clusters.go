@@ -247,6 +247,15 @@ func expandNodeConfigurationIn(v []interface{}) *qc.NodeConfiguration {
 	return &config
 }
 
+// flattenCluster creates an interface from a list of clusters for easy storage on terraform.
+func flattenClusters(clusters []qc.ClusterOut) []interface{} {
+	var flattenedClusters []interface{}
+	for _, cluster := range clusters {
+		flattenedClusters = append(flattenedClusters, flattenCluster(&cluster))
+	}
+	return flattenedClusters
+}
+
 // flattenCluster creates a map from a cluster for easy storage on terraform.
 func flattenCluster(cluster *qc.ClusterOut) map[string]interface{} {
 	result := map[string]interface{}{

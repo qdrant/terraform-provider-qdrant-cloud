@@ -67,8 +67,8 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 	if clustersOut == nil {
 		return diag.FromErr(fmt.Errorf("error listing clusters: ListCluster didn't return clusters"))
 	}
-	// Update the Terraform state (TODO: Flatten)
-	if err := d.Set("clusters", clustersOut); err != nil {
+	// Update the Terraform state
+	if err := d.Set("clusters", flattenClusters(*clustersOut)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -93,7 +93,7 @@ func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(fmt.Errorf("error getting cluster: %v", err))
 	}
 	// Get the cluster ID as UUID
-	clusterID := d.Get("cluster_id").(string)
+	clusterID := d.Get("id").(string)
 	clusterUUID, err := uuid.Parse(clusterID)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error parsing cluster ID: %v", err))
@@ -120,5 +120,6 @@ func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(err)
 		}
 	}
+	d.SetId(clusterID)
 	return nil
 }
