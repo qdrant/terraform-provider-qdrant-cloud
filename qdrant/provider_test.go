@@ -30,7 +30,7 @@ func testAccCheckAPIKeyConfigBasic() string {
 	apiURL := os.Getenv("QDRANT_CLOUD_API_URL")
 
 	return fmt.Sprintf(`
-provider "qdrant" {
+provider "qdrant-cloud" {
   alias = "qdrant_cloud"
   api_key = "%s"
   api_url = "%s"

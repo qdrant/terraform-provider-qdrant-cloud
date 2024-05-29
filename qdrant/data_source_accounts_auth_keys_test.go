@@ -11,16 +11,16 @@ import (
 
 func TestAccDataAccountsAuthKeys(t *testing.T) {
 	provider := fmt.Sprintf(`
-provider "qdrant" {
+provider "qdrant-cloud" {
   api_key = "%s"
 }
 	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
-	config := provider + `
-data "qdrant_accounts_auth_keys" "test" {
-	account_id = "c3e03ee1-b79b-443d-80f0-8eb8a2671978"
+	config := provider + fmt.Sprintf(`
+data "qdrant-cloud_accounts_auth_keys" "test" {
+	account_id = "%s"
 }
-	`
+`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttrSet("data.qdrant_accounts_auth_keys.test", "account_id"),
@@ -29,7 +29,7 @@ data "qdrant_accounts_auth_keys" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
-			"qdrant": func() (*schema.Provider, error) {
+			"qdrant-cloud": func() (*schema.Provider, error) {
 				return Provider(), nil
 			},
 		},

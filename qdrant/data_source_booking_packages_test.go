@@ -11,13 +11,13 @@ import (
 
 func TestAccDataBookingPackages(t *testing.T) {
 	provider := fmt.Sprintf(`
-provider "qdrant" {
+provider "qdrant-cloud" {
   api_key = "%s"
 }
 `, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
 	config := provider + `
-data "qdrant_booking_packages" "test" {
+data "qdrant-cloud_booking_packages" "test" {
 }
 `
 
@@ -27,7 +27,7 @@ data "qdrant_booking_packages" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
-			"qdrant": func() (*schema.Provider, error) {
+			"qdrant-cloud": func() (*schema.Provider, error) {
 				return Provider(), nil
 			},
 		},

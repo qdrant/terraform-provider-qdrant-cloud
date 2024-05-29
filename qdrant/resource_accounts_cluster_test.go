@@ -11,13 +11,13 @@ import (
 
 func TestResourceClusterCreate(t *testing.T) {
 	provider := fmt.Sprintf(`
-provider "qdrant" {
+provider "qdrant-cloud" {
   api_key = "%s"
 }
 	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
 	config := provider + fmt.Sprintf(`
-resource "qdrant_accounts_clusters" "test" {
+resource "qdrant-cloud_accounts_cluster" "test" {
 	name = "test-cluster"
 	account_id = "%s"
 	cloud_region = "us-east4"
@@ -34,7 +34,7 @@ resource "qdrant_accounts_clusters" "test" {
 }
 
 output "cluster_id" {
-	value = qdrant_accounts_clusters.test.id
+	value = qdrant-cloud_accounts_clusters.test.id
 }
 
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
