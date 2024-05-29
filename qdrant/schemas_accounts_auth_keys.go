@@ -4,75 +4,112 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 const (
-	authKeysFieldTemplate = "Auth Keys Schema %s field"
+	authKeysFieldTemplate      = "Auth Keys Schema %s field"
+	authKeysAccountIDFieldName = "account_id"
+	authKeysKeysFieldName      = "keys"
 
-	authKeysIdentifierFieldName = "id"
-	authKeysCreatedAtFieldName  = "created_at"
+	authKeysKeysFieldTemplate       = "Auth Keys Keys Schema %s field"
+	authKeysKeysIDFieldName         = "id"
+	authKeysKeysCreatedAtFieldName  = "created_at"
+	authKeysKeysUserIDFieldName     = "user_id"
+	authKeysKeysPrefixFieldName     = "prefix"
+	authKeysKeysClusterIDsFieldName = "cluster_ids"
+	authKeysKeysAccountIDFieldName  = "account_id"
+	authKeysKeysTokenFieldName      = "token"
 )
 
 // accountsAuthKeysSchema returns the schema for the auth keys.
 func accountsAuthKeysSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"account_id": {
-			Description: fmt.Sprintf(authKeysFieldTemplate, "Account Identifier"),
+		authKeysAccountIDFieldName: {
+			Description: fmt.Sprintf(authKeysFieldTemplate, "Account Identifier where all those Auth Keys belongs to"),
 			Type:        schema.TypeString,
 			Computed:    true,
 			Optional:    true,
 		},
-		"keys": {
-			Description: "TODO",
+		authKeysKeysFieldName: {
+			Description: fmt.Sprintf(authKeysFieldTemplate, "List of Auth Keys"),
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Description: "TODO",
-				Schema: map[string]*schema.Schema{
-					"id": {
-						Description: "TODO",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"created_at": {
-						Description: "TODO",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"user_id": {
-						Description: "TODO",
-						Type:        schema.TypeString,
-						Computed:    true,
-						Optional:    true,
-					},
-					"prefix": {
-						Description: "TODO",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"cluster_id_list": {
-						Description: "TODO",
-						Type:        schema.TypeList,
-						Computed:    true,
-						Optional:    true,
-						Elem: &schema.Schema{
-							Description: "TODO",
-							Type:        schema.TypeString,
-						},
-					},
-					"account_id": {
-						Description: "TODO",
-						Type:        schema.TypeString,
-						Computed:    true,
-						Optional:    true,
-					},
-					"token": {
-						Description: "TODO",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-				},
+				Description: fmt.Sprintf(authKeysFieldTemplate, "Individual Auth Keys"),
+				Schema:      accountsAuthKeySchema(),
 			},
 		},
 	}
+}
+
+// accountsAuthKeySchema returns the schema for the auth key.
+func accountsAuthKeySchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		authKeysKeysIDFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Auth Key Identifier"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysCreatedAtFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Timestamp when the Auth Key is created"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysUserIDFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "User Idetifier from whom the Auth Key has been created"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+		},
+		authKeysKeysPrefixFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Prefix of the Auth Key"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysClusterIDsFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Cluster Identifiers for which this Auth Key is attached"),
+			Type:        schema.TypeList,
+			Computed:    true,
+			Optional:    true,
+			Elem: &schema.Schema{
+				Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Single Cluster Identifier for which this Auth Key is attached"),
+				Type:        schema.TypeString,
+			},
+		},
+		authKeysKeysAccountIDFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Account Identifiers where this Auth Key belongs to"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+		},
+		authKeysKeysTokenFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Secret token for this Auth Key (handle with care!)"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+	}
+}
+
+// flattenAuthKeys flattens the API keys response into a slice of map[string]interface{}.
+func flattenAuthKeys(keys []qc.GetApiKeyOut) []interface{} {
+	var flattenedKeys []interface{}
+	for _, key := range keys {
+		flattenedKeys = append(flattenedKeys, flattenAuthKey(key))
+	}
+	return flattenedKeys
+}
+
+// flattenAuthKey flattens the API key response into a slice of map[string]interface{}.
+func flattenAuthKey(key qc.GetApiKeyOut) map[string]interface{} {
+	result := map[string]interface{}{
+		authKeysKeysIDFieldName:         key.Id,
+		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
+		authKeysKeysUserIDFieldName:     key.UserId,
+		authKeysKeysAccountIDFieldName:  key.AccountId,
+		authKeysKeysClusterIDsFieldName: key.ClusterIdList,
+		authKeysKeysPrefixFieldName:     key.Prefix,
+	}
+	return result
 }

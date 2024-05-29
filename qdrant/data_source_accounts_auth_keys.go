@@ -8,8 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 // dataSourceAccountsAuthKeys constructs a Terraform resource for managing the reading of API keys associated with an account.
@@ -33,40 +31,36 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-
-	accountID, err := uuid.Parse(d.Get("account_id").(string))
+	// Get The account ID as UUID
+	accountUUID, err := uuid.Parse(d.Get(authKeysAccountIDFieldName).(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	response, err := apiClient.ListApiKeysWithResponse(ctx, accountID)
+	// List the API Keys for the provided account
+	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
+	// Handle the response in case of error
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
 		if d.HasError() {
 			return d
 		}
 	}
-	if response.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: %s", getError(response.JSON422)))
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error listing API Keys: %s", getError(resp.JSON422)))
 	}
-	// Set the keys attribute in the Terraform state
-	if err := d.Set("keys", flattenAuthKeys(*response.JSON200)); err != nil {
+	if resp.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf("error listing API Keys: [%d] - %s", resp.StatusCode(), resp.Status()))
+	}
+	// Get the actual response
+	apiKeys := resp.JSON200
+	if apiKeys == nil {
+		return diag.FromErr(fmt.Errorf("error listing API Keys: no keys returned"))
+	}
+	// Flatten cluster and store in Terraform state
+	if err := d.Set(authKeysKeysFieldName, flattenAuthKeys(*apiKeys)); err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
-}
-
-// flattenAuthKeys flattens the API keys response into a slice of map[string]interface{}.
-func flattenAuthKeys(keys []qc.GetApiKeyOut) []interface{} {
-	var flattenedKeys []interface{}
-	for _, key := range keys {
-		flattenedKeys = append(flattenedKeys, map[string]interface{}{
-			"id":              key.Id,
-			"account_id":      key.AccountId,
-			"cluster_id_list": key.ClusterIdList,
-		})
-	}
-	return flattenedKeys
 }

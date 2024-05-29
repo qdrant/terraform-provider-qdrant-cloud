@@ -2,7 +2,23 @@ package qdrant
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
+
+// packagesSchema defines the schema structure for a packages within the Terraform provider.
+func packagesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"packages": {
+			Description: "TODO",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: packageSchema(),
+			},
+		},
+	}
+}
 
 // packageSchema defines the schema structure for a package within the Terraform provider.
 func packageSchema() map[string]*schema.Schema {
@@ -62,4 +78,16 @@ func resourceOptionSchema() map[string]*schema.Schema {
 		"unit_int_price_per_month": {Description: "TODO", Type: schema.TypeInt, Computed: true},
 		"unit_int_price_per_year":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
 	}
+}
+
+// flattenPackages flattens the package data into a format that Terraform can understand.
+func flattenPackages(packages []qc.PackageOut) []interface{} {
+	var flattenedPackages []interface{}
+	for _, p := range packages {
+		flattenedPackages = append(flattenedPackages, map[string]interface{}{
+			"id":   p.Id,
+			"name": p.Name,
+		})
+	}
+	return flattenedPackages
 }

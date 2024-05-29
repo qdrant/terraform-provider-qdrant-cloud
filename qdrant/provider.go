@@ -3,7 +3,6 @@ package qdrant
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,15 +42,15 @@ func Provider() *schema.Provider {
 		},
 		// ResourcesMap defines all the resources that this provider offers.
 		ResourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_keys": resourceAccountsAuthKeys(), // Resource for Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_clusters":  resourceAccountsClusters(), // Resource for managing Qdrant Cloud account clusters.
+			"qdrant-cloud_accounts_auth_key": resourceAccountsAuthKey(), // Resource for Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_cluster":  resourceAccountsCluster(), // Resource for managing Qdrant Cloud account clusters.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_keys":        dataSourceAccountsAuthKeys(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_cluster_accounts_clusters": dataSourceClusterAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
-			"qdrant-cloud_cluster_accounts_cluster":  dataSourceClusterAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
-			"qdrant-cloud_booking_packages":          dataSourceBookingPackages(),         // Data source for Qdrant booking packages.
+			"qdrant-cloud_accounts_auth_keys": dataSourceAccountsAuthKeys(), // Data source for retrieving Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_clusters":  dataSourceAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
+			"qdrant-cloud_accounts_cluster":   dataSourceAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
+			"qdrant-cloud_booking_packages":   dataSourceBookingPackages(),  // Data source for Qdrant booking packages.
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,
@@ -68,7 +67,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	apiKey := d.Get("api_key").(string)
 	apiURL := d.Get("api_url").(string)
 	var accountID string
-	if aid := d.Get("account_id"); aid != nil {
+	if aid, ok := d.GetOk("account_id"); ok {
 		accountID = aid.(string)
 	}
 	var diags diag.Diagnostics
@@ -89,7 +88,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	}
 
 	// Create and return the client configuration structure.
-	config := ClientConfig{
+	config := ProviderConfig{
 		ApiKey:    apiKey,
 		BaseURL:   apiURL,
 		AccountID: accountID,
@@ -98,28 +97,11 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	return &config, diags
 }
 
-// ClientConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
+// ProviderConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
 // It encapsulates the API key, the base URL, and the HTTP client configured for API communication.
-type ClientConfig struct {
+// As well as the (optional) default account ID
+type ProviderConfig struct {
 	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
 	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
 	AccountID string // The default Account Identifier for the Qdrant cloud, if any
-}
-
-// formatTime converts a time value to a standardized string format.
-// t: The time value which can be of type time.Time or string.
-// Returns a formatted time string in RFC3339 format if the input is of type time.Time,
-// returns the input string unchanged if it is of type string, or an empty string for other types.
-func formatTime(t interface{}) string {
-	switch v := t.(type) {
-	case time.Time:
-		// Format time.Time to RFC3339 standard string format.
-		return v.Format(time.RFC3339)
-	case string:
-		// Return string as is.
-		return v
-	default:
-		// Return empty string for other types.
-		return ""
-	}
 }

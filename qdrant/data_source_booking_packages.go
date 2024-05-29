@@ -16,16 +16,7 @@ func dataSourceBookingPackages() *schema.Resource {
 	return &schema.Resource{
 		Description: "Booking packages Data Source",
 		ReadContext: dataBookingPackagesRead,
-		Schema: map[string]*schema.Schema{
-			"packages": {
-				Description: "TODO",
-				Type:        schema.TypeList,
-				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: packageSchema(),
-				},
-			},
-		},
+		Schema:      packagesSchema(),
 	}
 }
 
@@ -42,14 +33,13 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	params := qc.GetPackagesParams{}
 	response, err := apiClient.GetPackagesWithResponse(ctx, &params)
 	if err != nil {
-		d := diag.FromErr(fmt.Errorf("error listing packages: %v", err))
-		if d.HasError() {
-			return d
-		}
+		return diag.FromErr(fmt.Errorf("error listing packages: %v", err))
 	}
-
 	if response.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("error listing packages: %v", getError(response.JSON422)))
+	}
+	if response.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf("error listing packages: [%d] - %s", response.StatusCode(), response.Status()))
 	}
 
 	packages := flattenPackages(*response.JSON200)
@@ -61,16 +51,4 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
-}
-
-// flattenPackages flattens the package data into a format that Terraform can understand.
-func flattenPackages(packages []qc.PackageOut) []interface{} {
-	var flattenedPackages []interface{}
-	for _, p := range packages {
-		flattenedPackages = append(flattenedPackages, map[string]interface{}{
-			"id":   p.Id,
-			"name": p.Name,
-		})
-	}
-	return flattenedPackages
 }
