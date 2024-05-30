@@ -6,11 +6,50 @@ import (
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
+// Constant keys and descriptions for schema fields
+const (
+	// Field keys
+	fieldPackages              = "packages"
+	fieldID                    = "id"
+	fieldName                  = "name"
+	fieldStatus                = "status"
+	fieldCurrency              = "currency"
+	fieldUnitIntPricePerHour   = "unit_int_price_per_hour"
+	fieldUnitIntPricePerDay    = "unit_int_price_per_day"
+	fieldUnitIntPricePerMonth  = "unit_int_price_per_month"
+	fieldUnitIntPricePerYear   = "unit_int_price_per_year"
+	fieldRegionalMappingID     = "regional_mapping_id"
+	fieldResourceConfiguration = "resource_configuration"
+	fieldResourceOptionID      = "resource_option_id"
+	fieldAmount                = "amount"
+	fieldResourceOption        = "resource_option"
+	fieldResourceType          = "resource_type"
+	fieldResourceUnit          = "resource_unit"
+
+	// Descriptions
+	descriptionPackages              = "List of packages"
+	descriptionID                    = "The ID of the package"
+	descriptionName                  = "The name of the package"
+	descriptionStatus                = "The status of the package"
+	descriptionCurrency              = "The currency of the package prices"
+	descriptionUnitIntPricePerHour   = "The unit price per hour in integer format"
+	descriptionUnitIntPricePerDay    = "The unit price per day in integer format"
+	descriptionUnitIntPricePerMonth  = "The unit price per month in integer format"
+	descriptionUnitIntPricePerYear   = "The unit price per year in integer format"
+	descriptionRegionalMappingID     = "The ID of the regional mapping"
+	descriptionResourceConfiguration = "The resource configuration of the package"
+	descriptionResourceOptionID      = "The ID of the resource option"
+	descriptionAmount                = "The amount of the resource"
+	descriptionResourceOption        = "The resource option details"
+	descriptionResourceType          = "The type of the resource"
+	descriptionResourceUnit          = "The unit of the resource"
+)
+
 // packagesSchema defines the schema structure for a packages within the Terraform provider.
 func packagesSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"packages": {
-			Description: "TODO",
+		fieldPackages: {
+			Description: descriptionPackages,
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
@@ -23,26 +62,57 @@ func packagesSchema() map[string]*schema.Schema {
 // packageSchema defines the schema structure for a package within the Terraform provider.
 func packageSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"id": {
-			Description: "TODO",
+		fieldID: {
+			Description: descriptionID,
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
-		"name":                     {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"status":                   {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"currency":                 {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"unit_int_price_per_hour":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_day":   {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_month": {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_year":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"regional_mapping_id":      {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"resource_configuration": {
-			Description: "TODO",
+		fieldName: {
+			Description: descriptionName,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldStatus: {
+			Description: descriptionStatus,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldCurrency: {
+			Description: descriptionCurrency,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerHour: {
+			Description: descriptionUnitIntPricePerHour,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerDay: {
+			Description: descriptionUnitIntPricePerDay,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerMonth: {
+			Description: descriptionUnitIntPricePerMonth,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerYear: {
+			Description: descriptionUnitIntPricePerYear,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldRegionalMappingID: {
+			Description: descriptionRegionalMappingID,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldResourceConfiguration: {
+			Description: descriptionResourceConfiguration,
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Description: "TODO",
-				Schema:      resourceConfigurationSchema(),
+				Schema: resourceConfigurationSchema(),
 			},
 		},
 	}
@@ -51,15 +121,22 @@ func packageSchema() map[string]*schema.Schema {
 // resourceConfigurationSchema defines the schema structure for resource configurations.
 func resourceConfigurationSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"resource_option_id": {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"amount":             {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"resource_option": {
-			Description: "TODO",
+		fieldResourceOptionID: {
+			Description: descriptionResourceOptionID,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldAmount: {
+			Description: descriptionAmount,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldResourceOption: {
+			Description: descriptionResourceOption,
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Description: "TODO",
-				Schema:      resourceOptionSchema(),
+				Schema: resourceOptionSchema(),
 			},
 		},
 	}
@@ -68,16 +145,56 @@ func resourceConfigurationSchema() map[string]*schema.Schema {
 // resourceOptionSchema returns the schema for individual resource options.
 func resourceOptionSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"id":                       {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"resource_type":            {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"status":                   {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"name":                     {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"resource_unit":            {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"currency":                 {Description: "TODO", Type: schema.TypeString, Computed: true},
-		"unit_int_price_per_hour":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_day":   {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_month": {Description: "TODO", Type: schema.TypeInt, Computed: true},
-		"unit_int_price_per_year":  {Description: "TODO", Type: schema.TypeInt, Computed: true},
+		fieldID: {
+			Description: descriptionID,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldResourceType: {
+			Description: descriptionResourceType,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldStatus: {
+			Description: descriptionStatus,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldName: {
+			Description: descriptionName,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldResourceUnit: {
+			Description: descriptionResourceUnit,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldCurrency: {
+			Description: descriptionCurrency,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerHour: {
+			Description: descriptionUnitIntPricePerHour,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerDay: {
+			Description: descriptionUnitIntPricePerDay,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerMonth: {
+			Description: descriptionUnitIntPricePerMonth,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		fieldUnitIntPricePerYear: {
+			Description: descriptionUnitIntPricePerYear,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
 	}
 }
 
@@ -86,16 +203,16 @@ func flattenPackages(packages []qc.PackageOut) []interface{} {
 	var flattenedPackages []interface{}
 	for _, p := range packages {
 		flattenedPackages = append(flattenedPackages, map[string]interface{}{
-			"id":                       derefString(p.Id),
-			"name":                     p.Name,
-			"status":                   int(p.Status),
-			"currency":                 string(p.Currency),
-			"unit_int_price_per_day":   derefInt(p.UnitIntPricePerDay),
-			"unit_int_price_per_hour":  derefInt(p.UnitIntPricePerHour),
-			"unit_int_price_per_month": derefInt(p.UnitIntPricePerMonth),
-			"unit_int_price_per_year":  derefInt(p.UnitIntPricePerYear),
-			"regional_mapping_id":      derefString(p.RegionalMappingId),
-			"resource_configuration":   flattenResourceConfiguraton(p.ResourceConfiguration),
+			fieldID:                    derefString(p.Id),
+			fieldName:                  p.Name,
+			fieldStatus:                int(p.Status),
+			fieldCurrency:              string(p.Currency),
+			fieldUnitIntPricePerDay:    derefInt(p.UnitIntPricePerDay),
+			fieldUnitIntPricePerHour:   derefInt(p.UnitIntPricePerHour),
+			fieldUnitIntPricePerMonth:  derefInt(p.UnitIntPricePerMonth),
+			fieldUnitIntPricePerYear:   derefInt(p.UnitIntPricePerYear),
+			fieldRegionalMappingID:     derefString(p.RegionalMappingId),
+			fieldResourceConfiguration: flattenResourceConfiguraton(p.ResourceConfiguration),
 		})
 
 	}
@@ -107,9 +224,9 @@ func flattenResourceConfiguraton(rcs []qc.ResourceConfiguration) []interface{} {
 	var flattenedResourceConfigurations []interface{}
 	for _, rc := range rcs {
 		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
-			"resource_option_id": rc.ResourceOptionId,
-			"amount":             rc.Amount,
-			"resource_option":    flattenResourceOption(rc.ResourceOption),
+			fieldResourceOptionID: rc.ResourceOptionId,
+			fieldAmount:           rc.Amount,
+			fieldResourceOption:   flattenResourceOption(rc.ResourceOption),
 		})
 
 	}
@@ -119,20 +236,20 @@ func flattenResourceConfiguraton(rcs []qc.ResourceConfiguration) []interface{} {
 // flattenResourceOption flattens the resource option data into a format that Terraform can understand.
 func flattenResourceOption(ro *qc.ResourceOptionOut) []interface{} {
 	if ro == nil {
-		return []interface{}{}
+		return nil
 	}
 	flattenedResourceOption := []interface{}{
 		map[string]interface{}{
-			"id":                       ro.Id,
-			"resource_type":            string(ro.ResourceType),
-			"status":                   int(ro.Status),
-			"name":                     derefString(ro.Name),
-			"resource_unit":            ro.ResourceUnit,
-			"currency":                 string(ro.Currency),
-			"unit_int_price_per_hour":  derefInt(ro.UnitIntPricePerHour),
-			"unit_int_price_per_day":   derefInt(ro.UnitIntPricePerDay),
-			"unit_int_price_per_month": derefInt(ro.UnitIntPricePerMonth),
-			"unit_int_price_per_year":  derefInt(ro.UnitIntPricePerYear),
+			fieldID:                   ro.Id,
+			fieldResourceType:         string(ro.ResourceType),
+			fieldStatus:               int(ro.Status),
+			fieldName:                 derefString(ro.Name),
+			fieldResourceUnit:         ro.ResourceUnit,
+			fieldCurrency:             string(ro.Currency),
+			fieldUnitIntPricePerHour:  derefInt(ro.UnitIntPricePerHour),
+			fieldUnitIntPricePerDay:   derefInt(ro.UnitIntPricePerDay),
+			fieldUnitIntPricePerMonth: derefInt(ro.UnitIntPricePerMonth),
+			fieldUnitIntPricePerYear:  derefInt(ro.UnitIntPricePerYear),
 		},
 	}
 	return flattenedResourceOption
