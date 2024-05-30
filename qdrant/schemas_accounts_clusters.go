@@ -196,6 +196,31 @@ func expandClusterIn(d *schema.ResourceData, accountID string) (qc.ClusterIn, er
 		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion.(string)),
 		AccountId:     &accountID,
 	}
+
+	if v, ok := d.GetOk(clusterVersionFieldName); ok {
+		val := v.(string)
+		cluster.Version = &val
+	}
+	if v, ok := d.GetOk(clusterCloudRegionAvailabilityZoneFieldName); ok {
+		val := v.(string)
+		cluster.CloudRegionAz = &val
+	}
+	if v, ok := d.GetOk(clusterCloudRegionSetupFieldName); ok {
+		val := v.(string)
+		cluster.CloudRegionSetup = &val
+	}
+	if v, ok := d.GetOk(clusterPrivateRegionIDFieldName); ok {
+		val := v.(string)
+		cluster.PrivateRegionId = &val
+	}
+	/*if v, ok := d.GetOk(clusterEncryptionKeyIDFieldName); ok {
+		val := v.(string)
+		cluster.EncryptionKeyId = &val
+	}
+	if v, ok := d.GetOk(clusterTotalExtraDiskFieldName); ok {
+		extraDisk := v.(int)
+		cluster.TotalExtraDisk = &extraDisk
+	}*/
 	if v, ok := d.GetOk(configurationFieldName); ok {
 		configuration := expandClusterConfigurationIn(v.([]interface{}))
 		cluster.Configuration = *configuration
@@ -234,7 +259,7 @@ func expandNodeConfigurationIn(v []interface{}) *qc.NodeConfiguration {
 	return &config
 }
 
-// flattenClusters creates an interface from a list of clusters for easy storage on terraform.
+// flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
 func flattenClusters(clusters []qc.ClusterOut) []interface{} {
 	var flattenedClusters []interface{}
 	for _, cluster := range clusters {
@@ -243,19 +268,29 @@ func flattenClusters(clusters []qc.ClusterOut) []interface{} {
 	return flattenedClusters
 }
 
-// flattenCluster creates a map from a cluster for easy storage on terraform.
+// flattenCluster creates a map from a cluster for easy storage in Terraform.
 func flattenCluster(cluster *qc.ClusterOut) map[string]interface{} {
 	return map[string]interface{}{
-		clusterIdentifierFieldName:    cluster.Id,
-		clusterAccountIDFieldName:     cluster.AccountId,
-		clusterNameFieldName:          cluster.Name,
-		clusterCloudProviderFieldName: cluster.CloudProvider,
-		clusterCloudRegionFieldName:   cluster.CloudRegion,
-		configurationFieldName:        flattenClusterConfiguration(cluster.Configuration),
+		clusterIdentifierFieldName:                  cluster.Id,
+		clusterCreatedAtFieldName:                   formatTime(cluster.CreatedAt),
+		clusterAccountIDFieldName:                   derefString(cluster.AccountId),
+		clusterNameFieldName:                        cluster.Name,
+		clusterCloudProviderFieldName:               cluster.CloudProvider,
+		clusterCloudRegionFieldName:                 cluster.CloudRegion,
+		clusterCloudRegionAvailabilityZoneFieldName: derefString(cluster.CloudRegionAz),
+		clusterVersionFieldName:                     derefString(cluster.Version),
+		clusterCloudRegionSetupFieldName:            derefString(cluster.CloudRegionSetup),
+		clusterPrivateRegionIDFieldName:             derefString(cluster.PrivateRegionId),
+		clusterCurrentConfigurationIDFieldName:      cluster.CurrentConfigurationId,
+		clusterEncryptionKeyIDFieldName:             derefString(cluster.EncryptionKeyId),
+		clusterMarkedForDeletionAtFieldName:         formatTime(cluster.MarkedForDeletionAt),
+		clusterURLFieldName:                         cluster.Url,
+		clusterTotalExtraDiskFieldName:              derefInt(cluster.TotalExtraDisk),
+		configurationFieldName:                      flattenClusterConfiguration(cluster.Configuration),
 	}
 }
 
-// flattenClusterConfiguration creates a map from a cluster configuration for easy storage on terraform.
+// flattenClusterConfiguration creates a map from a cluster configuration for easy storage in Terraform.
 func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
@@ -266,7 +301,7 @@ func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) []in
 	}
 }
 
-// flattenNodeConfiguration creates a map from a node configuration for easy storage on terraform.
+// flattenNodeConfiguration creates a map from a node configuration for easy storage in Terraform.
 func flattenNodeConfiguration(nodeConfig qc.NodeConfiguration) []interface{} {
 	return []interface{}{
 		map[string]interface{}{

@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -10,10 +11,21 @@ import (
 
 func TestResourceClusterFlatten(t *testing.T) {
 	cluster := &qc.ClusterOut{
-		AccountId:     newString("accountID"),
-		Name:          "testName",
-		CloudProvider: qc.ClusterOutCloudProviderAzure,
-		CloudRegion:   qc.ClusterOutCloudRegionUksouth,
+		Id:                     "testID",
+		CreatedAt:              time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
+		AccountId:              newString("accountID"),
+		Name:                   "testName",
+		CloudProvider:          qc.ClusterOutCloudProviderAzure,
+		CloudRegion:            qc.ClusterOutCloudRegionUksouth,
+		CloudRegionAz:          newString("1"),
+		Version:                newString("v1.0"),
+		CloudRegionSetup:       newString("Standard"),
+		PrivateRegionId:        newString("privateRegionID"),
+		CurrentConfigurationId: "currentConfigID",
+		EncryptionKeyId:        newString("encryptionKeyID"),
+		MarkedForDeletionAt:    newTime(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Url:                    "http://example.com",
+		TotalExtraDisk:         newInt(100),
 		Configuration: &qc.ClusterConfigurationOut{
 			NumNodes:    5,
 			NumNodesMax: 10,
@@ -22,22 +34,32 @@ func TestResourceClusterFlatten(t *testing.T) {
 			},
 		},
 	}
+
 	flattened := flattenCluster(cluster)
 
 	expected := map[string]interface{}{
-		"id":             "", // ClusterOut contains an ID
-		"account_id":     cluster.AccountId,
-		"name":           cluster.Name,
-		"cloud_provider": cluster.CloudProvider,
-		"cloud_region":   cluster.CloudRegion,
-		"configuration": []interface{}{
+		clusterIdentifierFieldName:                  cluster.Id,
+		clusterCreatedAtFieldName:                   formatTime(&cluster.CreatedAt),
+		clusterAccountIDFieldName:                   derefString(cluster.AccountId),
+		clusterNameFieldName:                        cluster.Name,
+		clusterCloudProviderFieldName:               cluster.CloudProvider,
+		clusterCloudRegionFieldName:                 cluster.CloudRegion,
+		clusterCloudRegionAvailabilityZoneFieldName: derefString(cluster.CloudRegionAz),
+		clusterVersionFieldName:                     derefString(cluster.Version),
+		clusterCloudRegionSetupFieldName:            derefString(cluster.CloudRegionSetup),
+		clusterPrivateRegionIDFieldName:             derefString(cluster.PrivateRegionId),
+		clusterCurrentConfigurationIDFieldName:      cluster.CurrentConfigurationId,
+		clusterEncryptionKeyIDFieldName:             derefString(cluster.EncryptionKeyId),
+		clusterMarkedForDeletionAtFieldName:         formatTime(cluster.MarkedForDeletionAt),
+		clusterURLFieldName:                         cluster.Url,
+		clusterTotalExtraDiskFieldName:              derefInt(cluster.TotalExtraDisk),
+		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				//"id":            "", // ConfigurationOut contains an ID
-				"num_nodes":     cluster.Configuration.NumNodes,
-				"num_nodes_max": cluster.Configuration.NumNodesMax,
-				"node_configuration": []interface{}{
+				numNodesFieldName:    cluster.Configuration.NumNodes,
+				numNodesMaxFieldName: cluster.Configuration.NumNodesMax,
+				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
-						"package_id": cluster.Configuration.NodeConfiguration.PackageId,
+						packageIDFieldName: cluster.Configuration.NodeConfiguration.PackageId,
 					},
 				},
 			},
@@ -45,8 +67,4 @@ func TestResourceClusterFlatten(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, flattened)
-}
-
-func newString(s string) *string {
-	return &s
 }

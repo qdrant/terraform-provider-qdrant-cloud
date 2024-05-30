@@ -68,6 +68,9 @@ func formatTime(t interface{}) string {
 	case time.Time:
 		// Format time.Time to RFC3339 standard string format.
 		return v.Format(time.RFC3339)
+	case *time.Time:
+		// Format time.Time to RFC3339 standard string format.
+		return v.Format(time.RFC3339)
 	case string:
 		// Return string as is.
 		return v
