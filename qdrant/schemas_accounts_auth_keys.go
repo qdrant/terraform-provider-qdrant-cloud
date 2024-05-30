@@ -106,9 +106,9 @@ func flattenGetAuthKey(key qc.GetApiKeyOut) map[string]interface{} {
 	result := map[string]interface{}{
 		authKeysKeysIDFieldName:         key.Id,
 		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
-		authKeysKeysUserIDFieldName:     key.UserId,
-		authKeysKeysAccountIDFieldName:  key.AccountId,
-		authKeysKeysClusterIDsFieldName: key.ClusterIdList,
+		authKeysKeysUserIDFieldName:     derefString(key.UserId),
+		authKeysKeysAccountIDFieldName:  derefString(key.AccountId),
+		authKeysKeysClusterIDsFieldName: derefStringArray(key.ClusterIdList),
 		authKeysKeysPrefixFieldName:     key.Prefix,
 	}
 	return result
@@ -119,9 +119,9 @@ func flattenCreateAuthKey(key qc.CreateApiKeyOut) map[string]interface{} {
 	result := map[string]interface{}{
 		authKeysKeysIDFieldName:         key.Id,
 		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
-		authKeysKeysUserIDFieldName:     key.UserId,
-		authKeysKeysAccountIDFieldName:  key.AccountId,
-		authKeysKeysClusterIDsFieldName: key.ClusterIdList,
+		authKeysKeysUserIDFieldName:     derefString(key.UserId),
+		authKeysKeysAccountIDFieldName:  derefString(key.AccountId),
+		authKeysKeysClusterIDsFieldName: derefStringArray(key.ClusterIdList),
 		authKeysKeysPrefixFieldName:     key.Prefix,
 		authKeysKeysTokenFieldName:      key.Token,
 	}

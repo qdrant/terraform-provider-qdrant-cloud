@@ -13,6 +13,13 @@ func derefString(ptr *string) string {
 	return ""
 }
 
+func derefStringArray(ptr *[]string) []string {
+	if ptr != nil {
+		return *ptr
+	}
+	return nil
+}
+
 func newInt(i int) *int {
 	return &i
 }
