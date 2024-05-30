@@ -71,25 +71,47 @@ func TestResourceClusterFlatten(t *testing.T) {
 }
 
 func TestExpandClusterIn(t *testing.T) {
-	accountID := "testAccountID"
-	name := "testName"
-	cloudProvider := "azure"
-	cloudRegion := "uksouth"
-
-	d := schema.TestResourceDataRaw(t, accountsClusterSchema(), map[string]interface{}{
-		"name":           name,
-		"cloud_provider": cloudProvider,
-		"cloud_region":   cloudRegion,
-	})
-
 	expected := qc.ClusterIn{
-		Name:          name,
-		CloudProvider: qc.ClusterInCloudProvider(cloudProvider),
-		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion),
-		AccountId:     &accountID,
+		AccountId:        newString("accountID"),
+		Name:             "testName",
+		CloudProvider:    qc.ClusterInCloudProviderAzure,
+		CloudRegion:      qc.ClusterInCloudRegionUksouth,
+		CloudRegionAz:    newString("1"),
+		Version:          newString("v1.0"),
+		CloudRegionSetup: newString("Standard"),
+		PrivateRegionId:  newString("privateRegionID"),
+		Configuration: qc.ClusterConfigurationIn{
+			NumNodes:    5,
+			NumNodesMax: 10,
+			NodeConfiguration: qc.NodeConfiguration{
+				PackageId: "testPackageID",
+			},
+		},
 	}
 
-	result, err := expandClusterIn(d, accountID)
+	d := schema.TestResourceDataRaw(t, accountsClusterSchema(), map[string]interface{}{
+		clusterAccountIDFieldName:                   derefString(expected.AccountId),
+		clusterNameFieldName:                        expected.Name,
+		clusterCloudProviderFieldName:               string(expected.CloudProvider),
+		clusterCloudRegionFieldName:                 string(expected.CloudRegion),
+		clusterCloudRegionAvailabilityZoneFieldName: derefString(expected.CloudRegionAz),
+		clusterVersionFieldName:                     derefString(expected.Version),
+		clusterCloudRegionSetupFieldName:            derefString(expected.CloudRegionSetup),
+		clusterPrivateRegionIDFieldName:             derefString(expected.PrivateRegionId),
+		configurationFieldName: []interface{}{
+			map[string]interface{}{
+				numNodesFieldName:    expected.Configuration.NumNodes,
+				numNodesMaxFieldName: expected.Configuration.NumNodesMax,
+				nodeConfigurationFieldName: []interface{}{
+					map[string]interface{}{
+						packageIDFieldName: expected.Configuration.NodeConfiguration.PackageId,
+					},
+				},
+			},
+		},
+	})
+
+	result, err := expandClusterIn(d, derefString(expected.AccountId))
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }
