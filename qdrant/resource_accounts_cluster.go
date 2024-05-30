@@ -127,37 +127,51 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
 	}
 	// Get the cluster ID as UUID
-	clusterUUID, err := uuid.Parse(d.Get("id").(string))
+	clusterUUID, err := uuid.Parse(d.Get(clusterIdentifierFieldName).(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	// Expand the cluster
+	cluster, err := expandClusterIn(d, getDefaultAccountID(m))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	patch := qc.PydanticClusterPatchIn{}
 	// Check what has been changed
-	if d.HasChange("configuration") {
-		conf := expandClusterConfigurationIn(d.Get("configuration").([]interface{}))
-
-		resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, qc.PydanticClusterPatchIn{
-			Configuration: &qc.PydanticClusterConfigurationPatchIn{
-				NumNodes: &conf.NumNodes,
-			},
-		})
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if resp.JSON422 != nil {
-			return diag.FromErr(fmt.Errorf("error updating cluster: %s", getError(resp.JSON422)))
-		}
-		if resp.StatusCode() != 200 {
-			return diag.FromErr(fmt.Errorf("error updating cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
-		}
-		clusterOut := resp.JSON200
-		if clusterOut == nil {
-			return diag.FromErr(fmt.Errorf("error updating cluster: no cluster returned"))
-		}
-		// Flatten cluster and store in Terraform state
-		for k, v := range flattenCluster(clusterOut) {
-			if err := d.Set(k, v); err != nil {
-				return diag.FromErr(err)
+	if d.HasChange(configurationFieldName) {
+		oldConf, newConf := d.GetChange(configurationFieldName)
+		oldConfMap := oldConf.(map[string]interface{})
+		newConfMap := newConf.(map[string]interface{})
+		// Check individual fields for changes
+		if oldConfMap[numNodesFieldName] != newConfMap[numNodesFieldName] {
+			// Handle change in num_nodes field
+			patch.Configuration = &qc.PydanticClusterConfigurationPatchIn{
+				NumNodes: &cluster.Configuration.NumNodes,
 			}
+		}
+	}
+	if d.HasChange(clusterVersionFieldName) {
+		patch.Version = cluster.Version
+	}
+
+	resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, patch)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("error updating cluster: %s", getError(resp.JSON422)))
+	}
+	if resp.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf("error updating cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+	}
+	clusterOut := resp.JSON200
+	if clusterOut == nil {
+		return diag.FromErr(fmt.Errorf("error updating cluster: no cluster returned"))
+	}
+	// Flatten cluster and store in Terraform state
+	for k, v := range flattenCluster(clusterOut) {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(err)
 		}
 	}
 	return nil
