@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
@@ -67,4 +68,28 @@ func TestResourceClusterFlatten(t *testing.T) {
 	}
 
 	assert.Equal(t, expected, flattened)
+}
+
+func TestExpandClusterIn(t *testing.T) {
+	accountID := "testAccountID"
+	name := "testName"
+	cloudProvider := "azure"
+	cloudRegion := "uksouth"
+
+	d := schema.TestResourceDataRaw(t, accountsClusterSchema(), map[string]interface{}{
+		"name":           name,
+		"cloud_provider": cloudProvider,
+		"cloud_region":   cloudRegion,
+	})
+
+	expected := qc.ClusterIn{
+		Name:          name,
+		CloudProvider: qc.ClusterInCloudProvider(cloudProvider),
+		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion),
+		AccountId:     &accountID,
+	}
+
+	result, err := expandClusterIn(d, accountID)
+	assert.NoError(t, err)
+	assert.Equal(t, expected, result)
 }
