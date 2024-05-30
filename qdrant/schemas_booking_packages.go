@@ -52,6 +52,7 @@ func packageSchema() map[string]*schema.Schema {
 func resourceConfigurationSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"resource_option_id": {Description: "TODO", Type: schema.TypeString, Computed: true},
+		"amount":             {Description: "TODO", Type: schema.TypeInt, Computed: true},
 		"resource_option": {
 			Description: "TODO",
 			Type:        schema.TypeList,
@@ -85,9 +86,54 @@ func flattenPackages(packages []qc.PackageOut) []interface{} {
 	var flattenedPackages []interface{}
 	for _, p := range packages {
 		flattenedPackages = append(flattenedPackages, map[string]interface{}{
-			"id":   p.Id,
-			"name": p.Name,
+			"id":                       derefString(p.Id),
+			"name":                     p.Name,
+			"status":                   int(p.Status),
+			"currency":                 string(p.Currency),
+			"unit_int_price_per_day":   derefInt(p.UnitIntPricePerDay),
+			"unit_int_price_per_hour":  derefInt(p.UnitIntPricePerHour),
+			"unit_int_price_per_month": derefInt(p.UnitIntPricePerMonth),
+			"unit_int_price_per_year":  derefInt(p.UnitIntPricePerYear),
+			"regional_mapping_id":      derefString(p.RegionalMappingId),
+			"resource_configuration":   flattenResourceConfiguraton(p.ResourceConfiguration),
 		})
+
 	}
 	return flattenedPackages
+}
+
+// flattenResourceConfiguraton flattens the resource configuration data into a format that Terraform can understand.
+func flattenResourceConfiguraton(rcs []qc.ResourceConfiguration) []interface{} {
+	var flattenedResourceConfigurations []interface{}
+	for _, rc := range rcs {
+		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
+			"resource_option_id": rc.ResourceOptionId,
+			"amount":             rc.Amount,
+			"resource_option":    flattenResourceOption(rc.ResourceOption),
+		})
+
+	}
+	return flattenedResourceConfigurations
+}
+
+// flattenResourceOption flattens the resource option data into a format that Terraform can understand.
+func flattenResourceOption(ro *qc.ResourceOptionOut) []interface{} {
+	if ro == nil {
+		return []interface{}{}
+	}
+	flattenedResourceOption := []interface{}{
+		map[string]interface{}{
+			"id":                       ro.Id,
+			"resource_type":            string(ro.ResourceType),
+			"status":                   int(ro.Status),
+			"name":                     derefString(ro.Name),
+			"resource_unit":            ro.ResourceUnit,
+			"currency":                 string(ro.Currency),
+			"unit_int_price_per_hour":  derefInt(ro.UnitIntPricePerHour),
+			"unit_int_price_per_day":   derefInt(ro.UnitIntPricePerDay),
+			"unit_int_price_per_month": derefInt(ro.UnitIntPricePerMonth),
+			"unit_int_price_per_year":  derefInt(ro.UnitIntPricePerYear),
+		},
+	}
+	return flattenedResourceOption
 }
