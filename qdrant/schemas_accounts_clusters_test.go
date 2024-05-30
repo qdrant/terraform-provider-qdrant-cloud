@@ -87,6 +87,11 @@ func TestExpandClusterIn(t *testing.T) {
 				PackageId: "testPackageID",
 			},
 		},
+		EncryptionConfig: &qc.EncryptionConfigIn{
+			AwsEncryptionConfig: &qc.AWSEncryptionConfig{
+				EncryptionKeyId: newString("encryptionKey"),
+			},
+		},
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsClusterSchema(), map[string]interface{}{
@@ -109,6 +114,7 @@ func TestExpandClusterIn(t *testing.T) {
 				},
 			},
 		},
+		clusterEncryptionKeyIDFieldName: derefString(expected.EncryptionConfig.AwsEncryptionConfig.EncryptionKeyId),
 	})
 
 	result, err := expandClusterIn(d, derefString(expected.AccountId))

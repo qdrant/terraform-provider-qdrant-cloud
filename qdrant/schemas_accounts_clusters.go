@@ -215,11 +215,13 @@ func expandClusterIn(d *schema.ResourceData, accountID string) (qc.ClusterIn, er
 		val := v.(string)
 		cluster.PrivateRegionId = &val
 	}
-	/*if v, ok := d.GetOk(clusterEncryptionKeyIDFieldName); ok {
+	if v, ok := d.GetOk(clusterEncryptionKeyIDFieldName); ok {
 		val := v.(string)
-		cluster.EncryptionKeyId = &val
+		cluster.EncryptionConfig = &qc.EncryptionConfigIn{AwsEncryptionConfig: &qc.AWSEncryptionConfig{
+			EncryptionKeyId: &val,
+		}}
 	}
-	if v, ok := d.GetOk(clusterTotalExtraDiskFieldName); ok {
+	/*if v, ok := d.GetOk(clusterTotalExtraDiskFieldName); ok {
 		extraDisk := v.(int)
 		cluster.TotalExtraDisk = &extraDisk
 	}*/
