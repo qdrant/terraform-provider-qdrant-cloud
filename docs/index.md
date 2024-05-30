@@ -7,7 +7,7 @@ description: |-
 
 # Qdrant Cloud Provider
 
-The Terraform Qdrank Cloud provider is a plugin for Terraform that allows for the full lifecycle management of Qdrant Cloud resources.
+The Terraform Qdrant Cloud provider is a plugin for Terraform that allows for the full lifecycle management of Qdrant Cloud resources.
 
 Api keys can be generated and viewed under the user's dashboard view on the API Keys tab.... TODO
 
