@@ -102,6 +102,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 		clusterCloudRegionSetupFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region setup of the cluster"),
 			Type:        schema.TypeString,
+			Computed:    true,
 			Optional:    true,
 		},
 		clusterPrivateRegionIDFieldName: {
@@ -128,6 +129,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 		clusterVersionFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the Qdrant cluster"),
 			Type:        schema.TypeString,
+			Computed:    true,
 			Optional:    true,
 		},
 		clusterURLFieldName: {
