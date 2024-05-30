@@ -18,7 +18,7 @@ Booking packages Data Source
 ### Read-Only
 
 - `id` (String) The ID of this resource.
-- `packages` (List of Object) TODO (see [below for nested schema](#nestedatt--packages))
+- `packages` (List of Object) List of packages (see [below for nested schema](#nestedatt--packages))
 
 <a id="nestedatt--packages"></a>
 ### Nested Schema for `packages`
@@ -41,6 +41,7 @@ Read-Only:
 
 Read-Only:
 
+- `amount` (Number)
 - `resource_option` (List of Object) (see [below for nested schema](#nestedobjatt--packages--resource_configuration--resource_option))
 - `resource_option_id` (String)
 

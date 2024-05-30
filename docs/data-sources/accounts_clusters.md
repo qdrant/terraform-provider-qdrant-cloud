@@ -41,7 +41,6 @@ Read-Only:
 - `id` (String)
 - `marked_for_deletion_at` (String)
 - `name` (String)
-- `owner_id` (String)
 - `private_region_id` (String)
 - `total_extra_disk` (Number)
 - `url` (String)
