@@ -152,6 +152,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	}
 	if d.HasChange(clusterVersionFieldName) {
 		patch.Version = cluster.Version
+		patch.Rolling = newBool(true)
 	}
 
 	resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, patch)

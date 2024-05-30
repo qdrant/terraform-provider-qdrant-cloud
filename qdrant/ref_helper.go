@@ -41,3 +41,7 @@ func derefTime(ptr *time.Time) time.Time {
 	}
 	return time.Time{}
 }
+
+func newBool(b bool) *bool {
+	return &b
+}
