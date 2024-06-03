@@ -1,6 +1,8 @@
 package qdrant
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
@@ -196,6 +198,16 @@ func resourceOptionSchema() map[string]*schema.Schema {
 			Computed:    true,
 		},
 	}
+}
+
+// ConvertToJSON takes a slice of interface{} and converts it to JSON for debugging purposes.
+func ConvertToJSON(data []interface{}) string {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println("Error converting to JSON")
+		return "[]"
+	}
+	return string(jsonData)
 }
 
 // flattenPackages flattens the package data into a format that Terraform can understand.
