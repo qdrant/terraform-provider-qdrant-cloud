@@ -9,27 +9,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func TestAccDataAccountsAuthKeys(t *testing.T) {
+func TestAccDataBookingPackages(t *testing.T) {
 	provider := fmt.Sprintf(`
-provider "qdrant" {
+provider "qdrant-cloud" {
   api_key = "%s"
 }
-	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
+`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
-	config := provider + fmt.Sprintf(`
-data "qdrant_accounts_auth_keys" "test" {
-	account_id = "%s"
+	config := provider + `
+data "qdrant-cloud_booking_packages" "test" {
 }
-	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+`
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet("data.qdrant_accounts_auth_keys.test", "account_id"),
-		resource.TestCheckResourceAttrSet("data.qdrant_accounts_auth_keys.test", "keys.#"),
+		resource.TestCheckResourceAttrSet("data.qdrant_booking_packages.test", "packages.#"),
 	)
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
-			"qdrant": func() (*schema.Provider, error) {
+			"qdrant-cloud": func() (*schema.Provider, error) {
 				return Provider(), nil
 			},
 		},

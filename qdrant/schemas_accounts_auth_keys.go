@@ -1,76 +1,129 @@
 package qdrant
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+)
+
+const (
+	authKeysFieldTemplate      = "Auth Keys Schema %s field"
+	authKeysAccountIDFieldName = "account_id"
+	authKeysKeysFieldName      = "keys"
+
+	authKeysKeysFieldTemplate       = "Auth Keys Keys Schema %s field"
+	authKeysKeysIDFieldName         = "id"
+	authKeysKeysCreatedAtFieldName  = "created_at"
+	authKeysKeysUserIDFieldName     = "user_id"
+	authKeysKeysPrefixFieldName     = "prefix"
+	authKeysKeysClusterIDsFieldName = "cluster_ids"
+	authKeysKeysAccountIDFieldName  = "account_id"
+	authKeysKeysTokenFieldName      = "token"
 )
 
 // accountsAuthKeysSchema returns the schema for the auth keys.
 func accountsAuthKeysSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"account_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
+		authKeysAccountIDFieldName: {
+			Description: fmt.Sprintf(authKeysFieldTemplate, "Account Identifier where all those Auth Keys belongs to"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
 		},
-		"keys": {
-			Type:     schema.TypeList,
-			Computed: true,
+		authKeysKeysFieldName: {
+			Description: fmt.Sprintf(authKeysFieldTemplate, "List of Auth Keys"),
+			Type:        schema.TypeList,
+			Computed:    true,
 			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"id": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"created_at": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"user_id": {
-						Type:     schema.TypeString,
-						Computed: true,
-						Optional: true,
-					},
-					"prefix": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"cluster_id_list": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Optional: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"account_id": {
-						Type:     schema.TypeString,
-						Computed: true,
-						Optional: true,
-					},
-					"token": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
+				Description: fmt.Sprintf(authKeysFieldTemplate, "Individual Auth Keys"),
+				Schema:      accountsAuthKeySchema(),
 			},
 		},
 	}
 }
 
-// APIKey represents the structure of an API key as retrieved from the Qdrant Cloud API.
-type APIKey struct {
-	ID            string   `json:"id"`              // The unique identifier of the API key.
-	CreatedAt     string   `json:"created_at"`      // The creation timestamp of the API key.
-	UserID        *string  `json:"user_id"`         // The user identifier associated with the API key, if applicable.
-	Prefix        string   `json:"prefix"`          // The prefix associated with the API key.
-	ClusterIDList []string `json:"cluster_id_list"` // A list of cluster identifiers associated with the API key.
-	AccountID     string   `json:"account_id"`      // The account identifier associated with the API key.
+// accountsAuthKeySchema returns the schema for the auth key.
+func accountsAuthKeySchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		authKeysKeysIDFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Auth Key Identifier"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysCreatedAtFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Timestamp when the Auth Key is created"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysUserIDFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "User Idetifier from whom the Auth Key has been created"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysPrefixFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Prefix of the Auth Key (the first few bytes from the token)"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		authKeysKeysClusterIDsFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Cluster Identifiers for which this Auth Key is attached"),
+			Type:        schema.TypeList,
+			Required:    true,
+			ForceNew:    true,
+			Elem: &schema.Schema{
+				Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Single Cluster Identifier for which this Auth Key is attached"),
+				Type:        schema.TypeString,
+			},
+		},
+		authKeysKeysAccountIDFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Account Identifiers where this Auth Key belongs to"),
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
+		},
+		authKeysKeysTokenFieldName: {
+			Description: fmt.Sprintf(authKeysKeysFieldTemplate, "Secret token for this Auth Key (handle with care!)"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+	}
 }
 
-// ApiKeyCreate defines the structure for the output response for an API key
-type ApiKeyCreate struct {
-	APIKey        // Embed the APIKey struct
-	Token  string `json:"token"` // The token associated with the API key
+// flattenGetAuthKeys flattens the API keys response into a slice of map[string]interface{}.
+func flattenGetAuthKeys(keys []qc.GetApiKeyOut) []interface{} {
+	var flattenedKeys []interface{}
+	for _, key := range keys {
+		flattenedKeys = append(flattenedKeys, flattenGetAuthKey(key))
+	}
+	return flattenedKeys
 }
 
-type ApiKeyCreateRequestBody struct {
-	ClusterIDList []string `json:"cluster_id_list"`
+// flattenGetAuthKey flattens the API key response into a slice of map[string]interface{}.
+func flattenGetAuthKey(key qc.GetApiKeyOut) map[string]interface{} {
+	result := map[string]interface{}{
+		authKeysKeysIDFieldName:         key.Id,
+		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
+		authKeysKeysUserIDFieldName:     derefString(key.UserId),
+		authKeysKeysAccountIDFieldName:  derefString(key.AccountId),
+		authKeysKeysClusterIDsFieldName: derefStringArray(key.ClusterIdList),
+		authKeysKeysPrefixFieldName:     key.Prefix,
+	}
+	return result
+}
+
+// flattenCreateAuthKey flattens the API key response into a slice of map[string]interface{}.
+func flattenCreateAuthKey(key qc.CreateApiKeyOut) map[string]interface{} {
+	result := map[string]interface{}{
+		authKeysKeysIDFieldName:         key.Id,
+		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
+		authKeysKeysUserIDFieldName:     derefString(key.UserId),
+		authKeysKeysAccountIDFieldName:  derefString(key.AccountId),
+		authKeysKeysClusterIDsFieldName: derefStringArray(key.ClusterIdList),
+		authKeysKeysPrefixFieldName:     key.Prefix,
+		authKeysKeysTokenFieldName:      key.Token,
+	}
+	return result
 }

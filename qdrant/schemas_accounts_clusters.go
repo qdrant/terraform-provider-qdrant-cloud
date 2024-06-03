@@ -1,115 +1,170 @@
 package qdrant
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
-// AccountsClustersSchema defines the schema for a cluster resource.
-// Returns a pointer to the schema.Resource object.
-func AccountsClustersSchema() map[string]*schema.Schema {
+const (
+	clustersFieldTemplate      = "Clusters Schema %s field"
+	clustersAccountIDFieldName = "account_id"
+	clustersClustersFieldName  = "clusters"
+
+	clusterFieldTemplate                        = "Cluster Schema %s field"
+	clusterIdentifierFieldName                  = "id"
+	clusterCreatedAtFieldName                   = "created_at"
+	clusterAccountIDFieldName                   = "account_id"
+	clusterNameFieldName                        = "name"
+	clusterCloudProviderFieldName               = "cloud_provider"
+	clusterCloudRegionFieldName                 = "cloud_region"
+	clusterCloudRegionAvailabilityZoneFieldName = "cloud_region_az"
+	clusterVersionFieldName                     = "version"
+	clusterCloudRegionSetupFieldName            = "cloud_region_setup"
+	clusterPrivateRegionIDFieldName             = "private_region_id"
+	clusterCurrentConfigurationIDFieldName      = "current_configuration_id"
+	clusterEncryptionKeyIDFieldName             = "encryption_key_id"
+	clusterMarkedForDeletionAtFieldName         = "marked_for_deletion_at"
+	clusterURLFieldName                         = "url"
+	clusterTotalExtraDiskFieldName              = "total_extra_disk"
+	configurationFieldName                      = "configuration"
+	nodeConfigurationFieldName                  = "node_configuration"
+	numNodesMaxFieldName                        = "num_nodes_max"
+	numNodesFieldName                           = "num_nodes"
+	packageIDFieldName                          = "package_id"
+)
+
+// accountsClustersSchema defines the schema for a cluster list resource.
+func accountsClustersSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"id": {
-			Type:     schema.TypeString,
-			Computed: true,
+		clustersAccountIDFieldName: {
+			Description: fmt.Sprintf(clustersFieldTemplate, "Identifier of the account"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
 		},
-		"created_at": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"owner_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"account_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"cloud_provider": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"cloud_region": {
-			Type:     schema.TypeString,
-			Required: true,
-			ForceNew: true,
-		},
-		"cloud_region_az": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"cloud_region_setup": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"private_region_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"current_configuration_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"encryption_key_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"marked_for_deletion_at": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"version": {
-			Type:     schema.TypeString,
-			Computed: true,
-			Optional: true,
-		},
-		"url": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"state": {
-			Type:     schema.TypeMap,
-			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
+		clustersClustersFieldName: {
+			Description: fmt.Sprintf(clustersFieldTemplate, "List of clusters"),
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Description: fmt.Sprintf(clustersFieldTemplate, "Individual cluster"),
+				Schema:      accountsClusterSchema(),
 			},
 		},
-		"configuration": {
-			Type:     schema.TypeSet,
-			Required: true,
-			ForceNew: true,
+	}
+}
+
+// accountsClusterSchema defines the schema for a cluster resource.
+func accountsClusterSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterIdentifierFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterCreatedAtFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp when the cluster is created"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterAccountIDFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the account"),
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+		},
+		clusterNameFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Name of the cluster"),
+			Type:        schema.TypeString,
+			Required:    true,
+		},
+		clusterCloudProviderFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud provider where the cluster resides"),
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true, // Cross provider migration isn't supported
+		},
+		clusterCloudRegionFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region where the cluster resides"),
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true, // Cross region migration isn't supported
+		},
+		clusterCloudRegionAvailabilityZoneFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region availability zone where the cluster resides"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+		},
+		clusterCloudRegionSetupFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region setup of the cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+		},
+		clusterPrivateRegionIDFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Private Region"),
+			Type:        schema.TypeString,
+			Optional:    true,
+		},
+		clusterCurrentConfigurationIDFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the current configuration"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterEncryptionKeyIDFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the encryption key"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+		},
+		clusterMarkedForDeletionAtFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp when this cluster was marked for deletion"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterVersionFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the Qdrant cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    true,
+		},
+		clusterURLFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The URL of the endpoint of the Qdrant cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		configurationFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The configuration options of a cluster"),
+			Type:        schema.TypeList, // There is a single required item only, no need for a set.
+			Required:    true,
+			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"num_nodes_max": {
-						Type:     schema.TypeInt,
-						Required: true,
+					numNodesMaxFieldName: {
+						Description: fmt.Sprintf(clusterFieldTemplate, "The maximum number of nodes in the cluster"),
+						Type:        schema.TypeInt,
+						Required:    true,
 					},
-					"num_nodes": {
-						Type:     schema.TypeInt,
-						Required: true,
+					numNodesFieldName: {
+						Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
+						Type:        schema.TypeInt,
+						Required:    true,
 					},
-					"node_configuration": {
-						Type:     schema.TypeSet,
-						Required: true,
+					nodeConfigurationFieldName: {
+						Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
+						Type:        schema.TypeList,
+						Required:    true,
+						MaxItems:    1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"package_id": {
-									Type:     schema.TypeString,
-									Required: true,
+								packageIDFieldName: {
+									Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory, and disk size)"),
+									Type:        schema.TypeString,
+									Required:    true,
 								},
 							},
 						},
@@ -117,128 +172,144 @@ func AccountsClustersSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"resources": {
-			Type:     schema.TypeMap,
-			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-		"total_extra_disk": {
-			Type:     schema.TypeInt,
-			Computed: true,
+		clusterTotalExtraDiskFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The total amount of extra disk in relation to the chosen package (in GiB)"),
+			Type:        schema.TypeInt,
+			Optional:    true,
 		},
 	}
 }
 
-type Cluster struct {
-	AccountID              string                 `json:"account_id"`
-	Name                   string                 `json:"name"`
-	CloudProvider          string                 `json:"cloud_provider"`
-	CloudRegion            string                 `json:"cloud_region"`
-	Configuration          ClusterConfigurationIn `json:"configuration"`
-	ID                     string                 `json:"id,omitempty"`
-	CreatedAt              string                 `json:"created_at,omitempty"`
-	OwnerID                string                 `json:"owner_id,omitempty"`
-	CloudRegionAZ          string                 `json:"cloud_region_az,omitempty"`
-	CloudRegionSetup       string                 `json:"cloud_region_setup,omitempty"`
-	PrivateRegionID        string                 `json:"private_region_id,omitempty"`
-	CurrentConfigurationID string                 `json:"current_configuration_id,omitempty"`
-	EncryptionKeyID        string                 `json:"encryption_key_id,omitempty"`
-	MarkedForDeletionAt    string                 `json:"marked_for_deletion_at,omitempty"`
-	Version                string                 `json:"version,omitempty"`
-	URL                    string                 `json:"url,omitempty"`
-	State                  interface{}            `json:"state,omitempty"`
-	Resources              interface{}            `json:"resources,omitempty"`
-	TotalExtraDisk         int                    `json:"total_extra_disk,omitempty"`
-	Schedule               *ScheduleIn            `json:"schedule,omitempty"`
-	EncryptionConfig       *EncryptionConfigIn    `json:"encryption_config,omitempty"`
+func expandClusterIn(d *schema.ResourceData, accountID string) (qc.ClusterIn, error) {
+	// Check if we need to override the default
+	if v, ok := d.GetOk(clusterAccountIDFieldName); ok {
+		accountID = v.(string)
+	}
+	if accountID == "" {
+		return qc.ClusterIn{}, fmt.Errorf("account ID not specified")
+	}
+	name := d.Get(clusterNameFieldName)
+	cloudProvider := d.Get(clusterCloudProviderFieldName)
+	cloudRegion := d.Get(clusterCloudRegionFieldName)
+
+	cluster := qc.ClusterIn{
+		Name:          name.(string),
+		CloudProvider: qc.ClusterInCloudProvider(cloudProvider.(string)),
+		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion.(string)),
+		AccountId:     &accountID,
+	}
+
+	if v, ok := d.GetOk(clusterVersionFieldName); ok {
+		val := v.(string)
+		cluster.Version = &val
+	}
+	if v, ok := d.GetOk(clusterCloudRegionAvailabilityZoneFieldName); ok {
+		val := v.(string)
+		cluster.CloudRegionAz = &val
+	}
+	if v, ok := d.GetOk(clusterCloudRegionSetupFieldName); ok {
+		val := v.(string)
+		cluster.CloudRegionSetup = &val
+	}
+	if v, ok := d.GetOk(clusterPrivateRegionIDFieldName); ok {
+		val := v.(string)
+		cluster.PrivateRegionId = &val
+	}
+	if v, ok := d.GetOk(clusterEncryptionKeyIDFieldName); ok {
+		val := v.(string)
+		cluster.EncryptionConfig = &qc.EncryptionConfigIn{AwsEncryptionConfig: &qc.AWSEncryptionConfig{
+			EncryptionKeyId: &val,
+		}}
+	}
+	/*if v, ok := d.GetOk(clusterTotalExtraDiskFieldName); ok {
+		extraDisk := v.(int)
+		cluster.TotalExtraDisk = &extraDisk
+	}*/
+	if v, ok := d.GetOk(configurationFieldName); ok {
+		configuration := expandClusterConfigurationIn(v.([]interface{}))
+		cluster.Configuration = *configuration
+	}
+	return cluster, nil
 }
 
-// ClusterConfigurationIn represents the input configuration for a cluster.
-type ClusterConfigurationIn struct {
-	NumNodes              int                     `json:"num_nodes"`
-	NumNodesMax           int                     `json:"num_nodes_max"`
-	NodeConfiguration     NodeConfiguration       `json:"node_configuration"`
-	QdrantConfiguration   *map[string]interface{} `json:"qdrant_configuration,omitempty"`
-	NodeSelector          *map[string]string      `json:"node_selector,omitempty"`
-	Tolerations           *[]map[string]string    `json:"tolerations,omitempty"`
-	ClusterAnnotations    *map[string]interface{} `json:"cluster_annotations,omitempty"`
-	AllowedIPSourceRanges *[]string               `json:"allowed_ip_source_ranges,omitempty"`
+func expandClusterConfigurationIn(v []interface{}) *qc.ClusterConfigurationIn {
+	config := qc.ClusterConfigurationIn{}
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		if v, ok := item[numNodesMaxFieldName]; ok {
+			config.NumNodesMax = v.(int)
+		}
+		if v, ok := item[numNodesFieldName]; ok {
+			config.NumNodes = v.(int)
+		}
+		if v, ok := item[nodeConfigurationFieldName]; ok {
+			nodeConfig := expandNodeConfigurationIn(v.([]interface{}))
+			if nodeConfig != nil {
+				config.NodeConfiguration = *nodeConfig
+			}
+		}
+	}
+	return &config
 }
 
-// NodeConfiguration defines the configuration for a node within the cluster.
-type NodeConfiguration struct {
-	PackageID              string                   `json:"package_id"`
-	Package                *PackageOut              `json:"package,omitempty"`
-	ResourceConfigurations *[]ResourceConfiguration `json:"resource_configurations,omitempty"`
+func expandNodeConfigurationIn(v []interface{}) *qc.NodeConfiguration {
+	config := qc.NodeConfiguration{}
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		if v, ok := item[packageIDFieldName]; ok {
+			config.PackageId = v.(string)
+		}
+	}
+	return &config
 }
 
-// PackageOut represents an output package information.
-type PackageOut struct {
-	ID                    *string                 `json:"id,omitempty"`
-	ResourceConfiguration []ResourceConfiguration `json:"resource_configuration"`
-	Name                  string                  `json:"name"`
-	Status                BookingStatus           `json:"status"`
-	Currency              Currency                `json:"currency"`
-	UnitIntPricePerHour   *int                    `json:"unit_int_price_per_hour,omitempty"`
-	UnitIntPricePerDay    *int                    `json:"unit_int_price_per_day,omitempty"`
-	UnitIntPricePerMonth  *int                    `json:"unit_int_price_per_month,omitempty"`
-	UnitIntPricePerYear   *int                    `json:"unit_int_price_per_year,omitempty"`
-	RegionalMappingID     *string                 `json:"regional_mapping_id,omitempty"`
+// flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
+func flattenClusters(clusters []qc.ClusterOut) []interface{} {
+	var flattenedClusters []interface{}
+	for _, cluster := range clusters {
+		flattenedClusters = append(flattenedClusters, flattenCluster(&cluster))
+	}
+	return flattenedClusters
 }
 
-// ResourceConfiguration holds the resource configurations for a node.
-type ResourceConfiguration struct {
-	ResourceOptionID string             `json:"resource_option_id"`
-	ResourceOption   *ResourceOptionOut `json:"resource_option,omitempty"`
-	Amount           int                `json:"amount"`
+// flattenCluster creates a map from a cluster for easy storage in Terraform.
+func flattenCluster(cluster *qc.ClusterOut) map[string]interface{} {
+	return map[string]interface{}{
+		clusterIdentifierFieldName:                  cluster.Id,
+		clusterCreatedAtFieldName:                   formatTime(cluster.CreatedAt),
+		clusterAccountIDFieldName:                   derefString(cluster.AccountId),
+		clusterNameFieldName:                        cluster.Name,
+		clusterCloudProviderFieldName:               cluster.CloudProvider,
+		clusterCloudRegionFieldName:                 cluster.CloudRegion,
+		clusterCloudRegionAvailabilityZoneFieldName: derefString(cluster.CloudRegionAz),
+		clusterVersionFieldName:                     derefString(cluster.Version),
+		clusterCloudRegionSetupFieldName:            derefString(cluster.CloudRegionSetup),
+		clusterPrivateRegionIDFieldName:             derefString(cluster.PrivateRegionId),
+		clusterCurrentConfigurationIDFieldName:      cluster.CurrentConfigurationId,
+		clusterEncryptionKeyIDFieldName:             derefString(cluster.EncryptionKeyId),
+		clusterMarkedForDeletionAtFieldName:         formatTime(cluster.MarkedForDeletionAt),
+		clusterURLFieldName:                         cluster.Url,
+		clusterTotalExtraDiskFieldName:              derefInt(cluster.TotalExtraDisk),
+		configurationFieldName:                      flattenClusterConfiguration(cluster.Configuration),
+	}
 }
 
-// ResourceOptionOut represents the details of a resource option.
-type ResourceOptionOut struct {
-	ID                   string        `json:"id"`
-	ResourceType         ResourceType  `json:"resource_type"`
-	Status               BookingStatus `json:"status"`
-	Name                 *string       `json:"name,omitempty"`
-	ResourceUnit         string        `json:"resource_unit"`
-	Currency             Currency      `json:"currency"`
-	UnitIntPricePerHour  *int          `json:"unit_int_price_per_hour,omitempty"`
-	UnitIntPricePerDay   *int          `json:"unit_int_price_per_day,omitempty"`
-	UnitIntPricePerMonth *int          `json:"unit_int_price_per_month,omitempty"`
-	UnitIntPricePerYear  *int          `json:"unit_int_price_per_year,omitempty"`
+// flattenClusterConfiguration creates a map from a cluster configuration for easy storage in Terraform.
+func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			numNodesFieldName:          clusterConfig.NumNodes,
+			numNodesMaxFieldName:       clusterConfig.NumNodesMax,
+			nodeConfigurationFieldName: flattenNodeConfiguration(clusterConfig.NodeConfiguration),
+		},
+	}
 }
 
-// ScheduleIn represents scheduling information for backups and other periodic tasks.
-type ScheduleIn struct {
-	CreatorUserID       *string        `json:"creator_user_id,omitempty"`
-	AccountID           *string        `json:"account_id,omitempty"`
-	Cron                string         `json:"cron"`
-	Retention           int            `json:"retention"`
-	PrivateRegionID     *string        `json:"private_region_id,omitempty"`
-	MarkedForDeletionAt *time.Time     `json:"marked_for_deletion_at,omitempty"`
-	Status              *ScheduleState `json:"status,omitempty"`
+// flattenNodeConfiguration creates a map from a node configuration for easy storage in Terraform.
+func flattenNodeConfiguration(nodeConfig qc.NodeConfiguration) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			packageIDFieldName: nodeConfig.PackageId,
+		},
+	}
 }
-
-// EncryptionConfigIn defines the encryption settings for a cluster.
-type EncryptionConfigIn struct {
-	AWSEncryptionConfig *AWSEncryptionConfig `json:"aws_encryption_config,omitempty"`
-}
-
-// AWSEncryptionConfig contains AWS specific encryption configuration details.
-type AWSEncryptionConfig struct {
-	Managed         bool    `json:"managed,omitempty"`
-	EncryptionKeyID *string `json:"encryption_key_id,omitempty"`
-}
-
-// BookingStatus represents the status of a booking.
-type BookingStatus int
-
-// Currency represents a currency type.
-type Currency string
-
-// ResourceType represents the type of resource.
-type ResourceType string
-
-// ScheduleState represents the state of a schedule.
-type ScheduleState string
