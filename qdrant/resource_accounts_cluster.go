@@ -144,8 +144,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	// Check what has been changed
 	if d.HasChange(configurationFieldName) {
 		oldConf, newConf := d.GetChange(configurationFieldName)
-		oldConfMap := oldConf.(map[string]interface{})
-		newConfMap := newConf.(map[string]interface{})
+		oldConfMap := oldConf.([]interface{})[0].(map[string]interface{})
+		newConfMap := newConf.([]interface{})[0].(map[string]interface{})
 		// Check individual fields for changes
 		if oldConfMap[numNodesFieldName] != newConfMap[numNodesFieldName] {
 			// Handle change in num_nodes field
