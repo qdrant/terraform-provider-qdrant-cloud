@@ -23,7 +23,7 @@ data "qdrant-cloud_accounts_clusters" "test" {
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet("data.qdrant_cluster_accounts_clusters.test", "clusters.#"),
+		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_clusters.test", "clusters.#"),
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -34,8 +34,9 @@ data "qdrant-cloud_accounts_clusters" "test" {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: config,
-				Check:  check,
+				Config:  config,
+				Destroy: true,
+				Check:   check,
 			},
 		},
 	})

@@ -42,6 +42,7 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	}
 	// Flatten packages
 	packages := flattenPackages(*response.JSON200)
+
 	// Set the packages in the Terraform state.
 	if err := d.Set("packages", packages); err != nil {
 		return diag.FromErr(err)

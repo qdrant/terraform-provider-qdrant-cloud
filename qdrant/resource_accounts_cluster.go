@@ -64,6 +64,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 			return diag.FromErr(err)
 		}
 	}
+
 	return nil
 }
 

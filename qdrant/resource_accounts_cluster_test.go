@@ -17,6 +17,18 @@ provider "qdrant-cloud" {
 	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
 	config := provider + fmt.Sprintf(`
+data "qdrant-cloud_booking_packages" "test" {}
+locals {
+  resource_data = data.qdrant-cloud_booking_packages.test.packages
+  // Filter out the free tariffs
+  // TODO: Change the resource.name to resource.type when the API is updated
+  free_tariffs = [
+    for resource in local.resource_data : resource if resource.name == "free2"
+  ]
+  // Get the first free tariff
+  first_free_tariff = local.free_tariffs[0]
+}
+
 resource "qdrant-cloud_accounts_cluster" "test" {
 	name = "test-cluster"
 	account_id = "%s"
@@ -28,13 +40,52 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 		num_nodes = 1
 
 		node_configuration {
-			package_id = "39b48a76-2a60-4ee0-9266-6d1e0f91ea14"
+			package_id = local.first_free_tariff.id
 		}
 	}
 }
 
-output "cluster_id" {
-	value = qdrant-cloud_accounts_cluster.test.id
+output "cluster_name" {
+	value = qdrant-cloud_accounts_cluster.test.name
+}
+
+`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+
+	config_update := provider + fmt.Sprintf(`
+data "qdrant-cloud_booking_packages" "test" {}
+locals {
+  resource_data = data.qdrant-cloud_booking_packages.test.packages
+  // Filter out the free tariffs
+  // TODO: Change the resource.name to resource.type when the API is updated
+  free_tariffs = [
+    for resource in local.resource_data : resource if resource.name == "free2"
+  ]
+  // Get the first free tariff
+  first_free_tariff = local.free_tariffs[0]
+}
+
+resource "qdrant-cloud_accounts_cluster" "test" {
+	name           = "test-cluster"
+	account_id     = "%s"
+	cloud_region   = "us-east4"
+	cloud_provider = "gcp"
+
+	configuration {
+		num_nodes_max = 2   // Update the number of nodes to 2
+		num_nodes     = 2   // New number of nodes for the cluster
+
+		node_configuration {
+			package_id = local.first_free_tariff.id
+		}
+	}
+}
+
+output "cluster_name" {
+	value = qdrant-cloud_accounts_cluster.test.name
+}
+
+output "cluster_cfg_num_nodes" {
+	value = qdrant-cloud_accounts_cluster.test.configuration[0].num_nodes
 }
 
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
@@ -49,12 +100,17 @@ output "cluster_id" {
 				},
 				Steps: []resource.TestStep{
 					{
-						Config:             config,
-						PlanOnly:           true,
-						ExpectNonEmptyPlan: false,
-						Destroy:            true,
+						Config:  config,
+						Destroy: false,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckOutput("cluster_name", "test-cluster"),
+						),
+					},
+					{
+						Config:  config_update,
+						Destroy: true,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckOutput("cluster_cfg_num_nodes", "2"),
 						),
 					},
 				},
