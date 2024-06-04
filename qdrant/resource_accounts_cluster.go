@@ -27,6 +27,7 @@ func resourceAccountsCluster() *schema.Resource {
 
 // resourceClusterRead reads the specific cluster's data from the API.
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error reading cluster"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -35,33 +36,33 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Fetch the cluster
 	resp, err := apiClient.GetClusterWithResponse(ctx, accountUUID, clusterUUID)
 	// Inspect the results
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error reading cluster: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error reading cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	clusterOut := resp.JSON200
 	if clusterOut == nil {
-		return diag.FromErr(fmt.Errorf("error reading cluster: no cluster returned"))
+		return diag.FromErr(fmt.Errorf("%s: no cluster returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 
@@ -69,6 +70,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error creating cluster"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -77,12 +79,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// Expand the cluster
 	cluster, err := expandClusterIn(d, getDefaultAccountID(m))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Create an account UUID from the account ID
 	accountUUID, err := uuid.Parse(*cluster.AccountId)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Set required version to 'latest' if not provided
 	if cluster.Version == nil {
@@ -92,23 +94,23 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// Create the cluster
 	resp, err := apiClient.CreateClusterWithResponse(ctx, accountUUID, cluster)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error creating cluster: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error creating cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 
 	clusterOut := resp.JSON200
 	if clusterOut == nil {
-		return diag.FromErr(fmt.Errorf("error creating cluster: no cluster returned"))
+		return diag.FromErr(fmt.Errorf("%s: no cluster returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 	// Set the ID
@@ -117,6 +119,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error updating cluster"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -125,17 +128,17 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get(clusterIdentifierFieldName).(string))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Expand the cluster
 	cluster, err := expandClusterIn(d, getDefaultAccountID(m))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	patch := qc.PydanticClusterPatchIn{}
 	// Check what has been changed
@@ -158,22 +161,22 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 
 	resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, patch)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error updating cluster: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error updating cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	clusterOut := resp.JSON200
 	if clusterOut == nil {
-		return diag.FromErr(fmt.Errorf("error updating cluster: no cluster returned"))
+		return diag.FromErr(fmt.Errorf("%s: no cluster returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 	return nil
@@ -182,6 +185,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 
 // resourceClusterDelete performs a delete operation to remove a cluster associated with an account.
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error deleting cluster"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -190,12 +194,12 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Delete with all backups as well.
 	deleteBackups := true
@@ -205,13 +209,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	// Delete the cluster
 	resp, err := apiClient.DeleteClusterWithResponse(ctx, accountUUID, clusterUUID, params)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error deleting cluster: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 204 {
-		return diag.FromErr(fmt.Errorf("error deleting cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	d.SetId("")
 	return nil

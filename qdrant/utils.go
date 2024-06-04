@@ -14,6 +14,26 @@ import (
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
+const (
+	requestIDHeaderField = "x-qd-request-id"
+)
+
+// getErrorMessage Fetches a human readable error message out of the provided HTTP Response
+func getErrorMessage(message string, response *http.Response) string {
+	if response == nil {
+		return "No response"
+	}
+	return fmt.Sprintf("%s: [%s: %d] - %s", message, getRequestID(response), response.StatusCode, response.Status)
+}
+
+// getRequestID fetches the Request ID from the current HTTP Response (or an empty string if not available)
+func getRequestID(response *http.Response) string {
+	if response == nil {
+		return "No response"
+	}
+	return response.Header.Get(requestIDHeaderField)
+}
+
 // getClient creates a client from the provided interface
 // This client already contains the Authorization needed to invoke the API
 // Returns: The client to call the backend API, TF Diagnostics

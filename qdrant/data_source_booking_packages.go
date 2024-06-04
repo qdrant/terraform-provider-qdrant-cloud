@@ -24,28 +24,29 @@ func dataSourceBookingPackages() *schema.Resource {
 // d: The Terraform ResourceData object containing the state.
 // m: The Terraform meta object containing the client configuration.
 func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error listing packages"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
 	// Get all packages
-	response, err := apiClient.GetPackagesWithResponse(ctx, &qc.GetPackagesParams{})
+	resp, err := apiClient.GetPackagesWithResponse(ctx, &qc.GetPackagesParams{})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing packages: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
-	if response.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing packages: %v", getError(response.JSON422)))
+	if resp.JSON422 != nil {
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, getError(resp.JSON422)))
 	}
-	if response.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error listing packages: [%d] - %s", response.StatusCode(), response.Status()))
+	if resp.StatusCode() != 200 {
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Flatten packages
-	packages := flattenPackages(*response.JSON200)
+	packages := flattenPackages(*resp.JSON200)
 
 	// Set the packages in the Terraform state.
 	if err := d.Set("packages", packages); err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil
