@@ -25,7 +25,7 @@ locals {
 
   // Filter out the free tariffs
   free_tariffs = [
-    // TODO: Change teh resource.name to resource.type when the API is updated
+    // TODO: Change the resource.name to resource.type when the API is updated
     for resource in local.resource_data : resource if resource.name == "free"
   ]
 

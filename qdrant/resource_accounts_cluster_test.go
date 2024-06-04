@@ -21,7 +21,7 @@ data "qdrant-cloud_booking_packages" "test" {}
 locals {
   resource_data = data.qdrant-cloud_booking_packages.test.packages
   // Filter out the free tariffs
-  // TODO: Change teh resource.name to resource.type when the API is updated
+  // TODO: Change the resource.name to resource.type when the API is updated
   free_tariffs = [
     for resource in local.resource_data : resource if resource.name == "free2"
   ]
