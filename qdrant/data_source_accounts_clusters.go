@@ -38,6 +38,7 @@ func dataSourceAccountsCluster() *schema.Resource {
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error listing clusters"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -46,30 +47,30 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// List all clusters for the provided account
 	resp, err := apiClient.ListClustersWithResponse(ctx, accountUUID, &qc.ListClustersParams{})
 	if err != nil {
-		d := diag.FromErr(fmt.Errorf("error listing clusters: %v", err))
+		d := diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		if d.HasError() {
 			return d
 		}
 	}
 	// Inspect result and get the resulting clusters
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing clusters: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error listing clusters: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	clustersOut := resp.JSON200
 	if clustersOut == nil {
-		return diag.FromErr(fmt.Errorf("error listing clusters: ListCluster didn't return clusters"))
+		return diag.FromErr(fmt.Errorf("%s: ListCluster didn't return clusters", errorPrefix))
 	}
 	// Update the Terraform state
 	if err := d.Set("clusters", flattenClusters(*clustersOut)); err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 
 	d.SetId(time.Now().UTC().String())
@@ -82,6 +83,7 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error getting cluster"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -90,34 +92,34 @@ func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, 
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting cluster: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterID := d.Get("id").(string)
 	clusterUUID, err := uuid.Parse(clusterID)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error parsing cluster ID: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: error parsing cluster ID: %v", errorPrefix, err))
 	}
 	// Fetch the cluster
 	resp, err := apiClient.GetClusterWithResponse(ctx, accountUUID, clusterUUID)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting cluster: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Inspect result and get the resulting cluster
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error getting cluster: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error getting cluster: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	clusterOut := resp.JSON200
 	if clusterOut == nil {
-		return diag.FromErr(fmt.Errorf("ListCluster didn't return clusters"))
+		return diag.FromErr(fmt.Errorf("%s: ListCluster didn't return clusters", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 	d.SetId(clusterID)

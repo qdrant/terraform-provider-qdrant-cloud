@@ -25,6 +25,7 @@ func dataSourceAccountsAuthKeys() *schema.Resource {
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error listing API Keys"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -33,31 +34,31 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// List the API Keys for the provided account
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
 	// Handle the response in case of error
 	if err != nil {
-		d := diag.FromErr(fmt.Errorf("error listing API Keys: %v", err))
+		d := diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		if d.HasError() {
 			return d
 		}
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Get the actual response
 	apiKeys := resp.JSON200
 	if apiKeys == nil {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: no keys returned"))
+		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
 	if err := d.Set(authKeysKeysFieldName, flattenGetAuthKeys(*apiKeys)); err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil

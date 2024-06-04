@@ -28,6 +28,7 @@ func resourceAccountsAuthKey() *schema.Resource {
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error getting API key"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -36,24 +37,24 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting API key: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Execute the request and handle the response
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error getting API key: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error getting API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Get the actual response
 	apiKeys := resp.JSON200
 	if apiKeys == nil {
-		return diag.FromErr(fmt.Errorf("error getting API Key: no keys returned"))
+		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
 	}
 	for _, apiKey := range *apiKeys {
 		if apiKey.Id != apiKeyID {
@@ -63,13 +64,13 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 		// Process the correect one,
 		for k, v := range flattenGetAuthKey(apiKey) {
 			if err := d.Set(k, v); err != nil {
-				return diag.FromErr(err)
+				return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 			}
 		}
 		d.SetId(apiKeyID)
 		return nil
 	}
-	return diag.Errorf("error getting API Key: API key ID cannot be found anymore")
+	return diag.Errorf("%s: API key ID cannot be found anymore", errorPrefix)
 }
 
 // resourceAPIKeyCreate performs a create operation to generate a new API key associated with an account.
@@ -78,6 +79,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error creating API Key"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -86,7 +88,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating API Key: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Prepare the payload for the API request
 	var clusterIDs []string
@@ -103,23 +105,23 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		ClusterIdList: &clusterIDs,
 	})
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error creating API key: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("error creating API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Get the actual response
 	apiKey := resp.JSON200
 	if apiKey == nil {
-		return diag.FromErr(fmt.Errorf("error listing API Keys: no keys returned"))
+		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCreateAuthKey(*apiKey) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 	// Set the ID
@@ -132,6 +134,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error deleting API Key"
 	// Get an authenticated client
 	apiClient, diagnostics := getClient(m)
 	if diagnostics.HasError() {
@@ -140,19 +143,19 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting API key: %v", err))
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 
 	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountUUID, apiKeyID)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("error deleting API key: %s", getError(resp.JSON422)))
+		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 204 {
-		return diag.FromErr(fmt.Errorf("error deleting API Key: [%d] - %s", resp.StatusCode(), resp.Status()))
+		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Clear the resource ID to mark as deleted
 	d.SetId("")
