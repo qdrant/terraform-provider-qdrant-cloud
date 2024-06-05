@@ -33,6 +33,8 @@ jobs:
       - name: Get Latest Tag
         id: get_latest_tag
         uses: actions/github-script@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
             const latestTag = await github.rest.repos.listTags({
