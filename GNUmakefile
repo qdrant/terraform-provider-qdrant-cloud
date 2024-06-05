@@ -26,7 +26,7 @@ generate-client:
 	cd internal && swagger-codegen generate -i ./spec.json -l go --output client --additional-properties packageName=cloud
 
 build:
-	CGO_ENABLED=0 gox \
+	CGO_ENABLED=0 ~/go/bin/gox \
 		-osarch="linux/amd64 linux/arm linux/arm64 darwin/amd64 darwin/arm64 windows/amd64" \
 		-output="bin/{{.OS}}/{{.Arch}}/${BINARY}_v$(VERSION)" \
 		-tags="netgo" \
@@ -45,3 +45,7 @@ install: build
 .PHONY: generate-help
 generate-help:
 	go generate ./...
+
+.PHONY: checksum
+checksum:
+	find bin -type f -exec sha256sum {} \; > checksums.txt
