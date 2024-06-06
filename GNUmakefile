@@ -22,15 +22,15 @@ ifndef QDRANT_CLOUD_ACCOUNT_ID
 endif
 	TF_ACC=1 go test ./qdrant/... -v $(TESTARGS) -timeout 120m
 
+requirements:
+	go install github.com/goreleaser/goreleaser/v2@latest
+	go install github.com/mitchellh/gox@latest
+
 generate-client:
 	cd internal && swagger-codegen generate -i ./spec.json -l go --output client --additional-properties packageName=cloud
 
-build:
-	CGO_ENABLED=0 ~/go/bin/gox \
-		-osarch="linux/amd64 linux/arm linux/arm64 darwin/amd64 darwin/arm64 windows/amd64" \
-		-output="bin/{{.OS}}/{{.Arch}}/${BINARY}_v$(VERSION)" \
-		-tags="netgo" \
-		./...
+build: requirements
+	goreleaser release --snapshot --clean
 
 .PHONY: update-go-client
 update-go-client:
