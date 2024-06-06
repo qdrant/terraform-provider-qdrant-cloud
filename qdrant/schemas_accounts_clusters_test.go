@@ -94,7 +94,7 @@ func TestExpandClusterIn(t *testing.T) {
 		},
 	}
 
-	d := schema.TestResourceDataRaw(t, accountsClusterSchema(), map[string]interface{}{
+	d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
 		clusterAccountIDFieldName:                   derefString(expected.AccountId),
 		clusterNameFieldName:                        expected.Name,
 		clusterCloudProviderFieldName:               string(expected.CloudProvider),

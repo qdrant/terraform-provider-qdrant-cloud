@@ -21,7 +21,7 @@ func resourceAccountsCluster() *schema.Resource {
 		CreateContext: resourceClusterCreate,
 		UpdateContext: resourceClusterUpdate,
 		DeleteContext: resourceClusterDelete,
-		Schema:        accountsClusterSchema(),
+		Schema:        accountsClusterSchema(false),
 	}
 }
 

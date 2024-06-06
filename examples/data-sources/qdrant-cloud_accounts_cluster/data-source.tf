@@ -15,5 +15,10 @@ provider "qdrant-cloud" {
   api_url    = "" // URL where the public API of Qdrant cloud can be found (can be left empty if the production URL need to be used)
   account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
 }
+data "qdrant-cloud_accounts_cluster" "test" {
+  id = "00000000-0000-0000-0000-000000000000" // Update with the ID to fetch
+}
 
-// TODO: Provide sample
+output "cluster" {
+  value = data.qdrant-cloud_accounts_cluster.test
+}
