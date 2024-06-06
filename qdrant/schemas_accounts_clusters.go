@@ -36,7 +36,7 @@ const (
 	packageIDFieldName                          = "package_id"
 )
 
-// accountsClustersSchema defines the schema for a cluster list resource.
+// accountsClustersSchema defines the schema for a cluster list data-source.
 func accountsClustersSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		clustersAccountIDFieldName: {
@@ -51,19 +51,26 @@ func accountsClustersSchema() map[string]*schema.Schema {
 			Computed:    true,
 			Elem: &schema.Resource{
 				Description: fmt.Sprintf(clustersFieldTemplate, "Individual cluster"),
-				Schema:      accountsClusterSchema(),
+				Schema:      accountsClusterSchema(true),
 			},
 		},
 	}
 }
 
-// accountsClusterSchema defines the schema for a cluster resource.
-func accountsClusterSchema() map[string]*schema.Schema {
+// accountsClusterSchema defines the schema for a cluster resource or data-source.
+func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		// We should not set Max Items
+		maxItems = 0
+	}
+
 	return map[string]*schema.Schema{
 		clusterIdentifierFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the cluster"),
 			Type:        schema.TypeString,
-			Computed:    true,
+			Required:    asDataSource,
+			Computed:    !asDataSource,
 		},
 		clusterCreatedAtFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp when the cluster is created"),
@@ -79,36 +86,40 @@ func accountsClusterSchema() map[string]*schema.Schema {
 		clusterNameFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Name of the cluster"),
 			Type:        schema.TypeString,
-			Required:    true,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 		clusterCloudProviderFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud provider where the cluster resides"),
 			Type:        schema.TypeString,
-			Required:    true,
-			ForceNew:    true, // Cross provider migration isn't supported
+			Required:    !asDataSource,
+			ForceNew:    !asDataSource, // Cross provider migration isn't supported
+			Computed:    asDataSource,
 		},
 		clusterCloudRegionFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region where the cluster resides"),
 			Type:        schema.TypeString,
-			Required:    true,
-			ForceNew:    true, // Cross region migration isn't supported
+			Required:    !asDataSource,
+			ForceNew:    !asDataSource, // Cross region migration isn't supported
+			Computed:    asDataSource,
 		},
 		clusterCloudRegionAvailabilityZoneFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region availability zone where the cluster resides"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
+			Optional:    !asDataSource,
 		},
 		clusterCloudRegionSetupFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region setup of the cluster"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
+			Optional:    !asDataSource,
 		},
 		clusterPrivateRegionIDFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Private Region"),
 			Type:        schema.TypeString,
-			Optional:    true,
+			Computed:    asDataSource,
+			Optional:    !asDataSource,
 		},
 		clusterCurrentConfigurationIDFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the current configuration"),
@@ -119,7 +130,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the encryption key"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
+			Optional:    !asDataSource,
 		},
 		clusterMarkedForDeletionAtFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp when this cluster was marked for deletion"),
@@ -130,7 +141,7 @@ func accountsClusterSchema() map[string]*schema.Schema {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the Qdrant cluster"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
+			Optional:    !asDataSource,
 		},
 		clusterURLFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The URL of the endpoint of the Qdrant cluster"),
@@ -140,31 +151,36 @@ func accountsClusterSchema() map[string]*schema.Schema {
 		configurationFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The configuration options of a cluster"),
 			Type:        schema.TypeList, // There is a single required item only, no need for a set.
-			Required:    true,
-			MaxItems:    1,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					numNodesMaxFieldName: {
 						Description: fmt.Sprintf(clusterFieldTemplate, "The maximum number of nodes in the cluster"),
 						Type:        schema.TypeInt,
-						Required:    true,
+						Required:    !asDataSource,
+						Computed:    asDataSource,
 					},
 					numNodesFieldName: {
 						Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
 						Type:        schema.TypeInt,
-						Required:    true,
+						Required:    !asDataSource,
+						Computed:    asDataSource,
 					},
 					nodeConfigurationFieldName: {
 						Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
 						Type:        schema.TypeList,
-						Required:    true,
-						MaxItems:    1,
+						Required:    !asDataSource,
+						Computed:    asDataSource,
+						MaxItems:    maxItems,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								packageIDFieldName: {
 									Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory, and disk size)"),
 									Type:        schema.TypeString,
-									Required:    true,
+									Required:    !asDataSource,
+									Computed:    asDataSource,
 								},
 							},
 						},
@@ -175,7 +191,8 @@ func accountsClusterSchema() map[string]*schema.Schema {
 		clusterTotalExtraDiskFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The total amount of extra disk in relation to the chosen package (in GiB)"),
 			Type:        schema.TypeInt,
-			Optional:    true,
+			Computed:    asDataSource,
+			Optional:    !asDataSource,
 		},
 	}
 }

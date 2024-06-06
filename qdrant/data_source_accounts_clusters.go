@@ -28,7 +28,7 @@ func dataSourceAccountsCluster() *schema.Resource {
 	return &schema.Resource{
 		Description: "Account Cluster Data Source",
 		ReadContext: dataSourceAccountsClusterRead,
-		Schema:      accountsClusterSchema(),
+		Schema:      accountsClusterSchema(true),
 	}
 }
 

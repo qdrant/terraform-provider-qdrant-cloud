@@ -16,5 +16,11 @@ provider "qdrant-cloud" {
   account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
 }
 
-// TODO: Provide sample
+data "qdrant-cloud_accounts_clusters" "test" {
+  // No keys needed here, the account ID is specified on provider level
+}
+
+output "clusters" {
+  value = data.qdrant-cloud_accounts_clusters.test.clusters
+}
 

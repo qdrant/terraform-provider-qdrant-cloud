@@ -16,4 +16,11 @@ provider "qdrant-cloud" {
   account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
 }
 
-// TODO: Provide sample
+data "qdrant-cloud_accounts_auth_keys" "test" {
+  // No keys needed here, the account ID is specified on provider level
+}
+
+output "keys" {
+  value = data.qdrant-cloud_accounts_auth_keys.test.keys
+}
+
