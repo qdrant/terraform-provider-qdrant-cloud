@@ -3,11 +3,10 @@ default: test
 NAME=qdrant-cloud
 BINARY=terraform-provider-${NAME}
 VERSION=1.0
-HOSTNAME=cloud.qdrant.io
 OS=$(shell uname -s | tr '[:upper:]' '[:lower:]')
 ARCH=$(shell uname -m)
 OS_ARCH=${OS}_${ARCH}
-NAMESPACE=$(shell whoami)
+NAMESPACE=local
 QDRANT_CLOUD_API_KEY ?=
 QDRANT_CLOUD_ACCOUNT_ID ?=
 
@@ -39,8 +38,8 @@ update-go-client:
 	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./go-client-programmatic-access
 
 install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	cp bin/${OS}/${ARCH}/${BINARY}_v$(VERSION) ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
+	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}
+	cp bin/${OS}/${ARCH}/${BINARY}_v$(VERSION) ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
 
 .PHONY: generate-help
 generate-help:
