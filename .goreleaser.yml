@@ -60,6 +60,7 @@ release:
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   ids:
     - none
+  draft: true
 signs:
   - artifacts: checksum
     args:
@@ -72,3 +73,4 @@ signs:
       - "${artifact}"
 snapshot:
   name_template: "{{ .Tag }}-next"
+
