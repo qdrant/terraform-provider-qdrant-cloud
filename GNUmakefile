@@ -29,6 +29,9 @@ requirements:
 generate-client:
 	cd internal && swagger-codegen generate -i ./spec.json -l go --output client --additional-properties packageName=cloud
 
+build:
+	goreleaser release --snapshot --clean
+
 build: requirements
 	goreleaser release --snapshot --clean
 
