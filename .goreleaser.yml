@@ -9,7 +9,7 @@ before:
     - 'go mod download'
 builds:
   - # Binary naming only required for Terraform CLI 0.12
-    binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
+    binary: '{{ .ProjectName }}_{{ .Version }}'
     env:
       - CGO_ENABLED=0
     flags:
@@ -61,14 +61,14 @@ release:
   ids:
     - none
 signs:
-  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
-    artifacts: checksum
-    cmd: signore
-    signature: ${artifact}.sig
-  - args: ["sign", "--dearmor", "--file", "${artifact}", "--out", "${signature}"]
-    artifacts: checksum
-    cmd: signore
-    id: key-id
-    signature: ${artifact}.72D7468F.sig
+  - artifacts: checksum
+    args:
+      - "--batch"
+      - "--local-user"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
 snapshot:
   name_template: "{{ .Tag }}-next"
