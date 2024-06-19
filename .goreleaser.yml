@@ -64,7 +64,7 @@ release:
       name_template: '{{ .ProjectName }}_{{ .Version }}_manifest.json'
   ids:
     - none
-#  draft: true
+  draft: true
 signs:
   - artifacts: checksum
     args:
