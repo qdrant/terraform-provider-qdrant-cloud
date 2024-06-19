@@ -7,6 +7,7 @@ archives:
 before:
   hooks:
     - 'go mod download'
+    - 'go mod tidy'
 builds:
   - # Binary naming only required for Terraform CLI 0.12
     binary: '{{ .ProjectName }}_{{ .Version }}'
