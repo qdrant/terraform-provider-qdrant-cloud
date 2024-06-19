@@ -1,8 +1,8 @@
 name: Provider Release
 on:
   push:
-    tags:
-      - 'v*'
+#    tags:
+#      - 'v*'
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
