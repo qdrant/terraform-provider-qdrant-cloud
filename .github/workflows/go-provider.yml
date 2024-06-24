@@ -1,8 +1,10 @@
 name: Provider Release
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*'
+      - 'v1.*'
 jobs:
   release:
     runs-on: ubuntu-latest
