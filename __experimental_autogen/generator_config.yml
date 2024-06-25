@@ -1,0 +1,87 @@
+provider:
+    name: qdrantcloud
+
+resources:
+  cluster:
+    create:
+      path: /accounts/{account_id}/clusters
+      method: POST
+    read:
+      path: /accounts/{account_id}/clusters/{cluster_id}
+      method: GET
+    update:
+      path: /accounts/{account_id}/clusters/{cluster_id}
+      method: PATCH
+    delete:
+      path: /accounts/{account_id}/clusters/{cluster_id}
+      method: DELETE
+    schema:
+      attributes:
+        overrides:
+          name:
+            description: The cluster's name
+          cloud_provider:
+            description: The cloud provider for the cluster, possible values - 'aws', 'gcp', 'private', or 'azure'
+          cloud_region:
+            description: The cloud region for the cluster
+        aliases:
+          cluster_id: id
+
+  api_key:
+    create:
+      path: /accounts/{account_id}/auth/api-keys
+      method: POST
+    read:
+      path: /accounts/{account_id}/auth/api-keys
+      method: GET
+    delete:
+      path: /accounts/{account_id}/auth/api-keys/{api_key_id}
+      method: DELETE
+    schema:
+      attributes:
+        overrides:
+          created_at:
+            description: The date and time the API key was created
+          prefix:
+            description: The prefix of the API key
+        aliases:
+          api_key_id: id
+
+#  package:
+#    read:
+#      path: /booking/packages
+#      method: GET
+#    schema:
+#      attributes:
+#        overrides:
+#          name:
+#            description: The package name
+#          status:
+#            description: The package status, possible values - 'PLANNED', 'ACTIVE', or 'DEACTIVATED'
+#          currency:
+#            description: The currency of the package pricing, possible values - 'usd', 'eur'
+
+data_sources:
+  cluster:
+    read:
+      path: /accounts/{account_id}/clusters/{cluster_id}
+      method: GET
+    schema:
+      attributes:
+        overrides:
+          name:
+            description: The cluster's name
+          cloud_provider:
+            description: The cloud provider for the cluster, possible values - 'aws', 'gcp', 'private', or 'azure'
+          cloud_region:
+            description: The cloud region for the cluster
+        aliases:
+          cluster_id: id
+
+  clusters:
+    read:
+      path: /accounts/{account_id}/clusters
+      method: GET
+    schema:
+      ignores:
+        - private_region_id

@@ -1,31 +1,22 @@
-HOSTNAME=qdrant.com
-NAMESPACE=com
-NAME=qdrant-cloud
-BINARY=terraform-provider-${NAME}
-VERSION=0.2
-OS_ARCH=darwin_amd64
+TFPLUGINGEN := ~/go/bin/tfplugingen-framework
+TFPLUGINGEN_OPENAPI := ~/go/bin/tfplugingen-openapi
+OUTPUT_DIR := internal/provider
 
-default: install
+cleanup:
+	rm -rf $(OUTPUT_DIR)
+	rm -rf provider-code-spec.json
+	mkdir -p $(OUTPUT_DIR)
 
-clean:
-	rm -Rf data_profile/
-	rm -Rf qdrantcloud/*
-	rm -Rf client/*
-	rm -Rf models/*
-	rm -f  main.go
+scaffold:
+	$(TFPLUGINGEN) scaffold resource --name resource_auth_api_keys --output-dir $(OUTPUT_DIR)
+	$(TFPLUGINGEN) scaffold resource --name resource_accoun_cluster --output-dir $(OUTPUT_DIR)
+	$(TFPLUGINGEN) scaffold data-source --name data_source_accoun_cluster --output-dir $(OUTPUT_DIR)
+	$(TFPLUGINGEN) scaffold data-source --name data_source_auth_api_keys --output-dir $(OUTPUT_DIR)
+	$(TFPLUGINGEN) scaffold data-source --name data_source_package --output-dir $(OUTPUT_DIR)
 
-build: clean
-	/Users/p0123n/go/bin/swagger generate client -f ./spec-v2.json --template-dir templates -C config.yml > swagrun.log
+gen-spec:
+	$(TFPLUGINGEN_OPENAPI) generate  --config ./generator_config.yml --output ./provider-code-spec.json ./openapi_fixed.json
+	patch provider-code-spec.json < provider-code-spec.patch
 
-compile:
-	go mod tidy
-	go build -o ${BINARY}
-
-install: build
-	#mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	#cp ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-
-nogen: 
-	go build -o ${BINARY}
-	#mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	#mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
+all: cleanup gen-spec scaffold
+	$(TFPLUGINGEN) generate resources --input ./provider-code-spec.json --output ./$(OUTPUT_DIR)
