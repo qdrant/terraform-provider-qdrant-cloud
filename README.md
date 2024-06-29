@@ -7,6 +7,8 @@ This provider allows you to manage your Qdrant Cloud resources using Terraform.
 
 - [Terraform](https://www.terraform.io/downloads.html) 1.7.x+
 - [Go](https://golang.org/doc/install) 1.21+ (to build the provider plugin)
+- [`swagger-codegen`](https://swagger.io/tools/swagger-codegen/)
+  `brew install swagger-codegen`
 
 ## Building The Provider
 
