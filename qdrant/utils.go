@@ -3,35 +3,20 @@ package qdrant
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
+	"net/http"
+	"reflect"
+	"strings"
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	"time"
 )
 
-const (
-	requestIDHeaderField = "x-qd-request-id"
-)
-
-// getErrorMessage Fetches a human readable error message out of the provided HTTP Response
-func getErrorMessage(message string, response *http.Response) string {
-	if response == nil {
-		return "No response"
-	}
-	return fmt.Sprintf("%s: [%s: %d] - %s", message, getRequestID(response), response.StatusCode, response.Status)
-}
-
-// getRequestID fetches the Request ID from the current HTTP Response (or an empty string if not available)
-func getRequestID(response *http.Response) string {
-	if response == nil {
-		return "No response"
-	}
-	return response.Header.Get(requestIDHeaderField)
+type ProviderConfig struct {
+	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
+	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
+	AccountID string // The default Account Identifier for the Qdrant cloud, if any
 }
 
 // getClient creates a client from the provided interface
@@ -53,68 +38,209 @@ func getClient(m interface{}) (*qc.ClientWithResponses, diag.Diagnostics) {
 	return apiClient, nil
 }
 
-// getAccountUUID get the Account ID as UUID, if defined at resouce level that is used, otherwise it fallback to the default on, specified on provider level.
-// if no account ID can be found an error will be returned.
 func getAccountUUID(d *schema.ResourceData, m interface{}) (uuid.UUID, error) {
-	// Get The account ID as UUID from the resource data
-	if v, ok := d.GetOk("account_id"); ok {
-		id := v.(string)
-		if id != "" {
-			return uuid.Parse(id)
-		}
+	accountID := d.Get("account_id").(string)
+	if accountID == "" {
+		config := m.(*ProviderConfig)
+		accountID = config.AccountID
 	}
-	// Get From default (if any)
-	if id := getDefaultAccountID(m); id != "" {
-		return uuid.Parse(id)
+	if accountID == "" {
+		return uuid.Nil, fmt.Errorf("account_id is not set")
 	}
-	return uuid.Nil, fmt.Errorf("cannot find account ID")
+	return uuid.Parse(accountID)
 }
 
-// getDefaultAccountID fetches the default account ID from the provided interface (containing the ClientConfig)
-func getDefaultAccountID(m interface{}) string {
-	clientConfig, ok := m.(*ProviderConfig)
-	if !ok {
-		return ""
+func getError(err interface{}) string {
+	if httpError, ok := err.(*qc.HTTPValidationError); ok && httpError.Detail != nil {
+		details := make([]string, len(*httpError.Detail))
+		for i, detail := range *httpError.Detail {
+			details[i] = fmt.Sprintf("%s: %s", detail.Loc, detail.Msg)
+		}
+		return fmt.Sprintf("Validation error: %s", strings.Join(details, "; "))
 	}
-	return clientConfig.AccountID
+	return fmt.Sprintf("%v", err)
 }
 
-// formatTime converts a time value to a standardized string format.
-// t: The time value which can be of type time.Time or string.
-// Returns a formatted time string in RFC3339 format if the input is of type time.Time,
-// returns the input string unchanged if it is of type string, or an empty string for other types.
-func formatTime(t interface{}) string {
-	switch v := t.(type) {
-	case time.Time:
-		// Format time.Time to RFC3339 standard string format.
-		return v.Format(time.RFC3339)
-	case *time.Time:
-		// Format time.Time to RFC3339 standard string format.
-		if v == nil {
-			return ""
+func getErrorMessage(prefix string, resp *http.Response) string {
+	if resp == nil {
+		return prefix + ": No response"
+	}
+	return fmt.Sprintf("%s: [Status: %d] - %s", prefix, resp.StatusCode, resp.Status)
+}
+
+func flattenValue(v reflect.Value, result map[string]interface{}, prefix string) {
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return
 		}
-		return v.Format(time.RFC3339)
-	case string:
-		// Return string as is.
-		return v
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Struct:
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Type().Field(i)
+			fieldValue := v.Field(i)
+
+			if field.PkgPath != "" {
+				continue
+			}
+
+			tag := field.Tag.Get("json")
+			name := strings.Split(tag, ",")[0]
+			if name == "" {
+				name = strings.ToLower(field.Name)
+			}
+
+			newPrefix := prefix + name
+
+			if fieldValue.Type() == reflect.TypeOf(time.Time{}) {
+				result[newPrefix] = fieldValue.Interface().(time.Time).Format(time.RFC3339)
+			} else {
+				flattenValue(fieldValue, result, newPrefix+".")
+			}
+		}
+	case reflect.Map:
+		for _, key := range v.MapKeys() {
+			flattenValue(v.MapIndex(key), result, prefix+key.String()+".")
+		}
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < v.Len(); i++ {
+			flattenValue(v.Index(i), result, prefix+fmt.Sprintf("%d.", i))
+		}
 	default:
-		// Return empty string for other types.
-		return ""
+		result[strings.TrimSuffix(prefix, ".")] = v.Interface()
 	}
 }
 
-// getError returns a human readable error composed from the given HTTP validation error
-func getError(error *qc.HTTPValidationError) string {
-	if error == nil {
-		return "no error"
+func flattenCreateAuthKey(key interface{}) map[string]interface{} {
+	return flatten(key)
+}
+
+func flattenGetAuthKey(key interface{}) map[string]interface{} {
+	return flatten(key)
+}
+
+func flattenGetAuthKeys(keys []qc.GetApiKeyOut) []interface{} {
+	result := make([]interface{}, len(keys))
+	for i, key := range keys {
+		result[i] = flattenGetAuthKey(key)
 	}
-	details := error.Detail
-	if details == nil {
-		return "no details"
+	return result
+}
+
+func flattenResponse(response interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	if m, ok := response.(map[string]interface{}); ok {
+		for k, v := range m {
+			result[k] = v
+		}
 	}
-	var result []string
-	for _, ve := range *details {
-		result = append(result, fmt.Sprintf("%s:%s", ve.Type, ve.Msg))
+	return result
+}
+
+func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+	apiKey := d.Get("api_key").(string)
+	apiURL := d.Get("api_url").(string)
+	var accountID string
+	if aid, ok := d.GetOk("account_id"); ok {
+		accountID = aid.(string)
 	}
-	return strings.Join(result, ",")
+	var diags diag.Diagnostics
+
+	if strings.TrimSpace(apiKey) == "" {
+		return nil, diag.Errorf("api_key must not be empty")
+	}
+
+	if strings.TrimSpace(apiURL) == "" {
+		apiURL = "https://cloud.qdrant.io/public/v0"
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Using default URL",
+			Detail:   "No API URL was provided, using default URL " + apiURL,
+		})
+	}
+
+	config := &ProviderConfig{
+		ApiKey:    apiKey,
+		BaseURL:   apiURL,
+		AccountID: accountID,
+	}
+
+	return config, diags
+}
+
+func flattenClustersData(clusters []qc.ClusterOut) []interface{} {
+	if clusters == nil {
+		return make([]interface{}, 0)
+	}
+
+	var clustersList []interface{}
+	for _, cluster := range clusters {
+		clusterMap := flatten(cluster)
+
+		// Обработка вложенных структур
+		if cluster.Configuration != nil {
+			clusterMap["configuration"] = []interface{}{flatten(*cluster.Configuration)}
+		}
+		if cluster.State != nil {
+			clusterMap["state"] = []interface{}{flatten(*cluster.State)}
+		}
+		if cluster.Resources != nil {
+			clusterMap["resources"] = []interface{}{flatten(*cluster.Resources)}
+		}
+
+		clustersList = append(clustersList, clusterMap)
+	}
+
+	return clustersList
+}
+
+func flattenClusterConfiguration(config qc.ClusterConfigurationOut) map[string]interface{} {
+	configMap := flatten(config)
+
+	if config.NodeConfiguration != nil {
+		configMap["node_configuration"] = []interface{}{flatten(*config.NodeConfiguration)}
+	}
+
+	return configMap
+}
+
+func flattenNodeConfiguration(nodeConfig qc.NodeConfiguration) map[string]interface{} {
+	nodeConfigMap := flatten(nodeConfig)
+
+	if nodeConfig.Package != nil {
+		nodeConfigMap["package"] = []interface{}{flatten(*nodeConfig.Package)}
+	}
+
+	return nodeConfigMap
+}
+
+func flatten(v interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	val := reflect.ValueOf(v)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldName := typ.Field(i).Name
+
+		switch field.Kind() {
+		case reflect.Struct:
+			result[fieldName] = flatten(field.Interface())
+		case reflect.Slice, reflect.Array:
+			sliceResult := make([]interface{}, field.Len())
+			for j := 0; j < field.Len(); j++ {
+				sliceResult[j] = flatten(field.Index(j).Interface())
+			}
+			result[fieldName] = sliceResult
+		default:
+			result[fieldName] = field.Interface()
+		}
+	}
+
+	return result
 }
