@@ -7,6 +7,11 @@ description: |-
 
 # Qdrant Cloud Provider
 
+
+This Terraform Provider is currently in Closed Beta. To learn more please [Contact Us](https://qdrant.tech/contact-us/).
+
+---
+
 The Terraform Qdrant Cloud provider is a plugin for Terraform that allows for the full lifecycle management of Qdrant Cloud resources.
 Note that it's not intended to manage the content of the database itself.
 

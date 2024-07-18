@@ -57,10 +57,8 @@ output "keys" {
 
 Read-Only:
 
-- `account_id` (String)
 - `cluster_ids` (List of String)
 - `created_at` (String)
 - `id` (String)
 - `prefix` (String)
 - `token` (String)
-- `user_id` (String)

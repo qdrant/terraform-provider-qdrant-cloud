@@ -60,17 +60,12 @@ Read-Only:
 - `account_id` (String)
 - `cloud_provider` (String)
 - `cloud_region` (String)
-- `cloud_region_az` (String)
-- `cloud_region_setup` (String)
 - `configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration))
 - `created_at` (String)
-- `current_configuration_id` (String)
-- `encryption_key_id` (String)
 - `id` (String)
 - `marked_for_deletion_at` (String)
 - `name` (String)
 - `private_region_id` (String)
-- `total_extra_disk` (Number)
 - `url` (String)
 - `version` (String)
 
@@ -80,8 +75,7 @@ Read-Only:
 Read-Only:
 
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--node_configuration))
-- `num_nodes` (Number)
-- `num_nodes_max` (Number)
+- `number_of_nodes` (Number)
 
 <a id="nestedobjatt--clusters--configuration--node_configuration"></a>
 ### Nested Schema for `clusters.configuration.node_configuration`
