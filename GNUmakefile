@@ -33,9 +33,9 @@ build: requirements
 
 .PHONY: update-go-client
 update-go-client:
-	rm -r ./go-client-programmatic-access
-	mkdir ./go-client-programmatic-access
-	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./go-client-programmatic-access
+	rm -r ./internal/client
+	mkdir ./internal/client
+	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./internal/client
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}

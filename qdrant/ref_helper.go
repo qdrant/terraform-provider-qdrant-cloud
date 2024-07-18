@@ -1,47 +1,31 @@
 package qdrant
 
-import "time"
+import (
+	"github.com/google/uuid"
+)
 
-func newString(s string) *string {
-	return &s
+// Generic function to create a pointer to any type
+func newPointer[T any](value T) *T {
+	return &value
 }
 
-func derefString(ptr *string) string {
+// Generic function to dereference a pointer with a default-value fallback
+func derefPointer[T any](ptr *T, defaults ...T) T {
 	if ptr != nil {
 		return *ptr
 	}
-	return ""
-}
-
-func derefStringArray(ptr *[]string) []string {
-	if ptr != nil {
-		return *ptr
+	if len(defaults) > 0 {
+		return defaults[0]
 	}
-	return nil
+	var empty T
+	return empty
 }
 
-func newInt(i int) *int {
-	return &i
-}
-
-func derefInt(ptr *int) int {
-	if ptr != nil {
-		return *ptr
+// uuidArrayAsStringArray converts an array of UUID to an array of strings
+func uuidArrayAsStringArray(ptr []uuid.UUID) []string {
+	result := []string{}
+	for _, uuid := range ptr {
+		result = append(result, uuid.String())
 	}
-	return 0
-}
-
-func newTime(t time.Time) *time.Time {
-	return &t
-}
-
-func derefTime(ptr *time.Time) time.Time {
-	if ptr != nil {
-		return *ptr
-	}
-	return time.Time{}
-}
-
-func newBool(b bool) *bool {
-	return &b
+	return result
 }

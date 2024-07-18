@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -40,6 +41,8 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
+	// convert to UUID
+	apiKeyUUID, err := uuid.Parse(apiKeyID)
 	// Execute the request and handle the response
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
 	if err != nil {
@@ -57,12 +60,12 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
 	}
 	for _, apiKey := range *apiKeys {
-		if apiKey.Id != apiKeyID {
-			// Skip incorrect ones
+		if apiKey.Id == nil || *apiKey.Id != apiKeyUUID {
+			// Skip unknown or incorrect ones
 			continue
 		}
-		// Process the correect one,
-		for k, v := range flattenGetAuthKey(apiKey) {
+		// Process the correct one,
+		for k, v := range flattenAuthKey(apiKey) {
 			if err := d.Set(k, v); err != nil {
 				return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 			}
@@ -91,18 +94,18 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Prepare the payload for the API request
-	var clusterIDs []string
+	var clusterIDs []uuid.UUID
 	if clusterIDList, ok := d.GetOk(authKeysKeysClusterIDsFieldName); ok {
 		// Prepare the payload for the API request
 		clusterIDList := clusterIDList.([]interface{})
-		clusterIDs = make([]string, len(clusterIDList))
+		clusterIDs = make([]uuid.UUID, len(clusterIDList))
 		for i, v := range clusterIDList {
-			clusterIDs[i] = v.(string)
+			clusterIDs[i] = uuid.MustParse(v.(string))
 		}
 	}
 	// Create the request body
-	resp, err := apiClient.CreateApiKeyWithResponse(ctx, accountUUID, qc.ApiKeyIn{
-		ClusterIdList: &clusterIDs,
+	resp, err := apiClient.CreateApiKeyWithResponse(ctx, accountUUID, qc.ApiKeySchema{
+		ClusterIds: clusterIDs,
 	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
@@ -115,17 +118,17 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	// Get the actual response
 	apiKey := resp.JSON200
-	if apiKey == nil {
+	if apiKey == nil || apiKey.Id == nil {
 		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
-	for k, v := range flattenCreateAuthKey(*apiKey) {
+	for k, v := range flattenAuthKey(*apiKey) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 	// Set the ID
-	d.SetId(apiKey.Id)
+	d.SetId(apiKey.Id.String())
 	return nil
 }
 

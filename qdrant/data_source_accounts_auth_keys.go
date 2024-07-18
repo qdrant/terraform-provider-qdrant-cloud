@@ -57,7 +57,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
-	if err := d.Set(authKeysKeysFieldName, flattenGetAuthKeys(*apiKeys)); err != nil {
+	if err := d.Set(authKeysKeysFieldName, flattenAuthKeys(*apiKeys)); err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	d.SetId(time.Now().Format(time.RFC3339))

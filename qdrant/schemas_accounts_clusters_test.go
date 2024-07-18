@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 
@@ -11,27 +12,21 @@ import (
 )
 
 func TestResourceClusterFlatten(t *testing.T) {
-	cluster := &qc.ClusterOut{
-		Id:                     "testID",
-		CreatedAt:              time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC),
-		AccountId:              newString("accountID"),
-		Name:                   "testName",
-		CloudProvider:          qc.ClusterOutCloudProviderAzure,
-		CloudRegion:            qc.ClusterOutCloudRegionUksouth,
-		CloudRegionAz:          newString("1"),
-		Version:                newString("v1.0"),
-		CloudRegionSetup:       newString("Standard"),
-		PrivateRegionId:        newString("privateRegionID"),
-		CurrentConfigurationId: "currentConfigID",
-		EncryptionKeyId:        newString("encryptionKeyID"),
-		MarkedForDeletionAt:    newTime(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
-		Url:                    "http://example.com",
-		TotalExtraDisk:         newInt(100),
-		Configuration: &qc.ClusterConfigurationOut{
-			NumNodes:    5,
-			NumNodesMax: 10,
-			NodeConfiguration: qc.NodeConfiguration{
-				PackageId: "testPackageID",
+	cluster := &qc.ClusterSchema{
+		Id:                  newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000001")),
+		CreatedAt:           newPointer(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId:           uuid.MustParse("00000000-1000-0000-0000-000000000001"),
+		Name:                "testName",
+		CloudProvider:       newPointer(qc.ClusterSchemaCloudProviderAzure),
+		CloudRegion:         newPointer(qc.ClusterSchemaCloudRegionUksouth),
+		Version:             newPointer("v1.0"),
+		PrivateRegionId:     newPointer(uuid.MustParse("00000003-0000-0000-0000-000000000001")),
+		MarkedForDeletionAt: newPointer(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Url:                 newPointer("http://example.com"),
+		Configuration: qc.ClusterConfigurationSchema{
+			NumberOfNodes: 5,
+			NodeConfiguration: qc.NodeConfigurationSchema{
+				PackageId: uuid.MustParse("00000009-1000-0000-0000-000000000001"),
 			},
 		},
 	}
@@ -39,28 +34,22 @@ func TestResourceClusterFlatten(t *testing.T) {
 	flattened := flattenCluster(cluster)
 
 	expected := map[string]interface{}{
-		clusterIdentifierFieldName:                  cluster.Id,
-		clusterCreatedAtFieldName:                   formatTime(&cluster.CreatedAt),
-		clusterAccountIDFieldName:                   derefString(cluster.AccountId),
-		clusterNameFieldName:                        cluster.Name,
-		clusterCloudProviderFieldName:               cluster.CloudProvider,
-		clusterCloudRegionFieldName:                 cluster.CloudRegion,
-		clusterCloudRegionAvailabilityZoneFieldName: derefString(cluster.CloudRegionAz),
-		clusterVersionFieldName:                     derefString(cluster.Version),
-		clusterCloudRegionSetupFieldName:            derefString(cluster.CloudRegionSetup),
-		clusterPrivateRegionIDFieldName:             derefString(cluster.PrivateRegionId),
-		clusterCurrentConfigurationIDFieldName:      cluster.CurrentConfigurationId,
-		clusterEncryptionKeyIDFieldName:             derefString(cluster.EncryptionKeyId),
-		clusterMarkedForDeletionAtFieldName:         formatTime(cluster.MarkedForDeletionAt),
-		clusterURLFieldName:                         cluster.Url,
-		clusterTotalExtraDiskFieldName:              derefInt(cluster.TotalExtraDisk),
+		clusterIdentifierFieldName:          cluster.Id.String(),
+		clusterCreatedAtFieldName:           formatTime(cluster.CreatedAt),
+		clusterAccountIDFieldName:           cluster.AccountId.String(),
+		clusterNameFieldName:                cluster.Name,
+		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
+		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
+		clusterVersionFieldName:             derefPointer(cluster.Version),
+		clusterPrivateRegionIDFieldName:     cluster.PrivateRegionId.String(),
+		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
+		clusterURLFieldName:                 derefPointer(cluster.Url),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				numNodesFieldName:    cluster.Configuration.NumNodes,
-				numNodesMaxFieldName: cluster.Configuration.NumNodesMax,
+				numberOfNodesFieldName: cluster.Configuration.NumberOfNodes,
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
-						packageIDFieldName: cluster.Configuration.NodeConfiguration.PackageId,
+						packageIDFieldName: cluster.Configuration.NodeConfiguration.PackageId.String(),
 					},
 				},
 			},
@@ -70,54 +59,50 @@ func TestResourceClusterFlatten(t *testing.T) {
 	assert.Equal(t, expected, flattened)
 }
 
-func TestExpandClusterIn(t *testing.T) {
-	expected := qc.ClusterIn{
-		AccountId:        newString("accountID"),
-		Name:             "testName",
-		CloudProvider:    qc.ClusterInCloudProviderAzure,
-		CloudRegion:      qc.ClusterInCloudRegionUksouth,
-		CloudRegionAz:    newString("1"),
-		Version:          newString("v1.0"),
-		CloudRegionSetup: newString("Standard"),
-		PrivateRegionId:  newString("privateRegionID"),
-		Configuration: qc.ClusterConfigurationIn{
-			NumNodes:    5,
-			NumNodesMax: 10,
-			NodeConfiguration: qc.NodeConfiguration{
-				PackageId: "testPackageID",
-			},
-		},
-		EncryptionConfig: &qc.EncryptionConfigIn{
-			AwsEncryptionConfig: &qc.AWSEncryptionConfig{
-				EncryptionKeyId: newString("encryptionKey"),
+func TestExpandCluster(t *testing.T) {
+	expected := qc.ClusterSchema{
+		Id:                  newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000001")),
+		CreatedAt:           newPointer(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId:           uuid.MustParse("00000000-1000-0000-0000-000000000001"),
+		Name:                "testName",
+		CloudProvider:       newPointer(qc.ClusterSchemaCloudProviderAzure),
+		CloudRegion:         newPointer(qc.ClusterSchemaCloudRegionUksouth),
+		Version:             newPointer("v1.0"),
+		PrivateRegionId:     newPointer(uuid.MustParse("00000003-0000-0000-0000-000000000001")),
+		MarkedForDeletionAt: newPointer(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Url:                 newPointer("http://example.com"),
+		Configuration: qc.ClusterConfigurationSchema{
+			NumberOfNodes: 5,
+			NodeConfiguration: qc.NodeConfigurationSchema{
+				PackageId: uuid.MustParse("00000009-1000-0000-0000-000000000001"),
 			},
 		},
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
-		clusterAccountIDFieldName:                   derefString(expected.AccountId),
-		clusterNameFieldName:                        expected.Name,
-		clusterCloudProviderFieldName:               string(expected.CloudProvider),
-		clusterCloudRegionFieldName:                 string(expected.CloudRegion),
-		clusterCloudRegionAvailabilityZoneFieldName: derefString(expected.CloudRegionAz),
-		clusterVersionFieldName:                     derefString(expected.Version),
-		clusterCloudRegionSetupFieldName:            derefString(expected.CloudRegionSetup),
-		clusterPrivateRegionIDFieldName:             derefString(expected.PrivateRegionId),
+		clusterIdentifierFieldName:          expected.Id.String(),
+		clusterCreatedAtFieldName:           formatTime(expected.CreatedAt),
+		clusterAccountIDFieldName:           expected.AccountId.String(),
+		clusterNameFieldName:                expected.Name,
+		clusterCloudProviderFieldName:       string(derefPointer(expected.CloudProvider)),
+		clusterCloudRegionFieldName:         string(derefPointer(expected.CloudRegion)),
+		clusterVersionFieldName:             derefPointer(expected.Version),
+		clusterPrivateRegionIDFieldName:     expected.PrivateRegionId.String(),
+		clusterMarkedForDeletionAtFieldName: formatTime(expected.MarkedForDeletionAt),
+		clusterURLFieldName:                 derefPointer(expected.Url),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				numNodesFieldName:    expected.Configuration.NumNodes,
-				numNodesMaxFieldName: expected.Configuration.NumNodesMax,
+				numberOfNodesFieldName: expected.Configuration.NumberOfNodes,
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
-						packageIDFieldName: expected.Configuration.NodeConfiguration.PackageId,
+						packageIDFieldName: expected.Configuration.NodeConfiguration.PackageId.String(),
 					},
 				},
 			},
 		},
-		clusterEncryptionKeyIDFieldName: derefString(expected.EncryptionConfig.AwsEncryptionConfig.EncryptionKeyId),
 	})
 
-	result, err := expandClusterIn(d, derefString(expected.AccountId))
+	result, err := expandCluster(d, expected.AccountId.String())
 	assert.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

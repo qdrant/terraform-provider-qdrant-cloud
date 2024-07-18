@@ -77,12 +77,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diagnostics
 	}
 	// Expand the cluster
-	cluster, err := expandClusterIn(d, getDefaultAccountID(m))
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
-	}
-	// Create an account UUID from the account ID
-	accountUUID, err := uuid.Parse(*cluster.AccountId)
+	cluster, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
@@ -92,7 +87,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		cluster.Version = &version
 	}
 	// Create the cluster
-	resp, err := apiClient.CreateClusterWithResponse(ctx, accountUUID, cluster)
+	resp, err := apiClient.CreateClusterWithResponse(ctx, cluster.AccountId, nil, cluster)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
@@ -103,18 +98,18 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 
-	clusterOut := resp.JSON200
-	if clusterOut == nil {
+	clusterSchema := resp.JSON200
+	if clusterSchema == nil {
 		return diag.FromErr(fmt.Errorf("%s: no cluster returned", errorPrefix))
 	}
 	// Flatten cluster and store in Terraform state
-	for k, v := range flattenCluster(clusterOut) {
+	for k, v := range flattenCluster(clusterSchema) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 		}
 	}
 	// Set the ID
-	d.SetId(clusterOut.Id)
+	d.SetId(clusterSchema.Id.String())
 	return nil
 }
 
@@ -136,30 +131,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Expand the cluster
-	cluster, err := expandClusterIn(d, getDefaultAccountID(m))
+	cluster, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
-	patch := qc.PydanticClusterPatchIn{}
-	// Check what has been changed
-	if d.HasChange(configurationFieldName) {
-		oldConf, newConf := d.GetChange(configurationFieldName)
-		oldConfMap := oldConf.([]interface{})[0].(map[string]interface{})
-		newConfMap := newConf.([]interface{})[0].(map[string]interface{})
-		// Check individual fields for changes
-		if oldConfMap[numNodesFieldName] != newConfMap[numNodesFieldName] {
-			// Handle change in num_nodes field
-			patch.Configuration = &qc.PydanticClusterConfigurationPatchIn{
-				NumNodes: &cluster.Configuration.NumNodes,
-			}
-		}
-	}
-	if d.HasChange(clusterVersionFieldName) {
-		patch.Version = cluster.Version
-		patch.Rolling = newBool(true)
-	}
-
-	resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, patch)
+	// Update the cluster
+	resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, cluster)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
@@ -197,7 +174,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
-	clusterUUID, err := uuid.Parse(d.Get("id").(string))
+	clusterUUID, err := uuid.Parse(d.Get(clusterIdentifierFieldName).(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}

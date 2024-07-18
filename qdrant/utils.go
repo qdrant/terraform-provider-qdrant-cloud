@@ -103,6 +103,16 @@ func formatTime(t interface{}) string {
 	}
 }
 
+// parseTime parses the provided value and returns it as time.Time (or an empty value if it cannot be parsed)
+// The provided string should be in RCF3339 format
+func parseTime(v string) time.Time {
+	result, err := time.Parse(time.RFC3339, v)
+	if err != nil {
+		return time.Time{}
+	}
+	return result
+}
+
 // getError returns a human readable error composed from the given HTTP validation error
 func getError(error *qc.HTTPValidationError) string {
 	if error == nil {
