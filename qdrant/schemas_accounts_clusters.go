@@ -59,7 +59,6 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 		// We should not set Max Items
 		maxItems = 0
 	}
-
 	return map[string]*schema.Schema{
 		clusterIdentifierFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the cluster"),
@@ -127,32 +126,47 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 			Computed:    asDataSource,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					numberOfNodesFieldName: {
-						Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
-						Type:        schema.TypeInt,
-						Required:    !asDataSource,
-						Computed:    asDataSource,
-					},
-					nodeConfigurationFieldName: {
-						Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
-						Type:        schema.TypeList,
-						Required:    !asDataSource,
-						Computed:    asDataSource,
-						MaxItems:    maxItems,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								packageIDFieldName: {
-									Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory, and disk size)"),
-									Type:        schema.TypeString,
-									Required:    !asDataSource,
-									Computed:    asDataSource,
-								},
-							},
-						},
-					},
-				},
+				Schema: accountsClusterConfigurationSchema(asDataSource),
 			},
+		},
+	}
+}
+
+// accountsClusterConfigurationSchema defines the schema for a cluster configuration resource or data-source.
+func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		// We should not set Max Items
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		numberOfNodesFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
+			Type:        schema.TypeInt,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		nodeConfigurationFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
+			Type:        schema.TypeList,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: accountsClusterNodeConfigurationSchema(asDataSource),
+			},
+		},
+	}
+}
+
+// accountsClusterNodeConfigurationSchema defines the schema for a cluster node configuration resource or data-source.
+func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		packageIDFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory, and disk size)"),
+			Type:        schema.TypeString,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 	}
 }
