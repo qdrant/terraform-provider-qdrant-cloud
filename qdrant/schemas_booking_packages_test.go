@@ -99,5 +99,5 @@ func TestFlattenResourceConfiguration(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, flattenResourceConfiguratons(rcs))
+	assert.Equal(t, expected, flattenResourceConfigurations(rcs))
 }

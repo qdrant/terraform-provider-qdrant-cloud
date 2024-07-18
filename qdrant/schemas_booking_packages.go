@@ -109,14 +109,14 @@ func flattenPackages(packages []qc.PackageSchema) []interface{} {
 			fieldName:                   p.Name,
 			fieldCurrency:               string(p.Currency),
 			fieldUnitIntPricePerHour:    derefPointer(p.UnitIntPricePerHour),
-			fieldResourceConfigurations: flattenResourceConfiguratons(p.ResourceConfigurations),
+			fieldResourceConfigurations: flattenResourceConfigurations(p.ResourceConfigurations),
 		})
 	}
 	return flattenedPackages
 }
 
-// flattenResourceConfiguratons flattens the resource configurations data into a format that Terraform can understand.
-func flattenResourceConfiguratons(rcs []qc.ResourceConfigurationSchema) []interface{} {
+// flattenResourceConfigurations flattens the resource configurations data into a format that Terraform can understand.
+func flattenResourceConfigurations(rcs []qc.ResourceConfigurationSchema) []interface{} {
 	var flattenedResourceConfigurations []interface{}
 	for _, rc := range rcs {
 		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
