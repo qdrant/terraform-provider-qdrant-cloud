@@ -166,7 +166,11 @@ type ClusterConfigurationSchema struct {
 	// NumberOfNodes The number of nodes in a cluster. This is a required field
 	NumberOfNodes       int                        `json:"number_of_nodes"`
 	QdrantConfiguration *QdrantConfigurationSchema `json:"qdrant_configuration,omitempty"`
-	Tolerations         *interface{}               `json:"tolerations"`
+
+	// Tolerations List of tolerations for this cluster in a hybrid cloud.
+	//                 It is ignored for Qdrant cloud clusters. This is an optional field
+	//
+	Tolerations *[]TolerationSchema `json:"tolerations,omitempty"`
 }
 
 // ClusterResourceSchema defines model for ClusterResourceSchema.
@@ -282,8 +286,13 @@ type HTTPValidationError struct {
 // NodeConfigurationSchema defines model for NodeConfigurationSchema.
 type NodeConfigurationSchema struct {
 	// PackageId Identifier of the package associated with the node configuration (in Guid format)
-	PackageId              openapi_types.UUID `json:"package_id"`
-	ResourceConfigurations *interface{}       `json:"resource_configurations"`
+	PackageId openapi_types.UUID `json:"package_id"`
+
+	// ResourceConfigurations List of additional resources.
+	//             Only one resource is allowed for each resource type and unit.
+	//             Currently only disk resources are supported. This is an optional field.
+	//
+	ResourceConfigurations *[]ResourceConfigurationSchema `json:"resource_configurations,omitempty"`
 }
 
 // PackageSchema defines model for PackageSchema.
@@ -291,15 +300,15 @@ type PackageSchema struct {
 	// Currency The currency of the package
 	Currency Currency `json:"currency"`
 
-	// Id The unique identifier of the package
-	Id string `json:"id"`
+	// Id The unique identifier of the package (in Guid format)
+	Id openapi_types.UUID `json:"id"`
 
 	// Name A human-readable identifier for the package
 	Name string `json:"name"`
 
-	// ResourceConfiguration The resource configuration of the package
-	ResourceConfiguration []ResourceConfigurationSchema `json:"resource_configuration"`
-	UnitIntPricePerHour   *int                          `json:"unit_int_price_per_hour"`
+	// ResourceConfigurations The resource configuration of the package
+	ResourceConfigurations []ResourceConfigurationSchema `json:"resource_configurations"`
+	UnitIntPricePerHour    *int                          `json:"unit_int_price_per_hour"`
 }
 
 // QdrantConfigApiKey defines model for QdrantConfigApiKey.

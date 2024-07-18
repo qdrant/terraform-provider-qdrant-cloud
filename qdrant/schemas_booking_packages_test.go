@@ -3,6 +3,7 @@ package qdrant
 import (
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
@@ -11,12 +12,12 @@ import (
 func TestFlattenPackages(t *testing.T) {
 	packages := []qc.PackageSchema{
 		{
-			Id:   "packageID1",
+			Id:   uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 			Name: "packageName1",
 
 			Currency:            "USD",
 			UnitIntPricePerHour: newPointer(10),
-			ResourceConfiguration: []qc.ResourceConfigurationSchema{
+			ResourceConfigurations: []qc.ResourceConfigurationSchema{
 				{
 					Amount:       1,
 					ResourceType: "type1",
@@ -25,11 +26,11 @@ func TestFlattenPackages(t *testing.T) {
 			},
 		},
 		{
-			Id:                  "packageID2",
+			Id:                  uuid.MustParse("00000000-0000-0000-0000-000000000002"),
 			Name:                "packageName2",
 			Currency:            "EUR",
 			UnitIntPricePerHour: newPointer(20),
-			ResourceConfiguration: []qc.ResourceConfigurationSchema{
+			ResourceConfigurations: []qc.ResourceConfigurationSchema{
 				{
 					Amount:       2,
 					ResourceType: "type2",
@@ -41,11 +42,11 @@ func TestFlattenPackages(t *testing.T) {
 
 	expected := []interface{}{
 		map[string]interface{}{
-			fieldID:                  "packageID1",
+			fieldID:                  "00000000-0000-0000-0000-000000000001",
 			fieldName:                "packageName1",
 			fieldCurrency:            "USD",
 			fieldUnitIntPricePerHour: 10,
-			fieldResourceConfiguration: []interface{}{
+			fieldResourceConfigurations: []interface{}{
 				map[string]interface{}{
 					fieldAmount:       1,
 					fieldResourceType: "type1",
@@ -54,11 +55,11 @@ func TestFlattenPackages(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			fieldID:                  "packageID2",
+			fieldID:                  "00000000-0000-0000-0000-000000000002",
 			fieldName:                "packageName2",
 			fieldCurrency:            "EUR",
 			fieldUnitIntPricePerHour: 20,
-			fieldResourceConfiguration: []interface{}{
+			fieldResourceConfigurations: []interface{}{
 				map[string]interface{}{
 					fieldAmount:       2,
 					fieldResourceType: "type2",
@@ -98,5 +99,5 @@ func TestFlattenResourceConfiguration(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, flattenResourceConfiguraton(rcs))
+	assert.Equal(t, expected, flattenResourceConfiguratons(rcs))
 }

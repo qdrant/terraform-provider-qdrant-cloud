@@ -9,26 +9,26 @@ import (
 // Constant keys and descriptions for schema fields
 const (
 	// Field keys
-	fieldPackages              = "packages"
-	fieldID                    = "id"
-	fieldName                  = "name"
-	fieldCurrency              = "currency"
-	fieldUnitIntPricePerHour   = "unit_int_price_per_hour"
-	fieldResourceConfiguration = "resource_configuration"
-	fieldAmount                = "amount"
-	fieldResourceType          = "resource_type"
-	fieldResourceUnit          = "resource_unit"
+	fieldPackages               = "packages"
+	fieldID                     = "id"
+	fieldName                   = "name"
+	fieldCurrency               = "currency"
+	fieldUnitIntPricePerHour    = "unit_int_price_per_hour"
+	fieldResourceConfigurations = "resource_configurations"
+	fieldAmount                 = "amount"
+	fieldResourceType           = "resource_type"
+	fieldResourceUnit           = "resource_unit"
 
 	// Descriptions
-	descriptionPackages              = "List of packages"
-	descriptionID                    = "The ID of the package"
-	descriptionName                  = "The name of the package"
-	descriptionCurrency              = "The currency of the package prices"
-	descriptionUnitIntPricePerHour   = "The unit price per hour in integer format"
-	descriptionResourceConfiguration = "The resource configuration of the package"
-	descriptionAmount                = "The amount of the resource"
-	descriptionResourceType          = "The type of the resource"
-	descriptionResourceUnit          = "The unit of the resource"
+	descriptionPackages               = "List of packages"
+	descriptionID                     = "The ID of the package"
+	descriptionName                   = "The name of the package"
+	descriptionCurrency               = "The currency of the package prices"
+	descriptionUnitIntPricePerHour    = "The unit price per hour in integer format"
+	descriptionResourceConfigurations = "The resource configurations of the package"
+	descriptionAmount                 = "The amount of the resource"
+	descriptionResourceType           = "The type of the resource"
+	descriptionResourceUnit           = "The unit of the resource"
 )
 
 // packagesSchema defines the schema structure for a packages within the Terraform provider.
@@ -68,19 +68,19 @@ func packageSchema() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Computed:    true,
 		},
-		fieldResourceConfiguration: {
-			Description: descriptionResourceConfiguration,
+		fieldResourceConfigurations: {
+			Description: descriptionResourceConfigurations,
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Schema: resourceConfigurationSchema(),
+				Schema: resourceConfigurationsSchema(),
 			},
 		},
 	}
 }
 
-// resourceConfigurationSchema defines the schema structure for resource configurations.
-func resourceConfigurationSchema() map[string]*schema.Schema {
+// resourceConfigurationsSchema defines the schema structure for resource configurations.
+func resourceConfigurationsSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		fieldAmount: {
 			Description: descriptionAmount,
@@ -105,18 +105,18 @@ func flattenPackages(packages []qc.PackageSchema) []interface{} {
 	var flattenedPackages []interface{}
 	for _, p := range packages {
 		flattenedPackages = append(flattenedPackages, map[string]interface{}{
-			fieldID:                    p.Id,
-			fieldName:                  p.Name,
-			fieldCurrency:              string(p.Currency),
-			fieldUnitIntPricePerHour:   derefPointer(p.UnitIntPricePerHour),
-			fieldResourceConfiguration: flattenResourceConfiguraton(p.ResourceConfiguration),
+			fieldID:                     p.Id.String(),
+			fieldName:                   p.Name,
+			fieldCurrency:               string(p.Currency),
+			fieldUnitIntPricePerHour:    derefPointer(p.UnitIntPricePerHour),
+			fieldResourceConfigurations: flattenResourceConfiguratons(p.ResourceConfigurations),
 		})
 	}
 	return flattenedPackages
 }
 
-// flattenResourceConfiguraton flattens the resource configuration data into a format that Terraform can understand.
-func flattenResourceConfiguraton(rcs []qc.ResourceConfigurationSchema) []interface{} {
+// flattenResourceConfiguratons flattens the resource configurations data into a format that Terraform can understand.
+func flattenResourceConfiguratons(rcs []qc.ResourceConfigurationSchema) []interface{} {
 	var flattenedResourceConfigurations []interface{}
 	for _, rc := range rcs {
 		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
