@@ -1,6 +1,7 @@
 package qdrant
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
@@ -41,6 +42,18 @@ func packagesSchema() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: packageSchema(),
 			},
+		},
+		clusterCloudProviderFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud provider where the cluster resides"),
+			Type:        schema.TypeString,
+			Required:    true,
+			Computed:    false,
+		},
+		clusterCloudRegionFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region where the cluster resides"),
+			Type:        schema.TypeString,
+			Required:    true,
+			Computed:    false,
 		},
 	}
 }

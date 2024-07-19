@@ -18,6 +18,8 @@ provider "qdrant-cloud" {
 
 	config := provider + `
 data "qdrant-cloud_booking_packages" "test" {
+	  cloud_provider = "gcp"
+	  cloud_region = "europe-west3"
 }
 
 locals {
@@ -26,7 +28,7 @@ locals {
   // Filter out the free tariffs
   free_tariffs = [
     // TODO: Change the resource.name to resource.type when the API is updated
-    for resource in local.resource_data : resource if resource.name == "free"
+    for resource in local.resource_data : resource if resource.name == "free2"
   ]
 
   // Get the first free tariff
@@ -40,7 +42,7 @@ output "first_free_tariff" {
 
 	check := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttrSet("data.qdrant-cloud_booking_packages.test", "packages.#"),
-		resource.TestCheckOutput("first_free_tariff", "free"),
+		resource.TestCheckOutput("first_free_tariff", "free2"),
 	)
 
 	resource.Test(t, resource.TestCase{

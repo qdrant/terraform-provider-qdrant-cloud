@@ -17,16 +17,18 @@ provider "qdrant-cloud" {
 	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
 	config := provider + fmt.Sprintf(`
-data "qdrant-cloud_booking_packages" "test" {}
+data "qdrant-cloud_booking_packages" "test" {
+    	cloud_provider = "gcp"
+		cloud_region = "us-east4"
+}
 locals {
   resource_data = data.qdrant-cloud_booking_packages.test.packages
-  // Filter out the free tariffs
-  // TODO: Change the resource.name to resource.type when the API is updated
-  free_tariffs = [
-    for resource in local.resource_data : resource if resource.name == "free2"
+  // Filter out the gpx1 
+  gpx1_packages = [
+    for resource in local.resource_data : resource if resource.name == "gpx1"
   ]
-  // Get the first free tariff
-  first_free_tariff = local.free_tariffs[0]
+  // Get the first gpx1 package
+  gpx1_package = local.gpx1_packages[0]
 }
 
 resource "qdrant-cloud_accounts_cluster" "test" {
@@ -36,11 +38,10 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 	cloud_provider = "gcp"
 
 	configuration {
-		num_nodes_max = 1
-		num_nodes = 1
+		number_of_nodes = 1
 
 		node_configuration {
-			package_id = local.first_free_tariff.id
+			package_id = local.gpx1_package.id
 		}
 	}
 }
@@ -52,16 +53,18 @@ output "cluster_name" {
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	config_update := provider + fmt.Sprintf(`
-data "qdrant-cloud_booking_packages" "test" {}
+data "qdrant-cloud_booking_packages" "test" {
+		cloud_provider = "gcp"
+		cloud_region = "us-east4"
+}
 locals {
   resource_data = data.qdrant-cloud_booking_packages.test.packages
-  // Filter out the free tariffs
-  // TODO: Change the resource.name to resource.type when the API is updated
-  free_tariffs = [
-    for resource in local.resource_data : resource if resource.name == "free2"
+  // Filter out the gpx1 
+  gpx1_packages = [
+    for resource in local.resource_data : resource if resource.name == "gpx1"
   ]
-  // Get the first free tariff
-  first_free_tariff = local.free_tariffs[0]
+  // Get the first gpx1 package
+  gpx1_package = local.gpx1_packages[0]
 }
 
 resource "qdrant-cloud_accounts_cluster" "test" {
@@ -71,11 +74,10 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 	cloud_provider = "gcp"
 
 	configuration {
-		num_nodes_max = 2   // Update the number of nodes to 2
-		num_nodes     = 2   // New number of nodes for the cluster
+		number_of_nodes = 2   // Update the number of nodes to 2
 
 		node_configuration {
-			package_id = local.first_free_tariff.id
+			package_id = local.gpx1_package.id
 		}
 	}
 }
@@ -85,7 +87,7 @@ output "cluster_name" {
 }
 
 output "cluster_cfg_num_nodes" {
-	value = qdrant-cloud_accounts_cluster.test.configuration[0].num_nodes
+	value = qdrant-cloud_accounts_cluster.test.configuration[0].number_of_nodes
 }
 
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))

@@ -30,8 +30,14 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	if diagnostics.HasError() {
 		return diagnostics
 	}
+
+	params := qc.GetPackagesParams{
+		Provider: qc.GetPackagesParamsProvider(d.Get("cloud_provider").(string)),
+		Region:   qc.GetPackagesParamsRegion(d.Get("cloud_region").(string)),
+	}
+
 	// Get all packages
-	resp, err := apiClient.GetPackagesWithResponse(ctx, &qc.GetPackagesParams{})
+	resp, err := apiClient.GetPackagesWithResponse(ctx, &params)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}

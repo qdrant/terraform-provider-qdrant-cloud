@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"fmt"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -184,8 +185,13 @@ func expandCluster(d *schema.ResourceData, accountID string) (qc.ClusterSchema, 
 	cloudProvider := d.Get(clusterCloudProviderFieldName)
 	cloudRegion := d.Get(clusterCloudRegionFieldName)
 
+	var uuid_id openapi_types.UUID
+	if id != nil && id.(string) != "" {
+		uuid_id = uuid.MustParse(id.(string))
+	}
+
 	cluster := qc.ClusterSchema{
-		Id:            newPointer(uuid.MustParse(id.(string))),
+		Id:            newPointer(uuid_id),
 		Name:          name.(string),
 		CloudProvider: newPointer(qc.ClusterSchemaCloudProvider(cloudProvider.(string))),
 		CloudRegion:   newPointer(qc.ClusterSchemaCloudRegion(cloudRegion.(string))),
@@ -252,6 +258,10 @@ func flattenClusters(clusters []qc.ClusterSchema) []interface{} {
 
 // flattenCluster creates a map from a cluster for easy storage in Terraform.
 func flattenCluster(cluster *qc.ClusterSchema) map[string]interface{} {
+	var privateRegionIdStr string
+	if cluster.PrivateRegionId != nil {
+		privateRegionIdStr = cluster.PrivateRegionId.String()
+	}
 	return map[string]interface{}{
 		clusterIdentifierFieldName:          cluster.Id.String(),
 		clusterCreatedAtFieldName:           formatTime(cluster.CreatedAt),
@@ -260,7 +270,7 @@ func flattenCluster(cluster *qc.ClusterSchema) map[string]interface{} {
 		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
 		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
 		clusterVersionFieldName:             derefPointer(cluster.Version),
-		clusterPrivateRegionIDFieldName:     cluster.PrivateRegionId.String(),
+		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
 		clusterURLFieldName:                 derefPointer(cluster.Url),
 		configurationFieldName:              flattenClusterConfiguration(cluster.Configuration),
