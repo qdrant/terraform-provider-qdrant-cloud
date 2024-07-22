@@ -783,7 +783,7 @@ func NewListApiKeysRequest(server string, accountId openapi_types.UUID) (*http.R
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/auth/api-keys", pathParam0)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/auth/api-keys", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -828,7 +828,7 @@ func NewCreateApiKeyRequestWithBody(server string, accountId openapi_types.UUID,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/auth/api-keys", pathParam0)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/auth/api-keys", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -871,7 +871,7 @@ func NewDeleteApiKeyRequest(server string, accountId openapi_types.UUID, apiKeyI
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/auth/api-keys/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/auth/api-keys/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -923,7 +923,7 @@ func NewUpdateApiKeyRequestWithBody(server string, accountId openapi_types.UUID,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/auth/api-keys/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/auth/api-keys/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -959,7 +959,7 @@ func NewListClustersRequest(server string, accountId openapi_types.UUID, params 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/clusters", pathParam0)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/clusters", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1026,7 +1026,7 @@ func NewCreateClusterRequestWithBody(server string, accountId openapi_types.UUID
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/clusters", pathParam0)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/clusters", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1091,7 +1091,7 @@ func NewDeleteClusterRequest(server string, accountId openapi_types.UUID, cluste
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/clusters/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/clusters/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1154,7 +1154,7 @@ func NewGetClusterRequest(server string, accountId openapi_types.UUID, clusterId
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/clusters/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/clusters/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1206,7 +1206,7 @@ func NewUpdateClusterRequestWithBody(server string, accountId openapi_types.UUID
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/accounts/%s/clusters/%s", pathParam0, pathParam1)
+	operationPath := fmt.Sprintf("/pa/v1/accounts/%s/clusters/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1235,7 +1235,7 @@ func NewGetPackagesRequest(server string, params *GetPackagesParams) (*http.Requ
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/public/v1/booking/packages")
+	operationPath := fmt.Sprintf("/pa/v1/booking/packages")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
