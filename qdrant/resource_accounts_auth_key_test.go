@@ -17,7 +17,10 @@ provider "qdrant-cloud" {
 	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
 
 	config := provider + fmt.Sprintf(`
-data "qdrant-cloud_booking_packages" "test" {}
+data "qdrant-cloud_booking_packages" "test" {
+	cloud_provider = "gcp"
+	cloud_region = "us-east4"
+}
 locals {
   account_id = "%s"
   resource_data = data.qdrant-cloud_booking_packages.test.packages
@@ -37,8 +40,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 	cloud_provider = "gcp"
 
 	configuration {
-		num_nodes_max = 1
-		num_nodes = 1
+		number_of_nodes = 1
 
 		node_configuration {
 			package_id = local.first_free_tariff.id
@@ -47,13 +49,12 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 }
 
 resource "qdrant-cloud_accounts_auth_key" "test" {
-	account_id = local.account_id
 	cluster_ids = [qdrant-cloud_accounts_cluster.test.id]
 }
 	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_auth_key.test", "account_id"),
+		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_auth_key.test", "cluster_ids.#"),
 	)
 
 	resource.Test(t, resource.TestCase{

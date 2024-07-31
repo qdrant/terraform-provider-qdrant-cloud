@@ -54,16 +54,11 @@ output "cluster" {
 
 - `cloud_provider` (String) Cluster Schema Cloud provider where the cluster resides field
 - `cloud_region` (String) Cluster Schema Cloud region where the cluster resides field
-- `cloud_region_az` (String) Cluster Schema Cloud region availability zone where the cluster resides field
-- `cloud_region_setup` (String) Cluster Schema Cloud region setup of the cluster field
 - `configuration` (List of Object) Cluster Schema The configuration options of a cluster field (see [below for nested schema](#nestedatt--configuration))
 - `created_at` (String) Cluster Schema Timestamp when the cluster is created field
-- `current_configuration_id` (String) Cluster Schema Identifier of the current configuration field
-- `encryption_key_id` (String) Cluster Schema Identifier of the encryption key field
 - `marked_for_deletion_at` (String) Cluster Schema Timestamp when this cluster was marked for deletion field
 - `name` (String) Cluster Schema Name of the cluster field
 - `private_region_id` (String) Cluster Schema Identifier of the Private Region field
-- `total_extra_disk` (Number) Cluster Schema The total amount of extra disk in relation to the chosen package (in GiB) field
 - `url` (String) Cluster Schema The URL of the endpoint of the Qdrant cluster field
 - `version` (String) Cluster Schema Version of the Qdrant cluster field
 
@@ -73,8 +68,7 @@ output "cluster" {
 Read-Only:
 
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_configuration))
-- `num_nodes` (Number)
-- `num_nodes_max` (Number)
+- `number_of_nodes` (Number)
 
 <a id="nestedobjatt--configuration--node_configuration"></a>
 ### Nested Schema for `configuration.node_configuration`

@@ -2,7 +2,9 @@ package qdrant
 
 import (
 	"fmt"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	qc "terraform-provider-qdrant-cloud/v1/internal/client"
@@ -13,27 +15,21 @@ const (
 	clustersAccountIDFieldName = "account_id"
 	clustersClustersFieldName  = "clusters"
 
-	clusterFieldTemplate                        = "Cluster Schema %s field"
-	clusterIdentifierFieldName                  = "id"
-	clusterCreatedAtFieldName                   = "created_at"
-	clusterAccountIDFieldName                   = "account_id"
-	clusterNameFieldName                        = "name"
-	clusterCloudProviderFieldName               = "cloud_provider"
-	clusterCloudRegionFieldName                 = "cloud_region"
-	clusterCloudRegionAvailabilityZoneFieldName = "cloud_region_az"
-	clusterVersionFieldName                     = "version"
-	clusterCloudRegionSetupFieldName            = "cloud_region_setup"
-	clusterPrivateRegionIDFieldName             = "private_region_id"
-	clusterCurrentConfigurationIDFieldName      = "current_configuration_id"
-	clusterEncryptionKeyIDFieldName             = "encryption_key_id"
-	clusterMarkedForDeletionAtFieldName         = "marked_for_deletion_at"
-	clusterURLFieldName                         = "url"
-	clusterTotalExtraDiskFieldName              = "total_extra_disk"
-	configurationFieldName                      = "configuration"
-	nodeConfigurationFieldName                  = "node_configuration"
-	numNodesMaxFieldName                        = "num_nodes_max"
-	numNodesFieldName                           = "num_nodes"
-	packageIDFieldName                          = "package_id"
+	clusterFieldTemplate                = "Cluster Schema %s field"
+	clusterIdentifierFieldName          = "id"
+	clusterCreatedAtFieldName           = "created_at"
+	clusterAccountIDFieldName           = "account_id"
+	clusterNameFieldName                = "name"
+	clusterCloudProviderFieldName       = "cloud_provider"
+	clusterCloudRegionFieldName         = "cloud_region"
+	clusterVersionFieldName             = "version"
+	clusterPrivateRegionIDFieldName     = "private_region_id"
+	clusterMarkedForDeletionAtFieldName = "marked_for_deletion_at"
+	clusterURLFieldName                 = "url"
+	configurationFieldName              = "configuration"
+	nodeConfigurationFieldName          = "node_configuration"
+	numberOfNodesFieldName              = "number_of_nodes"
+	packageIDFieldName                  = "package_id"
 )
 
 // accountsClustersSchema defines the schema for a cluster list data-source.
@@ -64,7 +60,6 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 		// We should not set Max Items
 		maxItems = 0
 	}
-
 	return map[string]*schema.Schema{
 		clusterIdentifierFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the cluster"),
@@ -103,33 +98,10 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 			ForceNew:    !asDataSource, // Cross region migration isn't supported
 			Computed:    asDataSource,
 		},
-		clusterCloudRegionAvailabilityZoneFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region availability zone where the cluster resides"),
-			Type:        schema.TypeString,
-			Computed:    true,
-			Optional:    !asDataSource,
-		},
-		clusterCloudRegionSetupFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region setup of the cluster"),
-			Type:        schema.TypeString,
-			Computed:    true,
-			Optional:    !asDataSource,
-		},
 		clusterPrivateRegionIDFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Private Region"),
 			Type:        schema.TypeString,
 			Computed:    asDataSource,
-			Optional:    !asDataSource,
-		},
-		clusterCurrentConfigurationIDFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the current configuration"),
-			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		clusterEncryptionKeyIDFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the encryption key"),
-			Type:        schema.TypeString,
-			Computed:    true,
 			Optional:    !asDataSource,
 		},
 		clusterMarkedForDeletionAtFieldName: {
@@ -155,112 +127,107 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 			Computed:    asDataSource,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					numNodesMaxFieldName: {
-						Description: fmt.Sprintf(clusterFieldTemplate, "The maximum number of nodes in the cluster"),
-						Type:        schema.TypeInt,
-						Required:    !asDataSource,
-						Computed:    asDataSource,
-					},
-					numNodesFieldName: {
-						Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
-						Type:        schema.TypeInt,
-						Required:    !asDataSource,
-						Computed:    asDataSource,
-					},
-					nodeConfigurationFieldName: {
-						Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
-						Type:        schema.TypeList,
-						Required:    !asDataSource,
-						Computed:    asDataSource,
-						MaxItems:    maxItems,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								packageIDFieldName: {
-									Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory, and disk size)"),
-									Type:        schema.TypeString,
-									Required:    !asDataSource,
-									Computed:    asDataSource,
-								},
-							},
-						},
-					},
-				},
+				Schema: accountsClusterConfigurationSchema(asDataSource),
 			},
-		},
-		clusterTotalExtraDiskFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "The total amount of extra disk in relation to the chosen package (in GiB)"),
-			Type:        schema.TypeInt,
-			Computed:    asDataSource,
-			Optional:    !asDataSource,
 		},
 	}
 }
 
-func expandClusterIn(d *schema.ResourceData, accountID string) (qc.ClusterIn, error) {
+// accountsClusterConfigurationSchema defines the schema for a cluster configuration resource or data-source.
+func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		// We should not set Max Items
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		numberOfNodesFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
+			Type:        schema.TypeInt,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		nodeConfigurationFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The node configuration options of a cluster"),
+			Type:        schema.TypeList,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: accountsClusterNodeConfigurationSchema(asDataSource),
+			},
+		},
+	}
+}
+
+// accountsClusterNodeConfigurationSchema defines the schema for a cluster node configuration resource or data-source.
+func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		packageIDFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The package identifier (specifying: CPU, Memory, and disk size)"),
+			Type:        schema.TypeString,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
+	}
+}
+
+func expandCluster(d *schema.ResourceData, accountID string) (qc.ClusterSchema, error) {
 	// Check if we need to override the default
 	if v, ok := d.GetOk(clusterAccountIDFieldName); ok {
 		accountID = v.(string)
 	}
 	if accountID == "" {
-		return qc.ClusterIn{}, fmt.Errorf("account ID not specified")
+		return qc.ClusterSchema{}, fmt.Errorf("account ID not specified")
 	}
+	id := d.Get(clusterIdentifierFieldName)
 	name := d.Get(clusterNameFieldName)
 	cloudProvider := d.Get(clusterCloudProviderFieldName)
 	cloudRegion := d.Get(clusterCloudRegionFieldName)
 
-	cluster := qc.ClusterIn{
-		Name:          name.(string),
-		CloudProvider: qc.ClusterInCloudProvider(cloudProvider.(string)),
-		CloudRegion:   qc.ClusterInCloudRegion(cloudRegion.(string)),
-		AccountId:     &accountID,
+	var uuid_id openapi_types.UUID
+	if id != nil && id.(string) != "" {
+		uuid_id = uuid.MustParse(id.(string))
 	}
 
+	cluster := qc.ClusterSchema{
+		Id:            newPointer(uuid_id),
+		Name:          name.(string),
+		CloudProvider: newPointer(qc.ClusterSchemaCloudProvider(cloudProvider.(string))),
+		CloudRegion:   newPointer(qc.ClusterSchemaCloudRegion(cloudRegion.(string))),
+		AccountId:     uuid.MustParse(accountID),
+	}
 	if v, ok := d.GetOk(clusterVersionFieldName); ok {
-		val := v.(string)
-		cluster.Version = &val
+		cluster.Version = newPointer(v.(string))
 	}
-	if v, ok := d.GetOk(clusterCloudRegionAvailabilityZoneFieldName); ok {
-		val := v.(string)
-		cluster.CloudRegionAz = &val
+	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
+		cluster.MarkedForDeletionAt = newPointer(parseTime(v.(string)))
 	}
-	if v, ok := d.GetOk(clusterCloudRegionSetupFieldName); ok {
-		val := v.(string)
-		cluster.CloudRegionSetup = &val
+	if v, ok := d.GetOk(clusterCreatedAtFieldName); ok {
+		cluster.CreatedAt = newPointer(parseTime(v.(string)))
+	}
+	if v, ok := d.GetOk(clusterURLFieldName); ok {
+		cluster.Url = newPointer(v.(string))
 	}
 	if v, ok := d.GetOk(clusterPrivateRegionIDFieldName); ok {
-		val := v.(string)
-		cluster.PrivateRegionId = &val
+		cluster.PrivateRegionId = newPointer(uuid.MustParse(v.(string)))
 	}
-	if v, ok := d.GetOk(clusterEncryptionKeyIDFieldName); ok {
-		val := v.(string)
-		cluster.EncryptionConfig = &qc.EncryptionConfigIn{AwsEncryptionConfig: &qc.AWSEncryptionConfig{
-			EncryptionKeyId: &val,
-		}}
-	}
-	/*if v, ok := d.GetOk(clusterTotalExtraDiskFieldName); ok {
-		extraDisk := v.(int)
-		cluster.TotalExtraDisk = &extraDisk
-	}*/
 	if v, ok := d.GetOk(configurationFieldName); ok {
-		configuration := expandClusterConfigurationIn(v.([]interface{}))
+		configuration := expandClusterConfiguration(v.([]interface{}))
 		cluster.Configuration = *configuration
 	}
 	return cluster, nil
 }
 
-func expandClusterConfigurationIn(v []interface{}) *qc.ClusterConfigurationIn {
-	config := qc.ClusterConfigurationIn{}
+func expandClusterConfiguration(v []interface{}) *qc.ClusterConfigurationSchema {
+	config := qc.ClusterConfigurationSchema{}
 	for _, m := range v {
 		item := m.(map[string]interface{})
-		if v, ok := item[numNodesMaxFieldName]; ok {
-			config.NumNodesMax = v.(int)
-		}
-		if v, ok := item[numNodesFieldName]; ok {
-			config.NumNodes = v.(int)
+		if v, ok := item[numberOfNodesFieldName]; ok {
+			config.NumberOfNodes = v.(int)
 		}
 		if v, ok := item[nodeConfigurationFieldName]; ok {
-			nodeConfig := expandNodeConfigurationIn(v.([]interface{}))
+			nodeConfig := expandNodeConfiguration(v.([]interface{}))
 			if nodeConfig != nil {
 				config.NodeConfiguration = *nodeConfig
 			}
@@ -269,19 +236,19 @@ func expandClusterConfigurationIn(v []interface{}) *qc.ClusterConfigurationIn {
 	return &config
 }
 
-func expandNodeConfigurationIn(v []interface{}) *qc.NodeConfiguration {
-	config := qc.NodeConfiguration{}
+func expandNodeConfiguration(v []interface{}) *qc.NodeConfigurationSchema {
+	config := qc.NodeConfigurationSchema{}
 	for _, m := range v {
 		item := m.(map[string]interface{})
 		if v, ok := item[packageIDFieldName]; ok {
-			config.PackageId = v.(string)
+			config.PackageId = uuid.MustParse(v.(string))
 		}
 	}
 	return &config
 }
 
 // flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
-func flattenClusters(clusters []qc.ClusterOut) []interface{} {
+func flattenClusters(clusters []qc.ClusterSchema) []interface{} {
 	var flattenedClusters []interface{}
 	for _, cluster := range clusters {
 		flattenedClusters = append(flattenedClusters, flattenCluster(&cluster))
@@ -290,43 +257,41 @@ func flattenClusters(clusters []qc.ClusterOut) []interface{} {
 }
 
 // flattenCluster creates a map from a cluster for easy storage in Terraform.
-func flattenCluster(cluster *qc.ClusterOut) map[string]interface{} {
+func flattenCluster(cluster *qc.ClusterSchema) map[string]interface{} {
+	var privateRegionIdStr string
+	if cluster.PrivateRegionId != nil {
+		privateRegionIdStr = cluster.PrivateRegionId.String()
+	}
 	return map[string]interface{}{
-		clusterIdentifierFieldName:                  cluster.Id,
-		clusterCreatedAtFieldName:                   formatTime(cluster.CreatedAt),
-		clusterAccountIDFieldName:                   derefString(cluster.AccountId),
-		clusterNameFieldName:                        cluster.Name,
-		clusterCloudProviderFieldName:               cluster.CloudProvider,
-		clusterCloudRegionFieldName:                 cluster.CloudRegion,
-		clusterCloudRegionAvailabilityZoneFieldName: derefString(cluster.CloudRegionAz),
-		clusterVersionFieldName:                     derefString(cluster.Version),
-		clusterCloudRegionSetupFieldName:            derefString(cluster.CloudRegionSetup),
-		clusterPrivateRegionIDFieldName:             derefString(cluster.PrivateRegionId),
-		clusterCurrentConfigurationIDFieldName:      cluster.CurrentConfigurationId,
-		clusterEncryptionKeyIDFieldName:             derefString(cluster.EncryptionKeyId),
-		clusterMarkedForDeletionAtFieldName:         formatTime(cluster.MarkedForDeletionAt),
-		clusterURLFieldName:                         cluster.Url,
-		clusterTotalExtraDiskFieldName:              derefInt(cluster.TotalExtraDisk),
-		configurationFieldName:                      flattenClusterConfiguration(cluster.Configuration),
+		clusterIdentifierFieldName:          cluster.Id.String(),
+		clusterCreatedAtFieldName:           formatTime(cluster.CreatedAt),
+		clusterAccountIDFieldName:           cluster.AccountId.String(),
+		clusterNameFieldName:                cluster.Name,
+		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
+		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
+		clusterVersionFieldName:             derefPointer(cluster.Version),
+		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
+		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
+		clusterURLFieldName:                 derefPointer(cluster.Url),
+		configurationFieldName:              flattenClusterConfiguration(cluster.Configuration),
 	}
 }
 
 // flattenClusterConfiguration creates a map from a cluster configuration for easy storage in Terraform.
-func flattenClusterConfiguration(clusterConfig *qc.ClusterConfigurationOut) []interface{} {
+func flattenClusterConfiguration(clusterConfig qc.ClusterConfigurationSchema) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			numNodesFieldName:          clusterConfig.NumNodes,
-			numNodesMaxFieldName:       clusterConfig.NumNodesMax,
+			numberOfNodesFieldName:     clusterConfig.NumberOfNodes,
 			nodeConfigurationFieldName: flattenNodeConfiguration(clusterConfig.NodeConfiguration),
 		},
 	}
 }
 
 // flattenNodeConfiguration creates a map from a node configuration for easy storage in Terraform.
-func flattenNodeConfiguration(nodeConfig qc.NodeConfiguration) []interface{} {
+func flattenNodeConfiguration(nodeConfig qc.NodeConfigurationSchema) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			packageIDFieldName: nodeConfig.PackageId,
+			packageIDFieldName: nodeConfig.PackageId.String(),
 		},
 	}
 }

@@ -10,6 +10,13 @@ NAMESPACE=local
 QDRANT_CLOUD_API_KEY ?=
 QDRANT_CLOUD_ACCOUNT_ID ?=
 
+# Get the latest tag
+LATEST_TAG := $(shell git describe --tags `git rev-list --tags --max-count=1`)
+
+# Use the latest tag in a target
+print-latest-tag:
+	@echo "The latest tag is $(LATEST_TAG)"
+
 .PHONY: testacc generate-client
 # Run acceptance tests
 test:
@@ -33,13 +40,17 @@ build: requirements
 
 .PHONY: update-go-client
 update-go-client:
-	rm -r ./go-client-programmatic-access
-	mkdir ./go-client-programmatic-access
-	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./go-client-programmatic-access
+	rm -r ./internal/client
+	mkdir ./internal/client
+	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./internal/client
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}
 	cp bin/${OS}/${ARCH}/${BINARY}_v$(VERSION) ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
+
+install-in-gobin: build
+	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}
+	cp dist/${BINARY}_${OS}_${ARCH}/${BINARY}_$(LATEST_TAG)-next ${HOME}/go/bin/terraform-provider-qdrant-cloud
 
 .PHONY: generate-help
 generate-help:
