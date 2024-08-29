@@ -171,6 +171,7 @@ type ClusterConfigurationSchema struct {
 	//                 It is ignored for Qdrant cloud clusters. This is an optional field
 	//
 	Tolerations *[]TolerationSchema `json:"tolerations,omitempty"`
+	Version     *string             `json:"version"`
 }
 
 // ClusterResourceSchema defines model for ClusterResourceSchema.
@@ -240,7 +241,6 @@ type ClusterSchema struct {
 	Resources       *ClusterResourcesSchema `json:"resources,omitempty"`
 	State           *ClusterStateSchema     `json:"state,omitempty"`
 	Url             *string                 `json:"url"`
-	Version         *string                 `json:"version"`
 }
 
 // ClusterSchemaCloudProvider Cloud provider where the cluster is hosted.
@@ -316,17 +316,43 @@ type QdrantConfigApiKey struct {
 	SecretKeyRef SecretKeyRef `json:"secretKeyRef"`
 }
 
+// QdrantConfigSecretKey defines model for QdrantConfigSecretKey.
+type QdrantConfigSecretKey struct {
+	SecretKeyRef SecretKeyRef `json:"secretKeyRef"`
+}
+
+// QdrantConfigurationCollectionConfig defines model for QdrantConfigurationCollectionConfig.
+type QdrantConfigurationCollectionConfig struct {
+	ReplicationFactor      *int                                        `json:"replication_factor"`
+	Vectors                *QdrantConfigurationCollectionVectorsConfig `json:"vectors,omitempty"`
+	WriteConsistencyFactor *int                                        `json:"write_consistency_factor"`
+}
+
+// QdrantConfigurationCollectionVectorsConfig defines model for QdrantConfigurationCollectionVectorsConfig.
+type QdrantConfigurationCollectionVectorsConfig struct {
+	OnDisk *bool `json:"on_disk"`
+}
+
 // QdrantConfigurationSchema defines model for QdrantConfigurationSchema.
 type QdrantConfigurationSchema struct {
-	LogLevel *string                           `json:"log_level"`
-	Service  *QdrantConfigurationServiceConfig `json:"service,omitempty"`
+	Collection *QdrantConfigurationCollectionConfig `json:"collection,omitempty"`
+	LogLevel   *string                              `json:"log_level"`
+	Service    *QdrantConfigurationServiceConfig    `json:"service,omitempty"`
+	Tls        *QdrantConfigurationTlsConfig        `json:"tls,omitempty"`
 }
 
 // QdrantConfigurationServiceConfig defines model for QdrantConfigurationServiceConfig.
 type QdrantConfigurationServiceConfig struct {
 	ApiKey         *QdrantConfigApiKey `json:"api_key,omitempty"`
+	EnableTls      *bool               `json:"enable_tls"`
 	JwtRbac        *bool               `json:"jwt_rbac"`
 	ReadOnlyApiKey *QdrantConfigApiKey `json:"read_only_api_key,omitempty"`
+}
+
+// QdrantConfigurationTlsConfig defines model for QdrantConfigurationTlsConfig.
+type QdrantConfigurationTlsConfig struct {
+	Cert *QdrantConfigSecretKey `json:"cert,omitempty"`
+	Key  *QdrantConfigSecretKey `json:"key,omitempty"`
 }
 
 // ResourceConfigurationSchema defines model for ResourceConfigurationSchema.
@@ -385,6 +411,11 @@ type ValidationErrorLocInner0 = string
 
 // ValidationErrorLocInner1 defines model for .
 type ValidationErrorLocInner1 = int
+
+// ListApiKeysParams defines parameters for ListApiKeys.
+type ListApiKeysParams struct {
+	ClusterId *openapi_types.UUID `form:"cluster_id,omitempty" json:"cluster_id,omitempty"`
+}
 
 // ListClustersParams defines parameters for ListClusters.
 type ListClustersParams struct {
@@ -561,7 +592,7 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 	// ListApiKeys request
-	ListApiKeys(ctx context.Context, accountId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	ListApiKeys(ctx context.Context, accountId openapi_types.UUID, params *ListApiKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateApiKeyWithBody request with any body
 	CreateApiKeyWithBody(ctx context.Context, accountId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -599,8 +630,8 @@ type ClientInterface interface {
 	GetPackages(ctx context.Context, params *GetPackagesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) ListApiKeys(ctx context.Context, accountId openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListApiKeysRequest(c.Server, accountId)
+func (c *Client) ListApiKeys(ctx context.Context, accountId openapi_types.UUID, params *ListApiKeysParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListApiKeysRequest(c.Server, accountId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -768,7 +799,7 @@ func (c *Client) GetPackages(ctx context.Context, params *GetPackagesParams, req
 }
 
 // NewListApiKeysRequest generates requests for ListApiKeys
-func NewListApiKeysRequest(server string, accountId openapi_types.UUID) (*http.Request, error) {
+func NewListApiKeysRequest(server string, accountId openapi_types.UUID, params *ListApiKeysParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -791,6 +822,28 @@ func NewListApiKeysRequest(server string, accountId openapi_types.UUID) (*http.R
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.ClusterId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "cluster_id", runtime.ParamLocationQuery, *params.ClusterId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -1327,7 +1380,7 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 	// ListApiKeysWithResponse request
-	ListApiKeysWithResponse(ctx context.Context, accountId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListApiKeysResponse, error)
+	ListApiKeysWithResponse(ctx context.Context, accountId openapi_types.UUID, params *ListApiKeysParams, reqEditors ...RequestEditorFn) (*ListApiKeysResponse, error)
 
 	// CreateApiKeyWithBodyWithResponse request with any body
 	CreateApiKeyWithBodyWithResponse(ctx context.Context, accountId openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateApiKeyResponse, error)
@@ -1594,8 +1647,8 @@ func (r GetPackagesResponse) StatusCode() int {
 }
 
 // ListApiKeysWithResponse request returning *ListApiKeysResponse
-func (c *ClientWithResponses) ListApiKeysWithResponse(ctx context.Context, accountId openapi_types.UUID, reqEditors ...RequestEditorFn) (*ListApiKeysResponse, error) {
-	rsp, err := c.ListApiKeys(ctx, accountId, reqEditors...)
+func (c *ClientWithResponses) ListApiKeysWithResponse(ctx context.Context, accountId openapi_types.UUID, params *ListApiKeysParams, reqEditors ...RequestEditorFn) (*ListApiKeysResponse, error) {
+	rsp, err := c.ListApiKeys(ctx, accountId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}

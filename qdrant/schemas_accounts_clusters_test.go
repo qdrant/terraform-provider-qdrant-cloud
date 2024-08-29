@@ -19,11 +19,11 @@ func TestResourceClusterFlatten(t *testing.T) {
 		Name:                "testName",
 		CloudProvider:       newPointer(qc.ClusterSchemaCloudProviderAzure),
 		CloudRegion:         newPointer(qc.ClusterSchemaCloudRegionUksouth),
-		Version:             newPointer("v1.0"),
 		PrivateRegionId:     newPointer(uuid.MustParse("00000003-0000-0000-0000-000000000001")),
 		MarkedForDeletionAt: newPointer(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Url:                 newPointer("http://example.com"),
 		Configuration: qc.ClusterConfigurationSchema{
+			Version:       newPointer("v1.0"),
 			NumberOfNodes: 5,
 			NodeConfiguration: qc.NodeConfigurationSchema{
 				PackageId: uuid.MustParse("00000009-1000-0000-0000-000000000001"),
@@ -40,13 +40,13 @@ func TestResourceClusterFlatten(t *testing.T) {
 		clusterNameFieldName:                cluster.Name,
 		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
 		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
-		clusterVersionFieldName:             derefPointer(cluster.Version),
 		clusterPrivateRegionIDFieldName:     cluster.PrivateRegionId.String(),
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
 		clusterURLFieldName:                 derefPointer(cluster.Url),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				numberOfNodesFieldName: cluster.Configuration.NumberOfNodes,
+				clusterVersionFieldName: derefPointer(cluster.Configuration.Version),
+				numberOfNodesFieldName:  cluster.Configuration.NumberOfNodes,
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
 						packageIDFieldName: cluster.Configuration.NodeConfiguration.PackageId.String(),
@@ -67,11 +67,11 @@ func TestExpandCluster(t *testing.T) {
 		Name:                "testName",
 		CloudProvider:       newPointer(qc.ClusterSchemaCloudProviderAzure),
 		CloudRegion:         newPointer(qc.ClusterSchemaCloudRegionUksouth),
-		Version:             newPointer("v1.0"),
 		PrivateRegionId:     newPointer(uuid.MustParse("00000003-0000-0000-0000-000000000001")),
 		MarkedForDeletionAt: newPointer(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Url:                 newPointer("http://example.com"),
 		Configuration: qc.ClusterConfigurationSchema{
+			Version:       newPointer("v1.0"),
 			NumberOfNodes: 5,
 			NodeConfiguration: qc.NodeConfigurationSchema{
 				PackageId: uuid.MustParse("00000009-1000-0000-0000-000000000001"),
@@ -86,13 +86,13 @@ func TestExpandCluster(t *testing.T) {
 		clusterNameFieldName:                expected.Name,
 		clusterCloudProviderFieldName:       string(derefPointer(expected.CloudProvider)),
 		clusterCloudRegionFieldName:         string(derefPointer(expected.CloudRegion)),
-		clusterVersionFieldName:             derefPointer(expected.Version),
 		clusterPrivateRegionIDFieldName:     expected.PrivateRegionId.String(),
 		clusterMarkedForDeletionAtFieldName: formatTime(expected.MarkedForDeletionAt),
 		clusterURLFieldName:                 derefPointer(expected.Url),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				numberOfNodesFieldName: expected.Configuration.NumberOfNodes,
+				clusterVersionFieldName: derefPointer(expected.Configuration.Version),
+				numberOfNodesFieldName:  expected.Configuration.NumberOfNodes,
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
 						packageIDFieldName: expected.Configuration.NodeConfiguration.PackageId.String(),
