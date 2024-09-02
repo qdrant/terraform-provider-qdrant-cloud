@@ -32,9 +32,6 @@ requirements:
 	go install github.com/goreleaser/goreleaser/v2@latest
 	go install github.com/mitchellh/gox@latest
 
-generate-client:
-	cd internal && swagger-codegen generate -i ./spec.json -l go --output client --additional-properties packageName=cloud
-
 build: requirements
 	goreleaser release --snapshot --clean
 

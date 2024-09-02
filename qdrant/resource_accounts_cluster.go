@@ -82,9 +82,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// Set required version to 'latest' if not provided
-	if cluster.Version == nil {
-		version := "latest"
-		cluster.Version = &version
+	if derefPointer(cluster.Configuration.Version) == "" {
+		cluster.Configuration.Version = newPointer("latest")
 	}
 	// Create the cluster
 	resp, err := apiClient.CreateClusterWithResponse(ctx, cluster.AccountId, nil, cluster)

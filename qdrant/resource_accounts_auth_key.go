@@ -44,7 +44,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	// convert to UUID
 	apiKeyUUID, err := uuid.Parse(apiKeyID)
 	// Execute the request and handle the response
-	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
+	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID, nil)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}

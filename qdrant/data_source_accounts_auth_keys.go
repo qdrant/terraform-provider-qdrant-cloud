@@ -37,7 +37,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
 	}
 	// List the API Keys for the provided account
-	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID)
+	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID, nil)
 	// Handle the response in case of error
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))

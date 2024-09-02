@@ -109,12 +109,6 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
-		clusterVersionFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the Qdrant cluster"),
-			Type:        schema.TypeString,
-			Computed:    true,
-			Optional:    !asDataSource,
-		},
 		clusterURLFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The URL of the endpoint of the Qdrant cluster"),
 			Type:        schema.TypeString,
@@ -141,6 +135,12 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 		maxItems = 0
 	}
 	return map[string]*schema.Schema{
+		clusterVersionFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the Qdrant cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+			Optional:    !asDataSource,
+		},
 		numberOfNodesFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
 			Type:        schema.TypeInt,
@@ -197,9 +197,6 @@ func expandCluster(d *schema.ResourceData, accountID string) (qc.ClusterSchema, 
 		CloudRegion:   newPointer(qc.ClusterSchemaCloudRegion(cloudRegion.(string))),
 		AccountId:     uuid.MustParse(accountID),
 	}
-	if v, ok := d.GetOk(clusterVersionFieldName); ok {
-		cluster.Version = newPointer(v.(string))
-	}
 	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
 		cluster.MarkedForDeletionAt = newPointer(parseTime(v.(string)))
 	}
@@ -225,6 +222,9 @@ func expandClusterConfiguration(v []interface{}) *qc.ClusterConfigurationSchema 
 		item := m.(map[string]interface{})
 		if v, ok := item[numberOfNodesFieldName]; ok {
 			config.NumberOfNodes = v.(int)
+		}
+		if v, ok := item[clusterVersionFieldName]; ok {
+			config.Version = newPointer(v.(string))
 		}
 		if v, ok := item[nodeConfigurationFieldName]; ok {
 			nodeConfig := expandNodeConfiguration(v.([]interface{}))
@@ -269,7 +269,6 @@ func flattenCluster(cluster *qc.ClusterSchema) map[string]interface{} {
 		clusterNameFieldName:                cluster.Name,
 		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
 		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
-		clusterVersionFieldName:             derefPointer(cluster.Version),
 		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
 		clusterURLFieldName:                 derefPointer(cluster.Url),
@@ -281,6 +280,7 @@ func flattenCluster(cluster *qc.ClusterSchema) map[string]interface{} {
 func flattenClusterConfiguration(clusterConfig qc.ClusterConfigurationSchema) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
+			clusterVersionFieldName:    derefPointer(clusterConfig.Version),
 			numberOfNodesFieldName:     clusterConfig.NumberOfNodes,
 			nodeConfigurationFieldName: flattenNodeConfiguration(clusterConfig.NodeConfiguration),
 		},
