@@ -1,5 +1,6 @@
 ---
 page_title: "Configure desired resources for Qdrant Cloud cluster"
+weight: 200
 description: |-
     Guide to getting started with the Qdrant Cloud packages and resources
 ---

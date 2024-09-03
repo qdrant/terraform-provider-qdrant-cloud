@@ -1,5 +1,6 @@
 ---
 page_title: "Getting started with Qdrant Cloud Terraform Provider"
+weight: 100
 description: |-
     Guide to getting started with the Qdrant Cloud Terraform Provider
 ---
@@ -69,10 +70,6 @@ output "cluster_id" {
   value = qdrant-cloud_accounts_cluster.example.id
 }
 
-output "cluster_version" {
-  value = qdrant-cloud_accounts_cluster.example.version
-}
-
 output "url" {
   value = qdrant-cloud_accounts_cluster.example.url
 }
@@ -99,13 +96,13 @@ aws:
 gcp:
 - europe-west3
 - us-east4
-private:
-- private
 azure:
 - eastus
 - germanywestcentral
 - southeastasia
 - uksouth
+private: # (Hybrid Cloud)
+- private
 
 ```
 
