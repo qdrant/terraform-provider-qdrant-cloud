@@ -30,6 +30,7 @@ const (
 	nodeConfigurationFieldName          = "node_configuration"
 	numberOfNodesFieldName              = "number_of_nodes"
 	packageIDFieldName                  = "package_id"
+	resourceConfigurationsFieldName     = "resource_configurations"
 )
 
 // accountsClustersSchema defines the schema for a cluster list data-source.
@@ -169,6 +170,14 @@ func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schem
 			Required:    !asDataSource,
 			Computed:    asDataSource,
 		},
+		resourceConfigurationsFieldName: {
+			Description: descriptionResourceConfigurations,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: resourceConfigurationsSchema(false),
+			},
+		},
 	}
 }
 
@@ -289,9 +298,15 @@ func flattenClusterConfiguration(clusterConfig qc.ClusterConfigurationSchema) []
 
 // flattenNodeConfiguration creates a map from a node configuration for easy storage in Terraform.
 func flattenNodeConfiguration(nodeConfig qc.NodeConfigurationSchema) []interface{} {
+	var resourceConfigurations []interface{}
+
+	if nodeConfig.ResourceConfigurations != nil {
+		resourceConfigurations = flattenResourceConfigurations(*nodeConfig.ResourceConfigurations)
+	}
 	return []interface{}{
 		map[string]interface{}{
-			packageIDFieldName: nodeConfig.PackageId.String(),
+			packageIDFieldName:              nodeConfig.PackageId.String(),
+			resourceConfigurationsFieldName: resourceConfigurations,
 		},
 	}
 }
