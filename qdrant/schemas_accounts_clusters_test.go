@@ -75,6 +75,13 @@ func TestResourceClusterFlatten(t *testing.T) {
 }
 
 func TestExpandCluster(t *testing.T) {
+	configs := []qc.ResourceConfigurationSchema{
+		{
+			Amount:       10,
+			ResourceUnit: "m",
+			ResourceType: "cpu",
+		},
+	}
 	expected := qc.ClusterSchema{
 		Id:                  newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000001")),
 		CreatedAt:           newPointer(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
@@ -89,7 +96,8 @@ func TestExpandCluster(t *testing.T) {
 			Version:       newPointer("v1.0"),
 			NumberOfNodes: 5,
 			NodeConfiguration: qc.NodeConfigurationSchema{
-				PackageId: uuid.MustParse("00000009-1000-0000-0000-000000000001"),
+				PackageId:              uuid.MustParse("00000009-1000-0000-0000-000000000001"),
+				ResourceConfigurations: &configs,
 			},
 		},
 	}
@@ -111,6 +119,13 @@ func TestExpandCluster(t *testing.T) {
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
 						packageIDFieldName: expected.Configuration.NodeConfiguration.PackageId.String(),
+						resourceConfigurationsFieldName: []interface{}{
+							map[string]interface{}{
+								fieldAmount:       configs[0].Amount,
+								fieldResourceUnit: string(configs[0].ResourceUnit),
+								fieldResourceType: string(configs[0].ResourceType),
+							},
+						},
 					},
 				},
 			},

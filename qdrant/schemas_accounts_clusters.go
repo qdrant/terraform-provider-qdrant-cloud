@@ -15,22 +15,25 @@ const (
 	clustersAccountIDFieldName = "account_id"
 	clustersClustersFieldName  = "clusters"
 
-	clusterFieldTemplate                = "Cluster Schema %s field"
-	clusterIdentifierFieldName          = "id"
-	clusterCreatedAtFieldName           = "created_at"
-	clusterAccountIDFieldName           = "account_id"
-	clusterNameFieldName                = "name"
-	clusterCloudProviderFieldName       = "cloud_provider"
-	clusterCloudRegionFieldName         = "cloud_region"
-	clusterVersionFieldName             = "version"
-	clusterPrivateRegionIDFieldName     = "private_region_id"
-	clusterMarkedForDeletionAtFieldName = "marked_for_deletion_at"
-	clusterURLFieldName                 = "url"
-	configurationFieldName              = "configuration"
-	nodeConfigurationFieldName          = "node_configuration"
-	numberOfNodesFieldName              = "number_of_nodes"
-	packageIDFieldName                  = "package_id"
-	resourceConfigurationsFieldName     = "resource_configurations"
+	clusterFieldTemplate                       = "Cluster Schema %s field"
+	clusterIdentifierFieldName                 = "id"
+	clusterCreatedAtFieldName                  = "created_at"
+	clusterAccountIDFieldName                  = "account_id"
+	clusterNameFieldName                       = "name"
+	clusterCloudProviderFieldName              = "cloud_provider"
+	clusterCloudRegionFieldName                = "cloud_region"
+	clusterVersionFieldName                    = "version"
+	clusterPrivateRegionIDFieldName            = "private_region_id"
+	clusterMarkedForDeletionAtFieldName        = "marked_for_deletion_at"
+	clusterURLFieldName                        = "url"
+	configurationFieldName                     = "configuration"
+	nodeConfigurationFieldName                 = "node_configuration"
+	numberOfNodesFieldName                     = "number_of_nodes"
+	packageIDFieldName                         = "package_id"
+	resourceConfigurationsFieldName            = "resource_configurations"
+	resourceConfigurationAmountFieldName       = "amount"
+	resourceConfigurationResourceTypeFieldName = "resource_type"
+	resourceConfigurationResourceUnitFieldName = "resource_unit"
 )
 
 // accountsClustersSchema defines the schema for a cluster list data-source.
@@ -252,8 +255,31 @@ func expandNodeConfiguration(v []interface{}) *qc.NodeConfigurationSchema {
 		if v, ok := item[packageIDFieldName]; ok {
 			config.PackageId = uuid.MustParse(v.(string))
 		}
+		if v, ok := item[resourceConfigurationsFieldName]; ok {
+			config.ResourceConfigurations = expandClusterNodeResourceConfigurations(v.([]interface{}))
+		}
 	}
 	return &config
+}
+
+func expandClusterNodeResourceConfigurations(v []interface{}) *[]qc.ResourceConfigurationSchema {
+	configs := make([]qc.ResourceConfigurationSchema, 0)
+	for _, m := range v {
+		config := qc.ResourceConfigurationSchema{}
+
+		item := m.(map[string]interface{})
+		if v, ok := item[resourceConfigurationAmountFieldName]; ok {
+			config.Amount = v.(int)
+		}
+		if v, ok := item[resourceConfigurationResourceTypeFieldName]; ok {
+			config.ResourceType = qc.ResourceType(v.(string))
+		}
+		if v, ok := item[resourceConfigurationResourceUnitFieldName]; ok {
+			config.ResourceUnit = qc.ResourceUnit(v.(string))
+		}
+		configs = append(configs, config)
+	}
+	return &configs
 }
 
 // flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
