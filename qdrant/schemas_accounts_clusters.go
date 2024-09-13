@@ -178,7 +178,7 @@ func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schem
 			Type:        schema.TypeList,
 			Optional:    true,
 			Elem: &schema.Resource{
-				Schema: resourceConfigurationsSchema(false),
+				Schema: resourceConfigurationsSchema(asDataSource),
 			},
 		},
 	}
