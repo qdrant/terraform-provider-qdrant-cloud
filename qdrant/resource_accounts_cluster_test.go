@@ -23,7 +23,7 @@ data "qdrant-cloud_booking_packages" "test" {
 }
 locals {
   resource_data = data.qdrant-cloud_booking_packages.test.packages
-  // Filter out the gpx1 
+  // Filter on gpx1 
   gpx1_packages = [
     for resource in local.resource_data : resource if resource.name == "gpx1"
   ]
@@ -59,7 +59,7 @@ data "qdrant-cloud_booking_packages" "test" {
 }
 locals {
   resource_data = data.qdrant-cloud_booking_packages.test.packages
-  // Filter out the gpx1 
+  // Filter on gpx1 
   gpx1_packages = [
     for resource in local.resource_data : resource if resource.name == "gpx1"
   ]
@@ -136,7 +136,7 @@ data "qdrant-cloud_booking_packages" "test" {
 }
 locals {
   resource_data = data.qdrant-cloud_booking_packages.test.packages
-  // Filter out the gpx1
+  // Filter on gpx1
   gpx1_packages = [
     for resource in local.resource_data : resource if resource.name == "gpx1"
   ]
