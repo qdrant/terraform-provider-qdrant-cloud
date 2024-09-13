@@ -86,29 +86,32 @@ func packageSchema() map[string]*schema.Schema {
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Schema: resourceConfigurationsSchema(),
+				Schema: resourceConfigurationsSchema(true),
 			},
 		},
 	}
 }
 
 // resourceConfigurationsSchema defines the schema structure for resource configurations.
-func resourceConfigurationsSchema() map[string]*schema.Schema {
+func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		fieldAmount: {
 			Description: descriptionAmount,
 			Type:        schema.TypeInt,
-			Computed:    true,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 		fieldResourceType: {
 			Description: descriptionResourceType,
 			Type:        schema.TypeString,
-			Computed:    true,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 		fieldResourceUnit: {
 			Description: descriptionResourceUnit,
 			Type:        schema.TypeString,
-			Computed:    true,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 	}
 }
