@@ -17,8 +17,8 @@ provider "qdrant-cloud" {
 
 // Reference the booking packages
 data "qdrant-cloud_booking_packages" "test" {
-  cloud_provider = "aws"  // Required. Please refer to the documentation (https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest/docs/guides/getting-started) for the available options.
-  cloud_region   = "us-west-2"  // Required. Please refer to the documentation (https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest/docs/guides/getting-started) for the available options.
+  cloud_provider = "aws"       // Required. Please refer to the documentation (https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest/docs/guides/getting-started) for the available options.
+  cloud_region   = "us-west-2" // Required. Please refer to the documentation (https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest/docs/guides/getting-started) for the available options.
 }
 
 // Output the packages (Note that the package id is relevent for creating a cluster)

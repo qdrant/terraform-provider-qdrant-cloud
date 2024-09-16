@@ -3,6 +3,7 @@ layout: ""
 page_title: "Provider: Qdrant Cloud"
 description: |-
   The Qdrant Cloud Terraform provider allows full lifecycle management of Qdrant Cloud resources.
+weight: 100
 ---
 
 # Qdrant Cloud Provider
@@ -20,7 +21,7 @@ Below is a sample that creates a [vector database] cluster and a token for acces
 
 The ID and version of the cluster as well the URL (endpoint of the database cluster) are displayed (as output).
 
-The access token created is scoped for the created cluster and is displayed as well. 
+The access token created is scoped for the created cluster and is displayed as well.
 Note that this token should be kept secret, with this token the database can be manipulated and viewed (CRUD operations).
 
 To view the cluster itself, please visit (in a web-browser)
@@ -31,15 +32,15 @@ The url and token can be used in client libraries as well
 
 For more info, please visit https://qdrant.tech/
 
---- 
+---
 
 ## Versioning and Compatibility
 
-Please always use the latest version of the provider. 
+Please always use the latest version of the provider.
 
 Versions below `1.1.0` are deprecated and should not be used.
 
---- 
+---
 
 ## Example Usage
 
@@ -56,6 +57,7 @@ terraform {
 
 provider "qdrant-cloud" {
   api_key    = "" // API Key generated in Qdrant Cloud (required)
+  api_url    = "" // URL where the public API of Qdrant cloud can be found (optional: defaults to production URL).
   account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
 }
 
@@ -66,7 +68,7 @@ resource "qdrant-cloud_accounts_cluster" "example" {
   configuration {
     number_of_nodes = 1
     node_configuration {
-       package_id = "7c939d96-d671-4051-aa16-3b8b7130fa42" # gpx1 
+      package_id = "7c939d96-d671-4051-aa16-3b8b7130fa42" # gpx1
     }
   }
 }
@@ -79,21 +81,17 @@ output "cluster_id" {
   value = qdrant-cloud_accounts_cluster.example.id
 }
 
-output "cluster_version" {
-  value = qdrant-cloud_accounts_cluster.example.version
-}
-
 output "url" {
   value = qdrant-cloud_accounts_cluster.example.url
 }
 
 output "token" {
-  value = qdrant-cloud_accounts_auth_key.example-key.token
+  value       = qdrant-cloud_accounts_auth_key.example-key.token
   description = "Token is available only once, after creation."
 }
 
 output "curl_command" {
-  value = "curl \\\n    -X GET '${qdrant-cloud_accounts_cluster.example.url}' \\\n    --header 'api-key: ${qdrant-cloud_accounts_auth_key.example-key.token}'"
+  value       = "curl \\\n    -X GET '${qdrant-cloud_accounts_cluster.example.url}' \\\n    --header 'api-key: ${qdrant-cloud_accounts_auth_key.example-key.token}'"
   description = "Generating a curl command test cluster access using the API key."
 }
 ```
