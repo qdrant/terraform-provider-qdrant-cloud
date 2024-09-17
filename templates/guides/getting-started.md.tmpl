@@ -89,7 +89,6 @@ output "token" {
 aws:
 - us-east-1
 - us-west-1
-- eu-central_lega-y
 - eu-central-1
 - ap-northeast-1
 - ap-southeast-1
