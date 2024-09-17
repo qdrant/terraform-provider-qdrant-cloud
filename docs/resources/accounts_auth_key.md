@@ -37,7 +37,7 @@ resource "qdrant-cloud_accounts_cluster" "example" {
   cloud_provider = "gcp"
   cloud_region   = "us-east4"
   configuration {
-    number_of_nodes  = 1 
+    number_of_nodes = 1
     node_configuration {
       package_id = "39b48a76-2a60-4ee0-9266-6d1e0f91ea14" # free
     }

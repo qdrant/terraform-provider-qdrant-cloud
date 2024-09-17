@@ -3,6 +3,7 @@ layout: ""
 page_title: "Provider: Qdrant Cloud"
 description: |-
   The Qdrant Cloud Terraform provider allows full lifecycle management of Qdrant Cloud resources.
+weight: 100
 ---
 
 # Qdrant Cloud Provider
@@ -12,6 +13,7 @@ This Terraform Provider is currently in Closed Beta. To learn more please [Conta
 
 ---
 
+
 The Terraform Qdrant Cloud provider is a plugin for Terraform that allows for the full lifecycle management of Qdrant Cloud resources.
 Note that it's not intended to manage the content of the database itself.
 
@@ -19,7 +21,7 @@ Below is a sample that creates a [vector database] cluster and a token for acces
 
 The ID and version of the cluster as well the URL (endpoint of the database cluster) are displayed (as output).
 
-The access token created is scoped for the created cluster and is displayed as well. 
+The access token created is scoped for the created cluster and is displayed as well.
 Note that this token should be kept secret, with this token the database can be manipulated and viewed (CRUD operations).
 
 To view the cluster itself, please visit (in a web-browser)
@@ -29,6 +31,16 @@ This will ask the token to grant you access.
 The url and token can be used in client libraries as well
 
 For more info, please visit https://qdrant.tech/
+
+---
+
+## Versioning and Compatibility
+
+Please always use the latest version of the provider.
+
+Versions below `1.1.0` are deprecated and should not be used.
+
+---
 
 ## Example Usage
 

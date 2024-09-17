@@ -67,7 +67,6 @@ Read-Only:
 - `name` (String)
 - `private_region_id` (String)
 - `url` (String)
-- `version` (String)
 
 <a id="nestedobjatt--clusters--configuration"></a>
 ### Nested Schema for `clusters.configuration`
@@ -76,6 +75,7 @@ Read-Only:
 
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--node_configuration))
 - `number_of_nodes` (Number)
+- `version` (String)
 
 <a id="nestedobjatt--clusters--configuration--node_configuration"></a>
 ### Nested Schema for `clusters.configuration.node_configuration`

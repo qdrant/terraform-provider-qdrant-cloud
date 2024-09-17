@@ -2,19 +2,19 @@
 page_title: "Getting started with Qdrant Cloud Terraform Provider"
 description: |-
     Guide to getting started with the Qdrant Cloud Terraform Provider
+weight: 200
 ---
 
 # Getting started with Qdrant Cloud Terraform Provider
-Qdrant Cloud, provides Qdrant databases as a Service (DBaaS). 
+Qdrant Cloud, provides Qdrant databases as a Service (DBaaS).
 It enables you to use the entire functionality of a Qdrant database without the need to run or manage the system yourself.
 
 Terraform Provider Qdrant Cloud is a plugin for Terraform that allows for the full lifecycle management of Qdant Cloud resources.
 
 ## Provider Setup
 
-You need to supply proper credentials to the provider before it can be used. 
+You need to supply proper credentials to the provider before it can be used.
 API keys serve as the credentials to the provider. You can obtain the keys from [Qdrant Cloud console](https://cloud.qdrant.io/).
-_Since the provider is in closed beta, you need to [contact Qdrant support](https://support.qdrant.io/support/tickets/new) to get access to the API keys._
 
 ```hcl
 // Setup Terraform, including the qdrant-cloud providers
@@ -89,7 +89,6 @@ output "token" {
 aws:
 - us-east-1
 - us-west-1
-- eu-central_lega-y
 - eu-central-1
 - ap-northeast-1
 - ap-southeast-1
@@ -108,5 +107,4 @@ azure:
 - uksouth
 
 ```
-
 

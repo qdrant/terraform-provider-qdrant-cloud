@@ -60,7 +60,6 @@ output "cluster" {
 - `name` (String) Cluster Schema Name of the cluster field
 - `private_region_id` (String) Cluster Schema Identifier of the Private Region field
 - `url` (String) Cluster Schema The URL of the endpoint of the Qdrant cluster field
-- `version` (String) Cluster Schema Version of the Qdrant cluster field
 
 <a id="nestedatt--configuration"></a>
 ### Nested Schema for `configuration`
@@ -69,6 +68,7 @@ Read-Only:
 
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_configuration))
 - `number_of_nodes` (Number)
+- `version` (String)
 
 <a id="nestedobjatt--configuration--node_configuration"></a>
 ### Nested Schema for `configuration.node_configuration`
