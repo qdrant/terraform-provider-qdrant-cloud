@@ -83,3 +83,13 @@ Read-Only:
 Read-Only:
 
 - `package_id` (String)
+- `resource_configurations` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--node_configuration--resource_configurations))
+
+<a id="nestedobjatt--clusters--configuration--node_configuration--resource_configurations"></a>
+### Nested Schema for `clusters.configuration.node_configuration.resource_configurations`
+
+Read-Only:
+
+- `amount` (Number)
+- `resource_type` (String)
+- `resource_unit` (String)
