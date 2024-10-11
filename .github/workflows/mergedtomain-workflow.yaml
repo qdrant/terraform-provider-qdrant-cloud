@@ -1,0 +1,27 @@
+name: Merged to Main
+on:
+  pull_request:
+    types: [ closed ]
+    branches: [ 'main' ]
+
+permissions:
+  contents: read
+
+jobs:
+  MergedtoMain:
+    if: github.event.pull_request.merged == true
+    name: Merged to Main
+    runs-on: ubuntu-latest
+    permissions:
+      # write permission is required to create a github release
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Update Release Draft
+        uses: release-drafter/release-drafter@v6
+        with:
+          disable-autolabeler: true
+          commitish: main
+          publish: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
