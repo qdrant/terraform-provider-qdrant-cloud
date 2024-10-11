@@ -97,3 +97,16 @@ Optional:
 Required:
 
 - `package_id` (String) Cluster Schema The package identifier (specifying: CPU, Memory, and disk size) field
+
+Optional:
+
+- `resource_configurations` (Block List) The resource configurations of the package (see [below for nested schema](#nestedblock--configuration--node_configuration--resource_configurations))
+
+<a id="nestedblock--configuration--node_configuration--resource_configurations"></a>
+### Nested Schema for `configuration.node_configuration.resource_configurations`
+
+Required:
+
+- `amount` (Number) The amount of the resource
+- `resource_type` (String) The type of the resource
+- `resource_unit` (String) The unit of the resource

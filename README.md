@@ -1,9 +1,5 @@
 # Qdrant Cloud Terraform Provider
 
-This Terraform Provider is currently in Closed Beta. To learn more please [Contact Us](https://qdrant.tech/contact-us/).
-
----
-
 This is a Terraform provider for Qdrant Cloud, which is the DBaaS solution for Qdrant database, which is a vector similarity search engine with extended functionality. The provider allows you to manage your Qdrant Cloud resources using Terraform.
 
 ## Requirements
