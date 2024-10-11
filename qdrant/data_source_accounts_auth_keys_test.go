@@ -29,6 +29,7 @@ data "qdrant-cloud_accounts_auth_keys" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam // Ignoring unparam as we know error will always be nil
 			"qdrant-cloud": func() (*schema.Provider, error) {
 				return Provider(), nil
 			},

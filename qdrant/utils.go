@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 const (
 	requestIDHeaderField = "x-qd-request-id"
 )
 
-// getErrorMessage Fetches a human readable error message out of the provided HTTP Response
+// getErrorMessage Fetches a human readable error message out of the provided HTTP Response.
 func getErrorMessage(message string, response *http.Response) string {
 	if response == nil {
 		return "No response"
@@ -26,7 +26,7 @@ func getErrorMessage(message string, response *http.Response) string {
 	return fmt.Sprintf("%s: [%s: %d] - %s", message, getRequestID(response), response.StatusCode, response.Status)
 }
 
-// getRequestID fetches the Request ID from the current HTTP Response (or an empty string if not available)
+// getRequestID fetches the Request ID from the current HTTP Response (or an empty string if not available).
 func getRequestID(response *http.Response) string {
 	if response == nil {
 		return "No response"
@@ -34,9 +34,9 @@ func getRequestID(response *http.Response) string {
 	return response.Header.Get(requestIDHeaderField)
 }
 
-// getClient creates a client from the provided interface
-// This client already contains the Authorization needed to invoke the API
-// Returns: The client to call the backend API, TF Diagnostics
+// getClient creates a client from the provided interface.
+// This client already contains the Authorization needed to invoke the API.
+// Returns: The client to call the backend API, TF Diagnostics.
 func getClient(m interface{}) (*qc.ClientWithResponses, diag.Diagnostics) {
 	clientConfig, ok := m.(*ProviderConfig)
 	if !ok {
@@ -48,7 +48,7 @@ func getClient(m interface{}) (*qc.ClientWithResponses, diag.Diagnostics) {
 	})
 	apiClient, err := qc.NewClientWithResponses(clientConfig.BaseURL, optsCallback)
 	if err != nil {
-		return nil, diag.FromErr(fmt.Errorf("error initializing client: %v", err))
+		return nil, diag.FromErr(fmt.Errorf("error initializing client: %w", err))
 	}
 	return apiClient, nil
 }
@@ -70,7 +70,7 @@ func getAccountUUID(d *schema.ResourceData, m interface{}) (uuid.UUID, error) {
 	return uuid.Nil, fmt.Errorf("cannot find account ID")
 }
 
-// getDefaultAccountID fetches the default account ID from the provided interface (containing the ClientConfig)
+// getDefaultAccountID fetches the default account ID from the provided interface (containing the ClientConfig).
 func getDefaultAccountID(m interface{}) string {
 	clientConfig, ok := m.(*ProviderConfig)
 	if !ok {
@@ -103,8 +103,8 @@ func formatTime(t interface{}) string {
 	}
 }
 
-// parseTime parses the provided value and returns it as time.Time (or an empty value if it cannot be parsed)
-// The provided string should be in RCF3339 format
+// parseTime parses the provided value and returns it as time.Time (or an empty value if it cannot be parsed).
+// The provided string should be in RCF3339 format.
 func parseTime(v string) time.Time {
 	result, err := time.Parse(time.RFC3339, v)
 	if err != nil {
@@ -113,7 +113,7 @@ func parseTime(v string) time.Time {
 	return result
 }
 
-// getError returns a human readable error composed from the given HTTP validation error
+// getError returns a human readable error composed from the given HTTP validation error.
 func getError(error *qc.HTTPValidationError) string {
 	if error == nil {
 		return "no error"

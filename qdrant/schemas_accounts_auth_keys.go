@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 const (

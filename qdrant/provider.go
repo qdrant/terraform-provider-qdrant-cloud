@@ -99,7 +99,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 // ProviderConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
 // It encapsulates the API key, the base URL, and the HTTP client configured for API communication.
-// As well as the (optional) default account ID
+// As well as the (optional) default account ID.
 type ProviderConfig struct {
 	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
 	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.

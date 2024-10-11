@@ -2,14 +2,15 @@ package qdrant
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
-// Constant keys and descriptions for schema fields
+// Constant keys and descriptions for schema fields.
 const (
-	// Field keys
+	// Field keys.
 	fieldPackages               = "packages"
 	fieldID                     = "id"
 	fieldName                   = "name"
@@ -20,7 +21,7 @@ const (
 	fieldResourceType           = "resource_type"
 	fieldResourceUnit           = "resource_unit"
 
-	// Descriptions
+	// Descriptions.
 	descriptionPackages               = "List of packages"
 	descriptionID                     = "The ID of the package"
 	descriptionName                   = "The name of the package"

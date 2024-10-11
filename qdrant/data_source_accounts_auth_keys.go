@@ -34,13 +34,13 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// List the API Keys for the provided account
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID, nil)
 	// Handle the response in case of error
 	if err != nil {
-		d := diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		d := diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		if d.HasError() {
 			return d
 		}
@@ -49,7 +49,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Get the actual response
 	apiKeys := resp.JSON200
@@ -58,7 +58,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 	}
 	// Flatten cluster and store in Terraform state
 	if err := d.Set(authKeysKeysFieldName, flattenAuthKeys(*apiKeys)); err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	d.SetId(time.Now().Format(time.RFC3339))
 	return nil

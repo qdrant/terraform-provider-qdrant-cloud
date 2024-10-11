@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 // resourceAccountsCluster constructs a Terraform resource for
@@ -36,24 +36,24 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get("id").(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Fetch the cluster
 	resp, err := apiClient.GetClusterWithResponse(ctx, accountUUID, clusterUUID)
 	// Inspect the results
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	clusterOut := resp.JSON200
 	if clusterOut == nil {
@@ -62,7 +62,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
 
@@ -79,7 +79,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// Expand the cluster
 	cluster, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Set required version to 'latest' if not provided
 	if derefPointer(cluster.Configuration.Version) == "" {
@@ -88,13 +88,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// Create the cluster
 	resp, err := apiClient.CreateClusterWithResponse(ctx, cluster.AccountId, nil, cluster)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 
 	clusterSchema := resp.JSON200
@@ -104,7 +104,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterSchema) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
 	// Set the ID
@@ -122,28 +122,28 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get(clusterIdentifierFieldName).(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Expand the cluster
 	cluster, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Update the cluster
 	resp, err := apiClient.UpdateClusterWithResponse(ctx, accountUUID, clusterUUID, cluster)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	clusterOut := resp.JSON200
 	if clusterOut == nil {
@@ -152,7 +152,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(clusterOut) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
 	return nil
@@ -170,12 +170,12 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Get the cluster ID as UUID
 	clusterUUID, err := uuid.Parse(d.Get(clusterIdentifierFieldName).(string))
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Delete with all backups as well.
 	deleteBackups := true
@@ -185,13 +185,13 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	// Delete the cluster
 	resp, err := apiClient.DeleteClusterWithResponse(ctx, accountUUID, clusterUUID, params)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 204 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	d.SetId("")
 	return nil

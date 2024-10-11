@@ -93,9 +93,10 @@ output "cluster_cfg_num_nodes" {
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	t.Run("creates a cluster", func(t *testing.T) {
-		testCase := func(t *testing.T, mode string) {
+		testCase := func(t *testing.T, _ string) {
 			resource.Test(t, resource.TestCase{
 				ProviderFactories: map[string]func() (*schema.Provider, error){
+					//nolint:unparam // Ignoring unparam as we know error will always be nil
 					"qdrant-cloud": func() (*schema.Provider, error) {
 						return Provider(), nil
 					},
@@ -175,9 +176,10 @@ output "extra_disk_amount" {
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	t.Run("creates a cluster with extra disk", func(t *testing.T) {
-		testCase := func(t *testing.T, mode string) {
+		testCase := func(t *testing.T, _ string) {
 			resource.Test(t, resource.TestCase{
 				ProviderFactories: map[string]func() (*schema.Provider, error){
+					//nolint:unparam // Ignoring unparam as we know error will always be nil
 					"qdrant-cloud": func() (*schema.Provider, error) {
 						return Provider(), nil
 					},
