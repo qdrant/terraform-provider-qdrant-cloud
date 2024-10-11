@@ -26,12 +26,12 @@ func Test_qdrant_cloud_programmatic_access_ClustersAPIService(t *testing.T) {
 		t.Skip("skip test") // remove to run test
 
 		accountGuid, err := uuid.Parse(accountId)
-		require.Nil(t, err)
+		require.NoError(t, err)
 
 		ctx := context.Background()
 		resp, err := apiClient.ListClustersWithResponse(ctx, accountGuid, &ListClustersParams{})
 
-		require.Nil(t, err)
+		require.NoError(t, err)
 		require.NotNil(t, resp)
 		require.NotNil(t, resp.JSON200)
 		for _, c := range *resp.JSON200 {

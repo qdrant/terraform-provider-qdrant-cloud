@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 // resourceAccountsAuthKey constructs a Terraform resource for managing an API keys associated with an account.
@@ -38,21 +38,24 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// convert to UUID
 	apiKeyUUID, err := uuid.Parse(apiKeyID)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
 	// Execute the request and handle the response
 	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID, nil)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Get the actual response
 	apiKeys := resp.JSON200
@@ -67,7 +70,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 		// Process the correct one,
 		for k, v := range flattenAuthKey(apiKey) {
 			if err := d.Set(k, v); err != nil {
-				return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+				return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 			}
 		}
 		d.SetId(apiKeyID)
@@ -91,7 +94,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Prepare the payload for the API request
 	var clusterIDs []uuid.UUID
@@ -108,13 +111,13 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		ClusterIds: clusterIDs,
 	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Get the actual response
 	apiKey := resp.JSON200
@@ -124,7 +127,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenAuthKey(*apiKey) {
 		if err := d.Set(k, v); err != nil {
-			return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
 	// Set the ID
@@ -146,19 +149,19 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 
 	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountUUID, apiKeyID)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, err))
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if resp.JSON422 != nil {
 		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
 	}
 	if resp.StatusCode() != 204 {
-		return diag.FromErr(fmt.Errorf(getErrorMessage(errorPrefix, resp.HTTPResponse)))
+		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Clear the resource ID to mark as deleted
 	d.SetId("")

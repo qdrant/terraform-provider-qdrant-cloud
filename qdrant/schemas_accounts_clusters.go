@@ -2,12 +2,12 @@ package qdrant
 
 import (
 	"fmt"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 const (

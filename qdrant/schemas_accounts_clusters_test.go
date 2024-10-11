@@ -7,8 +7,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	qc "terraform-provider-qdrant-cloud/v1/internal/client"
+	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
 )
 
 func TestResourceClusterFlatten(t *testing.T) {
@@ -133,6 +134,6 @@ func TestExpandCluster(t *testing.T) {
 	})
 
 	result, err := expandCluster(d, expected.AccountId.String())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

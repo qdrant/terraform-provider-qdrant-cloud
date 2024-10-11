@@ -4,12 +4,12 @@ import (
 	"github.com/google/uuid"
 )
 
-// Generic function to create a pointer to any type
+// Generic function to create a pointer to any type.
 func newPointer[T any](value T) *T {
 	return &value
 }
 
-// Generic function to dereference a pointer with a default-value fallback
+// Generic function to dereference a pointer with a default-value fallback.
 func derefPointer[T any](ptr *T, defaults ...T) T {
 	if ptr != nil {
 		return *ptr
@@ -21,7 +21,7 @@ func derefPointer[T any](ptr *T, defaults ...T) T {
 	return empty
 }
 
-// uuidArrayAsStringArray converts an array of UUID to an array of strings
+// uuidArrayAsStringArray converts an array of UUID to an array of strings.
 func uuidArrayAsStringArray(ptr []uuid.UUID) []string {
 	result := []string{}
 	for _, uuid := range ptr {

@@ -1,6 +1,6 @@
-module terraform-provider-qdrant-cloud/v1
+module github.com/qdrant/terraform-provider-qdrant-cloud/v1
 
-go 1.21
+go 1.22
 
 require (
 	github.com/google/uuid v1.6.0
