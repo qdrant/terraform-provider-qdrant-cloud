@@ -69,6 +69,19 @@ $ make test
 
 This will run the unit tests in the provider.
 
+## Releasing
+
+In order to release the provider (available for maintainers only):
+
+- Go to the [releases](https://github.com/qdrant/terraform-provider-qdrant-cloud/releases) on GitHib
+- Edit the 'DRAFT' (see pencil)
+- Typing a 'Tag', e.g. v1.3.2 (note that we are using [semantic versioning](https://semver.org/))
+- Edit the 'Release Title' with the version you want to release (like v1.3.2)
+- Click 'Publish release' button
+
+This will automatically create the artifacts and place them in the assets, create a tag and invoke a webhook in the terraform provider registry.
+After a while (approx 5min) the release will be available at the [terraform provider registry](https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest) as latest release.
+
 ## Contributing
 
 If you find any issues or would like to contribute, feel free to create an issue or a pull request.
