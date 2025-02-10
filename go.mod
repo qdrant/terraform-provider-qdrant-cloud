@@ -1,4 +1,4 @@
-module github.com/qdrant/terraform-provider-qdrant-cloud/v1
+module github.com/qdrant/terraform-provider-qdrant-cloud
 
 go 1.23.5
 
