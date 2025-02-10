@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v2"
 )
 
 // dataSourceBookingPackages returns the schema for the data source qdrant_booking_packages.
@@ -25,30 +25,30 @@ func dataSourceBookingPackages() *schema.Resource {
 // m: The Terraform meta object containing the client configuration.
 func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error listing packages"
-	// Get an authenticated client
-	apiClient, diagnostics := getClient(m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
-
-	params := qc.GetPackagesParams{
-		Provider: qc.GetPackagesParamsProvider(d.Get("cloud_provider").(string)),
-		Region:   qc.GetPackagesParamsRegion(d.Get("cloud_region").(string)),
-	}
-
-	// Get all packages
-	resp, err := apiClient.GetPackagesWithResponse(ctx, &params)
+	// Get a client
+	client := qcBooking.NewBookingServiceClient(apiClientConn)
+	// Get The account ID as UUID
+	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("%s: %v", errorPrefix, getError(resp.JSON422)))
-	}
-	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
+
+	// Get all packages
+	resp, err := client.ListPackages(clientCtx, &qcBooking.ListPackagesRequest{
+		AccountId:     accountUUID.String(),
+		CloudProvider: newPointer(d.Get("cloud_provider").(string)),
+		CloudRegion:   d.Get("cloud_region").(string),
+	})
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Flatten packages
-	packages := flattenPackages(*resp.JSON200)
+	packages := flattenPackages(resp.GetItems())
 
 	// Set the packages in the Terraform state.
 	if err := d.Set("packages", packages); err != nil {

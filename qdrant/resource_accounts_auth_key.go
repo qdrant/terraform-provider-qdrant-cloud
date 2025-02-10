@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/auth/v2"
 )
 
 // resourceAccountsAuthKey constructs a Terraform resource for managing an API keys associated with an account.
@@ -30,40 +29,29 @@ func resourceAccountsAuthKey() *schema.Resource {
 // m: The interface where the configured client is passed.
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error getting API key"
-	// Get an authenticated client
-	apiClient, diagnostics := getClient(m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
+	// Get a client
+	client := qcAuth.NewAuthServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
+	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
-	// convert to UUID
-	apiKeyUUID, err := uuid.Parse(apiKeyID)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
-	}
 	// Execute the request and handle the response
-	resp, err := apiClient.ListApiKeysWithResponse(ctx, accountUUID, nil)
+	resp, err := client.ListApiKeys(clientCtx, &qcAuth.ListApiKeysRequest{
+		AccountId: accountUUID.String(),
+	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
-	}
-	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
-	}
-	// Get the actual response
-	apiKeys := resp.JSON200
-	if apiKeys == nil {
-		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
-	}
-	for _, apiKey := range *apiKeys {
-		if apiKey.Id == nil || *apiKey.Id != apiKeyUUID {
+	for _, apiKey := range resp.GetItems() {
+		if apiKey.GetId() != apiKeyID {
 			// Skip unknown or incorrect ones
 			continue
 		}
@@ -86,52 +74,46 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating API Key"
-	// Get an authenticated client
-	apiClient, diagnostics := getClient(m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
+	// Get a client
+	client := qcAuth.NewAuthServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Prepare the payload for the API request
-	var clusterIDs []uuid.UUID
+	var clusterIDs []string
 	if clusterIDList, ok := d.GetOk(authKeysKeysClusterIDsFieldName); ok {
 		// Prepare the payload for the API request
 		clusterIDList := clusterIDList.([]interface{})
-		clusterIDs = make([]uuid.UUID, len(clusterIDList))
+		clusterIDs = make([]string, len(clusterIDList))
 		for i, v := range clusterIDList {
-			clusterIDs[i] = uuid.MustParse(v.(string))
+			clusterIDs[i] = v.(string)
 		}
 	}
 	// Create the request body
-	resp, err := apiClient.CreateApiKeyWithResponse(ctx, accountUUID, qc.ApiKeySchema{
-		ClusterIds: clusterIDs,
+	resp, err := client.CreateApiKey(clientCtx, &qcAuth.CreateApiKeyRequest{
+		ApiKey: &qcAuth.ApiKey{
+			AccountId:  accountUUID.String(),
+			ClusterIds: clusterIDs,
+		},
 	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
-	}
-	if resp.StatusCode() != 200 {
-		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
-	}
-	// Get the actual response
-	apiKey := resp.JSON200
-	if apiKey == nil || apiKey.Id == nil {
-		return diag.FromErr(fmt.Errorf("%s: no keys returned", errorPrefix))
-	}
 	// Flatten cluster and store in Terraform state
-	for k, v := range flattenAuthKey(*apiKey) {
+	for k, v := range flattenAuthKey(resp.GetApiKey()) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
 	// Set the ID
-	d.SetId(apiKey.Id.String())
+	d.SetId(resp.GetApiKey().GetId())
 	return nil
 }
 
@@ -141,27 +123,27 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 // m: The interface where the configured client is passed.
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting API Key"
-	// Get an authenticated client
-	apiClient, diagnostics := getClient(m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
 	if diagnostics.HasError() {
 		return diagnostics
 	}
+	// Get a client
+	client := qcAuth.NewAuthServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
+	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
-
-	resp, err := apiClient.DeleteApiKeyWithResponse(ctx, accountUUID, apiKeyID)
+	// Deelte the key
+	_, err = client.DeleteApiKey(clientCtx, &qcAuth.DeleteApiKeyRequest{
+		AccountId: accountUUID.String(),
+		ApiKeyId:  apiKeyID,
+	})
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
-	}
-	if resp.JSON422 != nil {
-		return diag.FromErr(fmt.Errorf("%s: %s", errorPrefix, getError(resp.JSON422)))
-	}
-	if resp.StatusCode() != 204 {
-		return diag.FromErr(fmt.Errorf("%s", getErrorMessage(errorPrefix, resp.HTTPResponse)))
 	}
 	// Clear the resource ID to mark as deleted
 	d.SetId("")

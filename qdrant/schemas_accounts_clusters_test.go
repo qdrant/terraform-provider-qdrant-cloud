@@ -4,38 +4,34 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v2"
 )
 
 func TestResourceClusterFlatten(t *testing.T) {
-	configs := []qc.ResourceConfigurationSchema{
-		{
-			Amount:       8,
-			ResourceUnit: "m",
-			ResourceType: "cpu",
-		},
-	}
-	cluster := &qc.ClusterSchema{
-		Id:                  newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000001")),
-		CreatedAt:           newPointer(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
-		AccountId:           uuid.MustParse("00000000-1000-0000-0000-000000000001"),
-		Name:                "testName",
-		CloudProvider:       newPointer(qc.ClusterSchemaCloudProviderAzure),
-		CloudRegion:         newPointer(qc.ClusterSchemaCloudRegionUksouth),
-		PrivateRegionId:     newPointer(uuid.MustParse("00000003-0000-0000-0000-000000000001")),
-		MarkedForDeletionAt: newPointer(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
-		Url:                 newPointer("http://example.com"),
-		Configuration: qc.ClusterConfigurationSchema{
-			Version:       newPointer("v1.0"),
+	cluster := &qcCluster.Cluster{
+		Id:            "00000000-0000-0000-0000-000000000001",
+		CreatedAt:     timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId:     "00000000-1000-0000-0000-000000000001",
+		Name:          "testName",
+		CloudProvider: "Azure",
+		CloudRegion:   "Uksouth",
+		// TODO: MarkedForDeletionAt: timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Configuration: &qcCluster.ClusterConfiguration{
+			Version:       "v1.0",
 			NumberOfNodes: 5,
-			NodeConfiguration: qc.NodeConfigurationSchema{
-				PackageId:              uuid.MustParse("00000009-1000-0000-0000-000000000001"),
-				ResourceConfigurations: &configs,
+			PackageId:     "00000009-1000-0000-0000-000000000001",
+			AdditionalResources: &qcCluster.AdditionalResources{
+				Disk: 8,
+			},
+		},
+		State: &qcCluster.ClusterState{
+			Endpoint: &qcCluster.ClusterEndpoint{
+				Url: "http://example.com",
 			},
 		},
 	}
@@ -43,27 +39,27 @@ func TestResourceClusterFlatten(t *testing.T) {
 	flattened := flattenCluster(cluster)
 
 	expected := map[string]interface{}{
-		clusterIdentifierFieldName:          cluster.Id.String(),
-		clusterCreatedAtFieldName:           formatTime(cluster.CreatedAt),
-		clusterAccountIDFieldName:           cluster.AccountId.String(),
-		clusterNameFieldName:                cluster.Name,
-		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
-		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
-		clusterPrivateRegionIDFieldName:     cluster.PrivateRegionId.String(),
-		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
-		clusterURLFieldName:                 derefPointer(cluster.Url),
+		clusterIdentifierFieldName:      cluster.GetId(),
+		clusterCreatedAtFieldName:       formatTime(cluster.GetCreatedAt()),
+		clusterAccountIDFieldName:       cluster.GetAccountId(),
+		clusterNameFieldName:            cluster.GetName(),
+		clusterCloudProviderFieldName:   cluster.GetCloudProvider(),
+		clusterCloudRegionFieldName:     cluster.GetCloudRegion(),
+		clusterPrivateRegionIDFieldName: "",
+		//TODO: clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
+		clusterURLFieldName: cluster.GetState().GetEndpoint().GetUrl(),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				clusterVersionFieldName: derefPointer(cluster.Configuration.Version),
-				numberOfNodesFieldName:  cluster.Configuration.NumberOfNodes,
+				clusterVersionFieldName: cluster.GetConfiguration().GetVersion(),
+				numberOfNodesFieldName:  int(cluster.GetConfiguration().GetNumberOfNodes()),
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
-						packageIDFieldName: cluster.Configuration.NodeConfiguration.PackageId.String(),
+						packageIDFieldName: cluster.GetConfiguration().GetPackageId(),
 						resourceConfigurationsFieldName: []interface{}{
 							map[string]interface{}{
-								fieldAmount:       configs[0].Amount,
-								fieldResourceUnit: string(configs[0].ResourceUnit),
-								fieldResourceType: string(configs[0].ResourceType),
+								fieldAmount:       int(cluster.GetConfiguration().GetAdditionalResources().GetDisk()),
+								fieldResourceUnit: string(ResourceUnitGi),
+								fieldResourceType: string(ResourceTypeDisk),
 							},
 						},
 					},
@@ -76,55 +72,51 @@ func TestResourceClusterFlatten(t *testing.T) {
 }
 
 func TestExpandCluster(t *testing.T) {
-	configs := []qc.ResourceConfigurationSchema{
-		{
-			Amount:       10,
-			ResourceUnit: "m",
-			ResourceType: "cpu",
-		},
-	}
-	expected := qc.ClusterSchema{
-		Id:                  newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000001")),
-		CreatedAt:           newPointer(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
-		AccountId:           uuid.MustParse("00000000-1000-0000-0000-000000000001"),
-		Name:                "testName",
-		CloudProvider:       newPointer(qc.ClusterSchemaCloudProviderAzure),
-		CloudRegion:         newPointer(qc.ClusterSchemaCloudRegionUksouth),
-		PrivateRegionId:     newPointer(uuid.MustParse("00000003-0000-0000-0000-000000000001")),
-		MarkedForDeletionAt: newPointer(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
-		Url:                 newPointer("http://example.com"),
-		Configuration: qc.ClusterConfigurationSchema{
-			Version:       newPointer("v1.0"),
+	expected := &qcCluster.Cluster{
+		Id:            "00000000-0000-0000-0000-000000000001",
+		CreatedAt:     timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId:     "00000000-1000-0000-0000-000000000001",
+		Name:          "testName",
+		CloudProvider: "Azure",
+		CloudRegion:   "Uksouth",
+		// TODO: MarkedForDeletionAt: timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Configuration: &qcCluster.ClusterConfiguration{
+			Version:       "v1.0",
 			NumberOfNodes: 5,
-			NodeConfiguration: qc.NodeConfigurationSchema{
-				PackageId:              uuid.MustParse("00000009-1000-0000-0000-000000000001"),
-				ResourceConfigurations: &configs,
+			PackageId:     "00000009-1000-0000-0000-000000000001",
+			AdditionalResources: &qcCluster.AdditionalResources{
+				Disk: 10,
+			},
+		},
+		State: &qcCluster.ClusterState{
+			Endpoint: &qcCluster.ClusterEndpoint{
+				Url: "http://example.com",
 			},
 		},
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
-		clusterIdentifierFieldName:          expected.Id.String(),
-		clusterCreatedAtFieldName:           formatTime(expected.CreatedAt),
-		clusterAccountIDFieldName:           expected.AccountId.String(),
-		clusterNameFieldName:                expected.Name,
-		clusterCloudProviderFieldName:       string(derefPointer(expected.CloudProvider)),
-		clusterCloudRegionFieldName:         string(derefPointer(expected.CloudRegion)),
-		clusterPrivateRegionIDFieldName:     expected.PrivateRegionId.String(),
-		clusterMarkedForDeletionAtFieldName: formatTime(expected.MarkedForDeletionAt),
-		clusterURLFieldName:                 derefPointer(expected.Url),
+		clusterIdentifierFieldName:      expected.GetId(),
+		clusterCreatedAtFieldName:       formatTime(expected.GetCreatedAt()),
+		clusterAccountIDFieldName:       expected.GetAccountId(),
+		clusterNameFieldName:            expected.GetName(),
+		clusterCloudProviderFieldName:   expected.GetCloudProvider(),
+		clusterCloudRegionFieldName:     expected.GetCloudRegion(),
+		clusterPrivateRegionIDFieldName: "",
+		// TODO: clusterMarkedForDeletionAtFieldName: formatTime(expected.MarkedForDeletionAt),
+		clusterURLFieldName: expected.GetState().GetEndpoint().GetUrl(),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				clusterVersionFieldName: derefPointer(expected.Configuration.Version),
-				numberOfNodesFieldName:  expected.Configuration.NumberOfNodes,
+				clusterVersionFieldName: expected.GetConfiguration().GetVersion(),
+				numberOfNodesFieldName:  int(expected.GetConfiguration().GetNumberOfNodes()),
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
-						packageIDFieldName: expected.Configuration.NodeConfiguration.PackageId.String(),
+						packageIDFieldName: expected.GetConfiguration().GetPackageId(),
 						resourceConfigurationsFieldName: []interface{}{
 							map[string]interface{}{
-								fieldAmount:       configs[0].Amount,
-								fieldResourceUnit: string(configs[0].ResourceUnit),
-								fieldResourceType: string(configs[0].ResourceType),
+								fieldAmount:       int(expected.GetConfiguration().GetAdditionalResources().GetDisk()),
+								fieldResourceUnit: string(ResourceUnitGi),
+								fieldResourceType: string(ResourceTypeDisk),
 							},
 						},
 					},
@@ -133,7 +125,7 @@ func TestExpandCluster(t *testing.T) {
 		},
 	})
 
-	result, err := expandCluster(d, expected.AccountId.String())
+	result, err := expandCluster(d, expected.GetAccountId())
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
 }

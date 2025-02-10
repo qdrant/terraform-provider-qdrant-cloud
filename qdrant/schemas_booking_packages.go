@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v2"
 )
 
 // Constant keys and descriptions for schema fields.
@@ -118,28 +118,28 @@ func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 }
 
 // flattenPackages flattens the package data into a format that Terraform can understand.
-func flattenPackages(packages []qc.PackageSchema) []interface{} {
+func flattenPackages(packages []*qcBooking.Package) []interface{} {
 	var flattenedPackages []interface{}
 	for _, p := range packages {
 		flattenedPackages = append(flattenedPackages, map[string]interface{}{
-			fieldID:                     p.Id.String(),
-			fieldName:                   p.Name,
-			fieldCurrency:               string(p.Currency),
-			fieldUnitIntPricePerHour:    derefPointer(p.UnitIntPricePerHour),
-			fieldResourceConfigurations: flattenResourceConfigurations(p.ResourceConfigurations),
+			fieldID:                     p.GetId(),
+			fieldName:                   p.GetName(),
+			fieldCurrency:               p.GetCurrency(),
+			fieldUnitIntPricePerHour:    p.GetUnitIntPricePerHour(),
+			fieldResourceConfigurations: flattenResourceConfigurations(p.GetResourceConfiguration()), // TODO: GetResourceConfigurationS ?
 		})
 	}
 	return flattenedPackages
 }
 
 // flattenResourceConfigurations flattens the resource configurations data into a format that Terraform can understand.
-func flattenResourceConfigurations(rcs []qc.ResourceConfigurationSchema) []interface{} {
+func flattenResourceConfigurations(rcs []*qcBooking.ResourceConfiguration) []interface{} {
 	var flattenedResourceConfigurations []interface{}
 	for _, rc := range rcs {
 		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
-			fieldAmount:       rc.Amount,
-			fieldResourceType: string(rc.ResourceType),
-			fieldResourceUnit: string(rc.ResourceUnit),
+			fieldAmount:       rc.GetAmount(),
+			fieldResourceType: rc.GetResourceType(),
+			fieldResourceUnit: rc.GetResourceUnit(),
 		})
 	}
 	return flattenedResourceConfigurations

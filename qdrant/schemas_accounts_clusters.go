@@ -3,14 +3,14 @@ package qdrant
 import (
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v2"
 )
 
 const (
+	hybridCloudClusterID = "hybrid"
+
 	clustersFieldTemplate      = "Clusters Schema %s field"
 	clustersAccountIDFieldName = "account_id"
 	clustersClustersFieldName  = "clusters"
@@ -184,155 +184,184 @@ func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schem
 	}
 }
 
-func expandCluster(d *schema.ResourceData, accountID string) (qc.ClusterSchema, error) {
+func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster, error) {
 	// Check if we need to override the default
 	if v, ok := d.GetOk(clusterAccountIDFieldName); ok {
 		accountID = v.(string)
 	}
 	if accountID == "" {
-		return qc.ClusterSchema{}, fmt.Errorf("account ID not specified")
+		return nil, fmt.Errorf("account ID not specified")
 	}
 	id := d.Get(clusterIdentifierFieldName)
 	name := d.Get(clusterNameFieldName)
 	cloudProvider := d.Get(clusterCloudProviderFieldName)
 	cloudRegion := d.Get(clusterCloudRegionFieldName)
 
-	var uuid_id openapi_types.UUID
-	if id != nil && id.(string) != "" {
-		uuid_id = uuid.MustParse(id.(string))
-	}
-
-	cluster := qc.ClusterSchema{
-		Id:            newPointer(uuid_id),
+	cluster := &qcCluster.Cluster{
+		Id:            id.(string),
 		Name:          name.(string),
-		CloudProvider: newPointer(qc.ClusterSchemaCloudProvider(cloudProvider.(string))),
-		CloudRegion:   newPointer(qc.ClusterSchemaCloudRegion(cloudRegion.(string))),
-		AccountId:     uuid.MustParse(accountID),
+		CloudProvider: cloudProvider.(string),
+		CloudRegion:   cloudRegion.(string),
+		AccountId:     accountID,
 	}
-	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
-		cluster.MarkedForDeletionAt = newPointer(parseTime(v.(string)))
+	if _, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
+		// TODO: cluster.MarkedForDeletionAt = parseTime(v.(string))
 	}
 	if v, ok := d.GetOk(clusterCreatedAtFieldName); ok {
-		cluster.CreatedAt = newPointer(parseTime(v.(string)))
-	}
-	if v, ok := d.GetOk(clusterURLFieldName); ok {
-		cluster.Url = newPointer(v.(string))
+		cluster.CreatedAt = parseTime(v.(string))
 	}
 	if v, ok := d.GetOk(clusterPrivateRegionIDFieldName); ok {
-		cluster.PrivateRegionId = newPointer(uuid.MustParse(v.(string)))
+		// Note this field has been merged with cloud-region (if provider indicates hybrid cloud)
+		if cluster.CloudProvider == hybridCloudClusterID {
+			cluster.CloudRegion = v.(string)
+		}
 	}
 	if v, ok := d.GetOk(configurationFieldName); ok {
 		configuration := expandClusterConfiguration(v.([]interface{}))
-		cluster.Configuration = *configuration
+		cluster.Configuration = configuration
+	}
+	if v, ok := d.GetOk(clusterURLFieldName); ok {
+		cluster.State = &qcCluster.ClusterState{
+			Endpoint: &qcCluster.ClusterEndpoint{
+				Url: v.(string),
+			},
+		}
 	}
 	return cluster, nil
 }
 
-func expandClusterConfiguration(v []interface{}) *qc.ClusterConfigurationSchema {
-	config := qc.ClusterConfigurationSchema{}
+func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration {
+	config := &qcCluster.ClusterConfiguration{}
 	for _, m := range v {
 		item := m.(map[string]interface{})
 		if v, ok := item[numberOfNodesFieldName]; ok {
-			config.NumberOfNodes = v.(int)
+			config.NumberOfNodes = uint32(v.(int))
 		}
 		if v, ok := item[clusterVersionFieldName]; ok {
-			config.Version = newPointer(v.(string))
+			config.Version = v.(string)
 		}
 		if v, ok := item[nodeConfigurationFieldName]; ok {
-			nodeConfig := expandNodeConfiguration(v.([]interface{}))
-			if nodeConfig != nil {
-				config.NodeConfiguration = *nodeConfig
-			}
+			packageId, additionalResources := expandNodeConfiguration(v.([]interface{}))
+			config.PackageId = packageId
+			config.AdditionalResources = additionalResources
 		}
 	}
-	return &config
+	return config
 }
 
-func expandNodeConfiguration(v []interface{}) *qc.NodeConfigurationSchema {
-	config := qc.NodeConfigurationSchema{}
+func expandNodeConfiguration(v []interface{}) (string, *qcCluster.AdditionalResources) {
+	var packageId string
+	var additionalResources *qcCluster.AdditionalResources
 	for _, m := range v {
 		item := m.(map[string]interface{})
 		if v, ok := item[packageIDFieldName]; ok {
-			config.PackageId = uuid.MustParse(v.(string))
+			packageId = v.(string)
 		}
 		if v, ok := item[resourceConfigurationsFieldName]; ok {
-			config.ResourceConfigurations = expandClusterNodeResourceConfigurations(v.([]interface{}))
+			additionalResources = expandClusterNodeResourceConfigurationsToAdditionalResources(v.([]interface{}))
 		}
 	}
-	return &config
+	return packageId, additionalResources
 }
 
-func expandClusterNodeResourceConfigurations(v []interface{}) *[]qc.ResourceConfigurationSchema {
-	configs := make([]qc.ResourceConfigurationSchema, 0)
+func expandClusterNodeResourceConfigurationsToAdditionalResources(v []interface{}) *qcCluster.AdditionalResources {
+	var result *qcCluster.AdditionalResources
 	for _, m := range v {
-		config := qc.ResourceConfigurationSchema{}
-
+		if result == nil {
+			result = &qcCluster.AdditionalResources{}
+		}
+		var amount int
+		var resourceType, resourceUnit string
 		item := m.(map[string]interface{})
 		if v, ok := item[resourceConfigurationAmountFieldName]; ok {
-			config.Amount = v.(int)
+			amount = v.(int)
 		}
 		if v, ok := item[resourceConfigurationResourceTypeFieldName]; ok {
-			config.ResourceType = qc.ResourceType(v.(string))
+			resourceType = v.(string)
 		}
 		if v, ok := item[resourceConfigurationResourceUnitFieldName]; ok {
-			config.ResourceUnit = qc.ResourceUnit(v.(string))
+			resourceUnit = v.(string)
 		}
-		configs = append(configs, config)
+		switch ResourceType(resourceType) {
+		case ResourceTypeCpu:
+			// Not supported
+		case ResourceTypeRam:
+			// Not supported
+		case ResourceTypeComplimentaryDisk:
+			// Not supported
+		case ResourceTypeSnapshot:
+			// Not supported
+		case ResourceTypeDisk:
+			// Not supported:
+			if ResourceUnit(resourceUnit) == ResourceUnitGi {
+				result.Disk += uint32(amount)
+			}
+		}
 	}
-	return &configs
+	return result
 }
 
 // flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
-func flattenClusters(clusters []qc.ClusterSchema) []interface{} {
+func flattenClusters(clusters []*qcCluster.Cluster) []interface{} {
 	var flattenedClusters []interface{}
 	for _, cluster := range clusters {
-		flattenedClusters = append(flattenedClusters, flattenCluster(&cluster))
+		flattenedClusters = append(flattenedClusters, flattenCluster(cluster))
 	}
 	return flattenedClusters
 }
 
 // flattenCluster creates a map from a cluster for easy storage in Terraform.
-func flattenCluster(cluster *qc.ClusterSchema) map[string]interface{} {
+func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 	var privateRegionIdStr string
-	if cluster.PrivateRegionId != nil {
-		privateRegionIdStr = cluster.PrivateRegionId.String()
+	if cluster.CloudProvider == hybridCloudClusterID {
+		// For backewards compatibility extract the region ID into separate field.
+		privateRegionIdStr = cluster.GetCloudRegion()
 	}
 	return map[string]interface{}{
-		clusterIdentifierFieldName:          cluster.Id.String(),
-		clusterCreatedAtFieldName:           formatTime(cluster.CreatedAt),
-		clusterAccountIDFieldName:           cluster.AccountId.String(),
-		clusterNameFieldName:                cluster.Name,
-		clusterCloudProviderFieldName:       string(derefPointer(cluster.CloudProvider)),
-		clusterCloudRegionFieldName:         string(derefPointer(cluster.CloudRegion)),
-		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
-		clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
-		clusterURLFieldName:                 derefPointer(cluster.Url),
-		configurationFieldName:              flattenClusterConfiguration(cluster.Configuration),
+		clusterIdentifierFieldName:      cluster.GetId(),
+		clusterCreatedAtFieldName:       formatTime(cluster.GetCreatedAt()),
+		clusterAccountIDFieldName:       cluster.GetAccountId(),
+		clusterNameFieldName:            cluster.GetName(),
+		clusterCloudProviderFieldName:   cluster.GetCloudProvider(),
+		clusterCloudRegionFieldName:     cluster.GetCloudRegion(),
+		clusterPrivateRegionIDFieldName: privateRegionIdStr,
+		// TODO: clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetMarkedForDeletionAt()),
+		clusterURLFieldName:    cluster.GetState().GetEndpoint().GetUrl(),
+		configurationFieldName: flattenClusterConfiguration(cluster.GetConfiguration()),
 	}
 }
 
 // flattenClusterConfiguration creates a map from a cluster configuration for easy storage in Terraform.
-func flattenClusterConfiguration(clusterConfig qc.ClusterConfigurationSchema) []interface{} {
+func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			clusterVersionFieldName:    derefPointer(clusterConfig.Version),
-			numberOfNodesFieldName:     clusterConfig.NumberOfNodes,
-			nodeConfigurationFieldName: flattenNodeConfiguration(clusterConfig.NodeConfiguration),
+			clusterVersionFieldName:    clusterConfig.GetVersion(),
+			numberOfNodesFieldName:     int(clusterConfig.GetNumberOfNodes()),
+			nodeConfigurationFieldName: flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
 		},
 	}
 }
 
-// flattenNodeConfiguration creates a map from a node configuration for easy storage in Terraform.
-func flattenNodeConfiguration(nodeConfig qc.NodeConfigurationSchema) []interface{} {
-	var resourceConfigurations []interface{}
-
-	if nodeConfig.ResourceConfigurations != nil {
-		resourceConfigurations = flattenResourceConfigurations(*nodeConfig.ResourceConfigurations)
-	}
+// flattenNodeConfiguration creates a map from a packageID and additional resources for easy storage in Terraform.
+// Note the TF structure is kept backwards compatible with the OpenAPI v1, so we need to map a bit here
+func flattenNodeConfiguration(packageID string, additionalResources *qcCluster.AdditionalResources) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			packageIDFieldName:              nodeConfig.PackageId.String(),
-			resourceConfigurationsFieldName: resourceConfigurations,
+			packageIDFieldName:              packageID,
+			resourceConfigurationsFieldName: flattenResourceConfigurationsFromAdditionalResources(additionalResources),
 		},
 	}
+}
+
+// flattenResourceConfigurations flattens the resource configurations data into a format that Terraform can understand.
+func flattenResourceConfigurationsFromAdditionalResources(additionalResources *qcCluster.AdditionalResources) []interface{} {
+	var flattenedResourceConfigurations []interface{}
+	if additionalResources.GetDisk() > 0 {
+		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
+			fieldAmount:       int(additionalResources.GetDisk()),
+			fieldResourceType: string(ResourceTypeDisk),
+			fieldResourceUnit: string(ResourceUnitGi),
+		})
+	}
+	return flattenedResourceConfigurations
 }
