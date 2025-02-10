@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,20 +20,9 @@ const (
 	requestIDHeaderField = "x-qd-request-id"
 )
 
-// getErrorMessage Fetches a human readable error message out of the provided HTTP Response.
-func getErrorMessage(message string, response *http.Response) string {
-	if response == nil {
-		return "No response"
-	}
-	return fmt.Sprintf("%s: [%s: %d] - %s", message, getRequestID(response), response.StatusCode, response.Status)
-}
-
 // getRequestID fetches the Request ID from the current HTTP Response (or an empty string if not available).
-func getRequestID(response *http.Response) string {
-	if response == nil {
-		return "No response"
-	}
-	return response.Header.Get(requestIDHeaderField)
+func getRequestID(header metadata.MD) string {
+	return fmt.Sprintf(" [%s]", strings.Join(header.Get(requestIDHeaderField), "-"))
 }
 
 // getClientConnection creates a client connection from the provided interface.

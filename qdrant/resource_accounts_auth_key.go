@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/auth/v2"
 )
@@ -44,9 +46,12 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Execute the request and handle the response
+	var header metadata.MD
 	resp, err := client.ListApiKeys(clientCtx, &qcAuth.ListApiKeysRequest{
 		AccountId: accountUUID.String(),
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -97,12 +102,15 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 	}
 	// Create the request body
+	var header metadata.MD
 	resp, err := client.CreateApiKey(clientCtx, &qcAuth.CreateApiKeyRequest{
 		ApiKey: &qcAuth.ApiKey{
 			AccountId:  accountUUID.String(),
 			ClusterIds: clusterIDs,
 		},
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -138,10 +146,13 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Deelte the key
+	var header metadata.MD
 	_, err = client.DeleteApiKey(clientCtx, &qcAuth.DeleteApiKeyRequest{
 		AccountId: accountUUID.String(),
 		ApiKeyId:  apiKeyID,
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}

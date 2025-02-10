@@ -204,7 +204,7 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 		CloudRegion:   cloudRegion.(string),
 		AccountId:     accountID,
 	}
-	if _, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
+	if _, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok { //nolint:all
 		// TODO: cluster.MarkedForDeletionAt = parseTime(v.(string))
 	}
 	if v, ok := d.GetOk(clusterCreatedAtFieldName); ok {

@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v2"
 )
@@ -37,13 +39,15 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
 	// Get all packages
+	var header metadata.MD
 	resp, err := client.ListPackages(clientCtx, &qcBooking.ListPackagesRequest{
 		AccountId:     accountUUID.String(),
 		CloudProvider: newPointer(d.Get("cloud_provider").(string)),
 		CloudRegion:   d.Get("cloud_region").(string),
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}

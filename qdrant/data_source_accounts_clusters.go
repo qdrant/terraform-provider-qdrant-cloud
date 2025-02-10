@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v2"
 )
@@ -51,9 +53,12 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// List all clusters for the provided account
+	var header metadata.MD
 	resp, err := client.ListClusters(clientCtx, &qcCluster.ListClustersRequest{
 		AccountId: accountUUID.String(),
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		if d.HasError() {
@@ -91,10 +96,13 @@ func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, 
 	// Get the cluster ID
 	clusterID := d.Get("id").(string)
 	// Fetch the cluster
+	var header metadata.MD
 	resp, err := client.GetCluster(clientCtx, &qcCluster.GetClusterRequest{
 		AccountId: accountUUID.String(),
 		ClusterId: clusterID,
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}

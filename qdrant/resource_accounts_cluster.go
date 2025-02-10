@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v2"
 )
@@ -40,10 +42,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Fetch the cluster
+	var header metadata.MD
 	resp, err := client.GetCluster(clientCtx, &qcCluster.GetClusterRequest{
 		AccountId: accountUUID.String(),
 		ClusterId: d.Get("id").(string),
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	// Inspect the results
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -76,9 +81,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		cluster.GetConfiguration().Version = "latest"
 	}
 	// Create the cluster
+	var header metadata.MD
 	resp, err := client.CreateCluster(clientCtx, &qcCluster.CreateClusterRequest{
 		Cluster: cluster,
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -108,9 +116,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Update the cluster
+	var header metadata.MD
 	resp, err := client.UpdateCluster(clientCtx, &qcCluster.UpdateClusterRequest{
 		Cluster: cluster,
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -140,11 +151,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Delete with all backups as well.
+	var header metadata.MD
 	_, err = client.DeleteCluster(clientCtx, &qcCluster.DeleteClusterRequest{
 		AccountId:     accountUUID.String(),
 		ClusterId:     d.Get(clusterIdentifierFieldName).(string),
 		DeleteBackups: newPointer(true),
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}

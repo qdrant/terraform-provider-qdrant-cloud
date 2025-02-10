@@ -7,6 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 
 	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/auth/v2"
 )
@@ -41,9 +43,12 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// List the API Keys for the provided account
+	var header metadata.MD
 	resp, err := client.ListApiKeys(clientCtx, &qcAuth.ListApiKeysRequest{
 		AccountId: accountUUID.String(),
-	})
+	}, grpc.Header(&header))
+	// enrich prefix with request ID
+	errorPrefix += getRequestID(header)
 	// Handle the response in case of error
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
