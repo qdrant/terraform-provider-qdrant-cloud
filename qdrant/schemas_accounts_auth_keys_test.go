@@ -32,14 +32,14 @@ func TestFlattenAuthKeySchema(t *testing.T) {
 	expected := []interface{}{
 		map[string]interface{}{
 			authKeysKeysIDFieldName:         "00000000-0000-0000-0000-000000000001",
-			authKeysKeysCreatedAtFieldName:  createdAt.String(),
+			authKeysKeysCreatedAtFieldName:  formatTime(createdAt),
 			authKeysKeysClusterIDsFieldName: []string{"00000000-0000-0000-0001-000000000001", "00000000-0000-0000-0002-000000000001"},
 			authKeysKeysPrefixFieldName:     "prefix1",
 			authKeysKeysTokenFieldName:      "token1",
 		},
 		map[string]interface{}{
 			authKeysKeysIDFieldName:         "00000000-0000-0000-0000-000000000002",
-			authKeysKeysCreatedAtFieldName:  createdAt.String(),
+			authKeysKeysCreatedAtFieldName:  formatTime(createdAt),
 			authKeysKeysClusterIDsFieldName: []string{"00000000-0000-0000-0003-000000000002"},
 			authKeysKeysPrefixFieldName:     "prefix2",
 			authKeysKeysTokenFieldName:      "token2",
@@ -62,7 +62,7 @@ func TestFlattenCreateAuthKey(t *testing.T) {
 
 	expected := map[string]interface{}{
 		authKeysKeysIDFieldName:         "10000000-0000-0000-0000-000000000002",
-		authKeysKeysCreatedAtFieldName:  createdAt.String(),
+		authKeysKeysCreatedAtFieldName:  formatTime(createdAt),
 		authKeysKeysClusterIDsFieldName: []string{"10000000-0000-0000-0003-000000000002"},
 		authKeysKeysPrefixFieldName:     "prefix3",
 		authKeysKeysTokenFieldName:      "token3",
