@@ -343,7 +343,7 @@ func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) 
 }
 
 // flattenNodeConfiguration creates a map from a packageID and additional resources for easy storage in Terraform.
-// Note the TF structure is kept backwards compatible with the OpenAPI v1, so we need to map a bit here
+// Note the TF structure is kept backwards compatible with the OpenAPI v1, so we need to map a bit here.
 func flattenNodeConfiguration(packageID string, additionalResources *qcCluster.AdditionalResources) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
