@@ -171,6 +171,8 @@ github.com/posener/complete v1.2.3 h1:NP0eAhjcjImqslEwo/1hq7gpajME0fTLTezBKDqfXq
 github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSgv7Sy7s/s=
 github.com/qdrant/qdrant-cloud-public-api v0.0.0-20250210131241-332ec61f22d5 h1:0bgfgiBB/F+Xql8ddlttr4YJAs9N4GkaWt1Afpj1BvA=
 github.com/qdrant/qdrant-cloud-public-api v0.0.0-20250210131241-332ec61f22d5/go.mod h1:3XTgEA7gOSSANcbh1GdK4+DR0qltwMOmYO9b+pa440I=
+github.com/qdrant/qdrant-cloud-public-api v0.0.0-20250211113045-a683c5bc1687 h1:5CLqaQvlDOh/AC7/NL+ycvIRBUAn7MV0iVFsLoMtP4c=
+github.com/qdrant/qdrant-cloud-public-api v0.0.0-20250211113045-a683c5bc1687/go.mod h1:3XTgEA7gOSSANcbh1GdK4+DR0qltwMOmYO9b+pa440I=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
