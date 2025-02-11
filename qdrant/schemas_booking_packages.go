@@ -126,7 +126,7 @@ func flattenPackages(packages []*qcBooking.Package) []interface{} {
 			fieldName:                   p.GetName(),
 			fieldCurrency:               p.GetCurrency(),
 			fieldUnitIntPricePerHour:    p.GetUnitIntPricePerHour(),
-			fieldResourceConfigurations: flattenResourceConfigurations(p.GetResourceConfiguration()), // TODO: GetResourceConfigurationS ?
+			fieldResourceConfigurations: flattenResourceConfigurations(p.GetResourceConfiguration()), // TODO: GetResourceConfigurations - with S ?
 		})
 	}
 	return flattenedPackages
