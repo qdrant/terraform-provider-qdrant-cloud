@@ -16,7 +16,7 @@ func TestFlattenPackages(t *testing.T) {
 
 			Currency:            "USD",
 			UnitIntPricePerHour: 10,
-			ResourceConfiguration: []*qcBooking.ResourceConfiguration{
+			ResourceConfigurations: []*qcBooking.ResourceConfiguration{
 				{
 					Amount:       1,
 					ResourceType: "type1",
@@ -29,7 +29,7 @@ func TestFlattenPackages(t *testing.T) {
 			Name:                "packageName2",
 			Currency:            "EUR",
 			UnitIntPricePerHour: 20,
-			ResourceConfiguration: []*qcBooking.ResourceConfiguration{
+			ResourceConfigurations: []*qcBooking.ResourceConfiguration{
 				{
 					Amount:       2,
 					ResourceType: "type2",
@@ -44,10 +44,10 @@ func TestFlattenPackages(t *testing.T) {
 			fieldID:                  "00000000-0000-0000-0000-000000000001",
 			fieldName:                "packageName1",
 			fieldCurrency:            "USD",
-			fieldUnitIntPricePerHour: int32(10),
+			fieldUnitIntPricePerHour: 10,
 			fieldResourceConfigurations: []interface{}{
 				map[string]interface{}{
-					fieldAmount:       int32(1),
+					fieldAmount:       1,
 					fieldResourceType: "type1",
 					fieldResourceUnit: "unit1",
 				},
@@ -57,10 +57,10 @@ func TestFlattenPackages(t *testing.T) {
 			fieldID:                  "00000000-0000-0000-0000-000000000002",
 			fieldName:                "packageName2",
 			fieldCurrency:            "EUR",
-			fieldUnitIntPricePerHour: int32(20),
+			fieldUnitIntPricePerHour: 20,
 			fieldResourceConfigurations: []interface{}{
 				map[string]interface{}{
-					fieldAmount:       int32(2),
+					fieldAmount:       2,
 					fieldResourceType: "type2",
 					fieldResourceUnit: "unit2",
 				},

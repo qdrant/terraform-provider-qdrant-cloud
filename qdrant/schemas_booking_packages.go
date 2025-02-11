@@ -125,7 +125,7 @@ func flattenPackages(packages []*qcBooking.Package) []interface{} {
 			fieldID:                     p.GetId(),
 			fieldName:                   p.GetName(),
 			fieldCurrency:               p.GetCurrency(),
-			fieldUnitIntPricePerHour:    p.GetUnitIntPricePerHour(),
+			fieldUnitIntPricePerHour:    int(p.GetUnitIntPricePerHour()),
 			fieldResourceConfigurations: flattenResourceConfigurations(p.GetResourceConfigurations()),
 		})
 	}
@@ -137,7 +137,7 @@ func flattenResourceConfigurations(rcs []*qcBooking.ResourceConfiguration) []int
 	var flattenedResourceConfigurations []interface{}
 	for _, rc := range rcs {
 		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
-			fieldAmount:       rc.GetAmount(),
+			fieldAmount:       int(rc.GetAmount()),
 			fieldResourceType: rc.GetResourceType(),
 			fieldResourceUnit: rc.GetResourceUnit(),
 		})

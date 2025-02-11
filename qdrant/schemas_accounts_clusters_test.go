@@ -20,7 +20,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 		Name:          "testName",
 		CloudProvider: "Azure",
 		CloudRegion:   "Uksouth",
-		// TODO: MarkedForDeletionAt: timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		DeletedAt:     timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Configuration: &qcCluster.ClusterConfiguration{
 			Version:       "v1.0",
 			NumberOfNodes: 5,
@@ -39,15 +39,15 @@ func TestResourceClusterFlatten(t *testing.T) {
 	flattened := flattenCluster(cluster)
 
 	expected := map[string]interface{}{
-		clusterIdentifierFieldName:      cluster.GetId(),
-		clusterCreatedAtFieldName:       formatTime(cluster.GetCreatedAt()),
-		clusterAccountIDFieldName:       cluster.GetAccountId(),
-		clusterNameFieldName:            cluster.GetName(),
-		clusterCloudProviderFieldName:   cluster.GetCloudProvider(),
-		clusterCloudRegionFieldName:     cluster.GetCloudRegion(),
-		clusterPrivateRegionIDFieldName: "",
-		//TODO: clusterMarkedForDeletionAtFieldName: formatTime(cluster.MarkedForDeletionAt),
-		clusterURLFieldName: cluster.GetState().GetEndpoint().GetUrl(),
+		clusterIdentifierFieldName:          cluster.GetId(),
+		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
+		clusterAccountIDFieldName:           cluster.GetAccountId(),
+		clusterNameFieldName:                cluster.GetName(),
+		clusterCloudProviderFieldName:       cluster.GetCloudProvider(),
+		clusterCloudRegionFieldName:         cluster.GetCloudRegion(),
+		clusterPrivateRegionIDFieldName:     "",
+		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
+		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
 				clusterVersionFieldName: cluster.GetConfiguration().GetVersion(),
@@ -79,7 +79,7 @@ func TestExpandCluster(t *testing.T) {
 		Name:          "testName",
 		CloudProvider: "Azure",
 		CloudRegion:   "Uksouth",
-		// TODO: MarkedForDeletionAt: timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		DeletedAt:     timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Configuration: &qcCluster.ClusterConfiguration{
 			Version:       "v1.0",
 			NumberOfNodes: 5,
@@ -96,15 +96,15 @@ func TestExpandCluster(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
-		clusterIdentifierFieldName:      expected.GetId(),
-		clusterCreatedAtFieldName:       formatTime(expected.GetCreatedAt()),
-		clusterAccountIDFieldName:       expected.GetAccountId(),
-		clusterNameFieldName:            expected.GetName(),
-		clusterCloudProviderFieldName:   expected.GetCloudProvider(),
-		clusterCloudRegionFieldName:     expected.GetCloudRegion(),
-		clusterPrivateRegionIDFieldName: "",
-		// TODO: clusterMarkedForDeletionAtFieldName: formatTime(expected.MarkedForDeletionAt),
-		clusterURLFieldName: expected.GetState().GetEndpoint().GetUrl(),
+		clusterIdentifierFieldName:          expected.GetId(),
+		clusterCreatedAtFieldName:           formatTime(expected.GetCreatedAt()),
+		clusterAccountIDFieldName:           expected.GetAccountId(),
+		clusterNameFieldName:                expected.GetName(),
+		clusterCloudProviderFieldName:       expected.GetCloudProvider(),
+		clusterCloudRegionFieldName:         expected.GetCloudRegion(),
+		clusterPrivateRegionIDFieldName:     "",
+		clusterMarkedForDeletionAtFieldName: formatTime(expected.GetDeletedAt()),
+		clusterURLFieldName:                 expected.GetState().GetEndpoint().GetUrl(),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
 				clusterVersionFieldName: expected.GetConfiguration().GetVersion(),

@@ -204,8 +204,8 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 		CloudRegion:   cloudRegion.(string),
 		AccountId:     accountID,
 	}
-	if _, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok { //nolint:all
-		// TODO: cluster.MarkedForDeletionAt = parseTime(v.(string))
+	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
+		cluster.DeletedAt = parseTime(v.(string))
 	}
 	if v, ok := d.GetOk(clusterCreatedAtFieldName); ok {
 		cluster.CreatedAt = parseTime(v.(string))
@@ -318,16 +318,16 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 		privateRegionIdStr = cluster.GetCloudRegion()
 	}
 	return map[string]interface{}{
-		clusterIdentifierFieldName:      cluster.GetId(),
-		clusterCreatedAtFieldName:       formatTime(cluster.GetCreatedAt()),
-		clusterAccountIDFieldName:       cluster.GetAccountId(),
-		clusterNameFieldName:            cluster.GetName(),
-		clusterCloudProviderFieldName:   cluster.GetCloudProvider(),
-		clusterCloudRegionFieldName:     cluster.GetCloudRegion(),
-		clusterPrivateRegionIDFieldName: privateRegionIdStr,
-		// TODO: clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetMarkedForDeletionAt()),
-		clusterURLFieldName:    cluster.GetState().GetEndpoint().GetUrl(),
-		configurationFieldName: flattenClusterConfiguration(cluster.GetConfiguration()),
+		clusterIdentifierFieldName:          cluster.GetId(),
+		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
+		clusterAccountIDFieldName:           cluster.GetAccountId(),
+		clusterNameFieldName:                cluster.GetName(),
+		clusterCloudProviderFieldName:       cluster.GetCloudProvider(),
+		clusterCloudRegionFieldName:         cluster.GetCloudRegion(),
+		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
+		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
+		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),
+		configurationFieldName:              flattenClusterConfiguration(cluster.GetConfiguration()),
 	}
 }
 
