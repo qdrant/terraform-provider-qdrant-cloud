@@ -1,7 +1,8 @@
 module github.com/qdrant/terraform-provider-qdrant-cloud/v1
 
-go 1.22.0
-toolchain go1.23.1
+go 1.22.7
+
+toolchain go1.23.6
 
 require (
 	github.com/google/uuid v1.6.0
