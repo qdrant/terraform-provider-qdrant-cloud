@@ -25,8 +25,14 @@ jobs:
       - name: Golang CI Lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.61.0 # Specify the golangci-lint version, so we are stable
+          version: v1.63.4 # Specify the golangci-lint version, so we are stable
           args: --timeout 10m # Increase the timeout to 10 minutes
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+            terraform_version: "^1.5.5"
+            terraform_wrapper: false
 
       - name: Run make generate-help
         run: |
