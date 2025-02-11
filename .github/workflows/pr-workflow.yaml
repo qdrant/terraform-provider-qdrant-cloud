@@ -20,7 +20,7 @@ jobs:
 
       - name: Setup access for private go modules
         run: |
-          git config --global url.'https://${{ secrets.GH_REPO_READ_TOKEN }}@github.com'.insteadOf 'https://github.com'
+          git config --global url.'https://${{ secrets.GH_TOKEN }}@github.com'.insteadOf 'https://github.com'
 
       - uses: actions/setup-go@v5
         with:
