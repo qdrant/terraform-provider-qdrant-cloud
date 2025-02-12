@@ -17,7 +17,7 @@ LATEST_TAG := $(shell git describe --tags `git rev-list --tags --max-count=1`)
 print-latest-tag:
 	@echo "The latest tag is $(LATEST_TAG)"
 
-.PHONY: testacc generate-client
+.PHONY: test
 # Run acceptance tests
 test:
 ifndef QDRANT_CLOUD_API_KEY
@@ -34,12 +34,6 @@ requirements:
 
 build: requirements
 	goreleaser release --snapshot --clean
-
-.PHONY: update-go-client
-update-go-client:
-	rm -r ./internal/client
-	mkdir ./internal/client
-	cp -R -v ../qdrant-cloud-cluster-api/pypi/go-client-programmatic-access/* ./internal/client
 
 install: build
 	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}
