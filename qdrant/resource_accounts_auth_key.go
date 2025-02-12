@@ -145,7 +145,7 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
-	// Deelte the key
+	// Delete the key
 	var header metadata.MD
 	_, err = client.DeleteApiKey(clientCtx, &qcAuth.DeleteApiKeyRequest{
 		AccountId: accountUUID.String(),
