@@ -28,10 +28,10 @@ func Provider() *schema.Provider {
 				Description: "The API Key for Qdrant Cloud API operations.",     // Description of the API key usage.
 			},
 			"api_url": {
-				Type:        schema.TypeString,                                                        // Data type of the API URL.
-				Optional:    true,                                                                     // API URL is an optional field, with a default provided.
-				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "https://cloud.qdrant.io"), // Default API URL.
-				Description: "The URL of the Qdrant Cloud API.",                                       // Description of the API URL.
+				Type:        schema.TypeString,                                                             // Data type of the API URL.
+				Optional:    true,                                                                          // API URL is an optional field, with a default provided.
+				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "https://grpc.cloud.qdrant.io"), // Default API URL.
+				Description: "The URL of the Qdrant Cloud API.",                                            // Description of the API URL.
 			},
 			"account_id": {
 				Type:        schema.TypeString,
