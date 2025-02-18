@@ -20,9 +20,13 @@ const (
 	requestIDHeaderField = "x-qd-request-id"
 )
 
-// getRequestID fetches the Request ID from the current HTTP Response (or an empty string if not available).
+// getRequestID fetches the humanized Request ID from the current HTTP Response (or an empty string if not available).
 func getRequestID(header metadata.MD) string {
-	return fmt.Sprintf(" [%s]", strings.Join(header.Get(requestIDHeaderField), "-"))
+	reqIDs := header.Get(requestIDHeaderField)
+	if len(reqIDs) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(" [%s]", strings.Join(reqIDs, "-"))
 }
 
 // getClientConnection creates a client connection from the provided interface.
