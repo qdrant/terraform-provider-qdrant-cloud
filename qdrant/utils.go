@@ -37,6 +37,9 @@ func getClientConnection(ctx context.Context, m interface{}) (*grpc.ClientConn, 
 	if !ok {
 		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: provided interface cannot be casted to ClientConfig"))
 	}
+	if clientConfig.BaseURL == "" {
+		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: provided ClientConfig.BaseURL not set"))
+	}
 	// Set up a connection to the server.
 	tc := credentials.NewTLS(&tls.Config{})
 	conn, err := grpc.NewClient(clientConfig.BaseURL, grpc.WithTransportCredentials(tc))

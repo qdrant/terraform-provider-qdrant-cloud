@@ -28,10 +28,10 @@ func Provider() *schema.Provider {
 				Description: "The API Key for Qdrant Cloud API operations.",     // Description of the API key usage.
 			},
 			"api_url": {
-				Type:        schema.TypeString,                                                             // Data type of the API URL.
-				Optional:    true,                                                                          // API URL is an optional field, with a default provided.
-				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "https://grpc.cloud.qdrant.io"), // Default API URL.
-				Description: "The URL of the Qdrant Cloud API.",                                            // Description of the API URL.
+				Type:        schema.TypeString,                                                     // Data type of the API URL.
+				Optional:    true,                                                                  // API URL is an optional field, with a default provided.
+				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "grpc.cloud.qdrant.io"), // Default API URL.
+				Description: "The URL of the Qdrant Cloud API.",                                    // Description of the API URL.
 			},
 			"account_id": {
 				Type:        schema.TypeString,
@@ -79,7 +79,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	// Validate that the API URL is not empty, returning an error diagnostic if it is.
 	if strings.TrimSpace(apiURL) == "" {
-		apiURL = "https://cloud.qdrant.io/public/v1"
+		apiURL = "grpc.cloud.qdrant.io"
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Warning,
 			Summary:  "Using default URL",

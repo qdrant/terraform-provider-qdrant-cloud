@@ -50,3 +50,8 @@ generate-help:
 .PHONY: checksum
 checksum:
 	find bin -type f -exec sha256sum {} \; > checksums.txt
+
+local-build:
+	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}
+	go build
+	cp ${BINARY} ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
