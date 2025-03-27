@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/auth/v2"
+	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v2"
 )
 
 func TestFlattenAuthKeySchema(t *testing.T) {
@@ -52,12 +52,12 @@ func TestFlattenAuthKeySchema(t *testing.T) {
 
 func TestFlattenCreateAuthKey(t *testing.T) {
 	createdAt := timestamppb.New(time.Now())
-	key := &qcAuth.ApiKey{
+	key := &qcAuth.DatabaseApiKey{
 		Id:         "10000000-0000-0000-0000-000000000002",
 		CreatedAt:  createdAt,
 		ClusterIds: []string{"10000000-0000-0000-0003-000000000002"},
 		Prefix:     "prefix3",
-		Token:      "token3",
+		Key:        "token3",
 	}
 
 	expected := map[string]interface{}{

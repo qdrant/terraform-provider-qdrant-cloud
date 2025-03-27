@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/auth/v2"
+	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v2"
 )
 
 // dataSourceAccountsAuthKeys constructs a Terraform resource for managing the reading of API keys associated with an account.
@@ -36,7 +36,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diagnostics
 	}
 	// Get a client
-	client := qcAuth.NewAuthServiceClient(apiClientConn)
+	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -44,7 +44,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 	}
 	// List the API Keys for the provided account
 	var header metadata.MD
-	resp, err := client.ListApiKeys(clientCtx, &qcAuth.ListApiKeysRequest{
+	resp, err := client.ListDatabaseApiKeys(clientCtx, &qcAuth.ListDatabaseApiKeysRequest{
 		AccountId: accountUUID.String(),
 	}, grpc.Header(&header))
 	// enrich prefix with request ID

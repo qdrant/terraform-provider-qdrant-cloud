@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 
-	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/auth/v2"
+	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v2"
 )
 
 // resourceAccountsAuthKey constructs a Terraform resource for managing an API keys associated with an account.
@@ -37,7 +37,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 		return diagnostics
 	}
 	// Get a client
-	client := qcAuth.NewAuthServiceClient(apiClientConn)
+	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -47,7 +47,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Execute the request and handle the response
 	var header metadata.MD
-	resp, err := client.ListApiKeys(clientCtx, &qcAuth.ListApiKeysRequest{
+	resp, err := client.ListDatabaseApiKeys(clientCtx, &qcAuth.ListDatabaseApiKeysRequest{
 		AccountId: accountUUID.String(),
 	}, grpc.Header(&header))
 	// enrich prefix with request ID
@@ -85,7 +85,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diagnostics
 	}
 	// Get a client
-	client := qcAuth.NewAuthServiceClient(apiClientConn)
+	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -103,8 +103,8 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 	// Create the request body
 	var header metadata.MD
-	resp, err := client.CreateApiKey(clientCtx, &qcAuth.CreateApiKeyRequest{
-		ApiKey: &qcAuth.ApiKey{
+	resp, err := client.CreateDatabaseApiKey(clientCtx, &qcAuth.CreateDatabaseApiKeyRequest{
+		DatabaseApiKey: &qcAuth.DatabaseApiKey{
 			AccountId:  accountUUID.String(),
 			ClusterIds: clusterIDs,
 		},
@@ -115,13 +115,13 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Flatten cluster and store in Terraform state
-	for k, v := range flattenAuthKey(resp.GetApiKey()) {
+	for k, v := range flattenAuthKey(resp.GetDatabaseApiKey()) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
 	// Set the ID
-	d.SetId(resp.GetApiKey().GetId())
+	d.SetId(resp.GetDatabaseApiKey().GetId())
 	return nil
 }
 
@@ -137,7 +137,7 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		return diagnostics
 	}
 	// Get a client
-	client := qcAuth.NewAuthServiceClient(apiClientConn)
+	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -147,9 +147,9 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Delete the key
 	var header metadata.MD
-	_, err = client.DeleteApiKey(clientCtx, &qcAuth.DeleteApiKeyRequest{
-		AccountId: accountUUID.String(),
-		ApiKeyId:  apiKeyID,
+	_, err = client.DeleteDatabaseApiKey(clientCtx, &qcAuth.DeleteDatabaseApiKeyRequest{
+		AccountId:        accountUUID.String(),
+		DatabaseApiKeyId: apiKeyID,
 	}, grpc.Header(&header))
 	// enrich prefix with request ID
 	errorPrefix += getRequestID(header)
