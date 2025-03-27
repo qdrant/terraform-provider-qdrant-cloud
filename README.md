@@ -5,7 +5,7 @@ This is a Terraform provider for Qdrant Cloud, which is the DBaaS solution for Q
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 1.7.x+
-- [Go](https://golang.org/doc/install) 1.22+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.24+ (to build the provider plugin)
 - [`swagger-codegen`](https://swagger.io/tools/swagger-codegen/)
   `brew install swagger-codegen`
 
