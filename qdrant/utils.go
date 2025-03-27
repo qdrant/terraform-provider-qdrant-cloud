@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	requestIDHeaderField = "x-qd-request-id"
+	requestIDHeaderField = "qc-trace-id"
 )
 
 // getRequestID fetches the humanized Request ID from the current HTTP Response (or an empty string if not available).
