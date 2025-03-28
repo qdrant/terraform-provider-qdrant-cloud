@@ -12,20 +12,20 @@ import (
 
 func TestFlattenAuthKeySchema(t *testing.T) {
 	createdAt := timestamppb.New(time.Now())
-	keys := []*qcAuth.ApiKey{
+	keys := []*qcAuth.DatabaseApiKey{
 		{
 			Id:         "00000000-0000-0000-0000-000000000001",
 			CreatedAt:  createdAt,
 			ClusterIds: []string{"00000000-0000-0000-0001-000000000001", "00000000-0000-0000-0002-000000000001"},
 			Prefix:     "prefix1",
-			Token:      "token1",
+			Key:        "token1",
 		},
 		{
 			Id:         "00000000-0000-0000-0000-000000000002",
 			CreatedAt:  createdAt,
 			ClusterIds: []string{"00000000-0000-0000-0003-000000000002"},
 			Prefix:     "prefix2",
-			Token:      "token2",
+			Key:        "token2",
 		},
 	}
 
