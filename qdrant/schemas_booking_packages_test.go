@@ -3,21 +3,20 @@ package qdrant
 import (
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v2"
 )
 
 func TestFlattenPackages(t *testing.T) {
-	packages := []qc.PackageSchema{
+	packages := []*qcBooking.Package{
 		{
-			Id:   uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+			Id:   "00000000-0000-0000-0000-000000000001",
 			Name: "packageName1",
 
 			Currency:            "USD",
-			UnitIntPricePerHour: newPointer(10),
-			ResourceConfigurations: []qc.ResourceConfigurationSchema{
+			UnitIntPricePerHour: 10,
+			ResourceConfigurations: []*qcBooking.ResourceConfiguration{
 				{
 					Amount:       1,
 					ResourceType: "type1",
@@ -26,11 +25,11 @@ func TestFlattenPackages(t *testing.T) {
 			},
 		},
 		{
-			Id:                  uuid.MustParse("00000000-0000-0000-0000-000000000002"),
+			Id:                  "00000000-0000-0000-0000-000000000002",
 			Name:                "packageName2",
 			Currency:            "EUR",
-			UnitIntPricePerHour: newPointer(20),
-			ResourceConfigurations: []qc.ResourceConfigurationSchema{
+			UnitIntPricePerHour: 20,
+			ResourceConfigurations: []*qcBooking.ResourceConfiguration{
 				{
 					Amount:       2,
 					ResourceType: "type2",
@@ -73,7 +72,7 @@ func TestFlattenPackages(t *testing.T) {
 }
 
 func TestFlattenResourceConfiguration(t *testing.T) {
-	rcs := []qc.ResourceConfigurationSchema{
+	rcs := []*qcBooking.ResourceConfiguration{
 		{
 			Amount:       1,
 			ResourceType: "type1",
