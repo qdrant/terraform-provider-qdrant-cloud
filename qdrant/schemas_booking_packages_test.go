@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v2"
+	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v1"
 )
 
 func TestFlattenPackages(t *testing.T) {
@@ -16,12 +16,10 @@ func TestFlattenPackages(t *testing.T) {
 
 			Currency:            "USD",
 			UnitIntPricePerHour: 10,
-			ResourceConfigurations: []*qcBooking.ResourceConfiguration{
-				{
-					Amount:       1,
-					ResourceType: "type1",
-					ResourceUnit: "unit1",
-				},
+			ResourceConfiguration: &qcBooking.ResourceConfiguration{
+				Ram:  "ram_1",
+				Cpu:  "cpu_1",
+				Disk: "disk_1",
 			},
 		},
 		{
@@ -29,12 +27,10 @@ func TestFlattenPackages(t *testing.T) {
 			Name:                "packageName2",
 			Currency:            "EUR",
 			UnitIntPricePerHour: 20,
-			ResourceConfigurations: []*qcBooking.ResourceConfiguration{
-				{
-					Amount:       2,
-					ResourceType: "type2",
-					ResourceUnit: "unit2",
-				},
+			ResourceConfiguration: &qcBooking.ResourceConfiguration{
+				Ram:  "ram_2",
+				Cpu:  "cpu_2",
+				Disk: "disk_2",
 			},
 		},
 	}
@@ -45,12 +41,10 @@ func TestFlattenPackages(t *testing.T) {
 			fieldName:                "packageName1",
 			fieldCurrency:            "USD",
 			fieldUnitIntPricePerHour: 10,
-			fieldResourceConfigurations: []interface{}{
-				map[string]interface{}{
-					fieldAmount:       1,
-					fieldResourceType: "type1",
-					fieldResourceUnit: "unit1",
-				},
+			fieldResourceConfiguration: map[string]interface{}{
+				fieldResourceRam:  "ram_1",
+				fieldResourceCpu:  "cpu_1",
+				fieldResourceDisk: "disk_1",
 			},
 		},
 		map[string]interface{}{
@@ -58,12 +52,10 @@ func TestFlattenPackages(t *testing.T) {
 			fieldName:                "packageName2",
 			fieldCurrency:            "EUR",
 			fieldUnitIntPricePerHour: 20,
-			fieldResourceConfigurations: []interface{}{
-				map[string]interface{}{
-					fieldAmount:       2,
-					fieldResourceType: "type2",
-					fieldResourceUnit: "unit2",
-				},
+			fieldResourceConfiguration: map[string]interface{}{
+				fieldResourceRam:  "ram_2",
+				fieldResourceCpu:  "cpu_2",
+				fieldResourceDisk: "disk_2",
 			},
 		},
 	}
@@ -72,31 +64,18 @@ func TestFlattenPackages(t *testing.T) {
 }
 
 func TestFlattenResourceConfiguration(t *testing.T) {
-	rcs := []*qcBooking.ResourceConfiguration{
-		{
-			Amount:       1,
-			ResourceType: "type1",
-			ResourceUnit: "unit1",
-		},
-		{
-			Amount:       2,
-			ResourceType: "type2",
-			ResourceUnit: "unit2",
-		},
+	rcs := &qcBooking.ResourceConfiguration{
+		Ram:  "ram_3",
+		Cpu:  "cpu_3",
+		Disk: "disk_3",
 	}
 
-	expected := []interface{}{
+	expected :=
 		map[string]interface{}{
-			fieldAmount:       1,
-			fieldResourceType: "type1",
-			fieldResourceUnit: "unit1",
-		},
-		map[string]interface{}{
-			fieldAmount:       2,
-			fieldResourceType: "type2",
-			fieldResourceUnit: "unit2",
-		},
-	}
+			fieldResourceRam:  "ram_3",
+			fieldResourceCpu:  "cpu_3",
+			fieldResourceDisk: "disk_3",
+		}
 
-	assert.Equal(t, expected, flattenResourceConfigurations(rcs))
+	assert.Equal(t, expected, flattenResourceConfiguration(rcs))
 }

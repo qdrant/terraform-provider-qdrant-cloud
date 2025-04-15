@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v2"
+	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
 )
 
 const (
@@ -34,6 +34,15 @@ const (
 	resourceConfigurationAmountFieldName       = "amount"
 	resourceConfigurationResourceTypeFieldName = "resource_type"
 	resourceConfigurationResourceUnitFieldName = "resource_unit"
+
+	// Backward compatibility
+	fieldAmount       = "amount"
+	fieldResourceType = "resource_type"
+	fieldResourceUnit = "resource_unit"
+
+	descriptionAmount       = "The amount of the resource"
+	descriptionResourceType = "The type of the resource"
+	descriptionResourceUnit = "The unit of the resource"
 )
 
 // accountsClustersSchema defines the schema for a cluster list data-source.
@@ -174,12 +183,37 @@ func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schem
 			Computed:    asDataSource,
 		},
 		resourceConfigurationsFieldName: {
-			Description: descriptionResourceConfigurations,
+			Description: descriptionResourceConfiguration,
 			Type:        schema.TypeList,
 			Optional:    true,
 			Elem: &schema.Resource{
 				Schema: resourceConfigurationsSchema(asDataSource),
 			},
+		},
+	}
+}
+
+// resourceConfigurationsSchema defines the schema structure for resource configurations.
+// This is for backwards compatibility
+func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		fieldAmount: {
+			Description: descriptionAmount,
+			Type:        schema.TypeInt,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		fieldResourceType: {
+			Description: descriptionResourceType,
+			Type:        schema.TypeString,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		fieldResourceUnit: {
+			Description: descriptionResourceUnit,
+			Type:        schema.TypeString,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 	}
 }
