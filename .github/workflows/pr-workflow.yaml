@@ -31,9 +31,6 @@ jobs:
         run: |
           files=$(gofmt -l .) && echo $files && [ -z "$files" ]
 
-      - name: Build dependencies and code
-        run: go build ./...
-
       - name: Golang CI Lint
         uses: golangci/golangci-lint-action@v7
         with:
