@@ -35,7 +35,7 @@ const (
 	resourceConfigurationResourceTypeFieldName = "resource_type"
 	resourceConfigurationResourceUnitFieldName = "resource_unit"
 
-	// Backward compatibility
+	// Backward compatibility.
 	fieldAmount       = "amount"
 	fieldResourceType = "resource_type"
 	fieldResourceUnit = "resource_unit"
@@ -194,7 +194,7 @@ func accountsClusterNodeConfigurationSchema(asDataSource bool) map[string]*schem
 }
 
 // resourceConfigurationsSchema defines the schema structure for resource configurations.
-// This is for backwards compatibility
+// This is for backwards compatibility.
 func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		fieldAmount: {
