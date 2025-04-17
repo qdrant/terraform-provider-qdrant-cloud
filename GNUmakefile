@@ -72,7 +72,7 @@ $(LOCALBIN):
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
-GOLANGCI_LINT_VERSION ?= v2.0.1
+GOLANGCI_LINT_VERSION ?= v2.1.2
 
 .PHONY: bootstrap
 bootstrap: install/golangci-lint ## Install required dependencies to work with this project
