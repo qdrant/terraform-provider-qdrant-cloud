@@ -14,8 +14,10 @@ const (
 	fieldPackages              = "packages"
 	fieldID                    = "id"
 	fieldName                  = "name"
+	fieldType                  = "type"
 	fieldCurrency              = "currency"
 	fieldUnitIntPricePerHour   = "unit_int_price_per_hour"
+	fieldStatus                = "status"
 	fieldResourceConfiguration = "resource_configuration"
 	fieldResourceRam           = "ram"
 	fieldResourceCpu           = "cpu"
@@ -25,8 +27,10 @@ const (
 	descriptionPackages              = "List of packages"
 	descriptionID                    = "The ID of the package"
 	descriptionName                  = "The name of the package"
+	descriptionType                  = "The type of the package"
 	descriptionCurrency              = "The currency of the package prices"
 	descriptionUnitIntPricePerHour   = "The unit price per hour in integer format"
+	descriptionStatus                = "The status of the package"
 	descriptionResourceConfiguration = "The resource configuration of the package"
 	descriptionResourceRam           = "The amount of RAM (e.g., '1GiB')"
 	descriptionResourceCpu           = "The amount of CPU (e.g., '1000m' (1 vCPU))"
@@ -72,6 +76,11 @@ func packageSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
+		fieldType: {
+			Description: descriptionType,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
 		fieldCurrency: {
 			Description: descriptionCurrency,
 			Type:        schema.TypeString,
@@ -89,6 +98,11 @@ func packageSchema() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: resourceConfigurationSchema(true),
 			},
+		},
+		fieldStatus: {
+			Description: descriptionStatus,
+			Type:        schema.TypeString,
+			Computed:    true,
 		},
 	}
 }
@@ -124,9 +138,11 @@ func flattenPackages(packages []*qcBooking.Package) []interface{} {
 		flattenedPackages = append(flattenedPackages, map[string]interface{}{
 			fieldID:                    p.GetId(),
 			fieldName:                  p.GetName(),
+			fieldType:                  p.GetType(),
 			fieldCurrency:              p.GetCurrency(),
 			fieldUnitIntPricePerHour:   int(p.GetUnitIntPricePerHour()),
 			fieldResourceConfiguration: flattenResourceConfiguration(p.GetResourceConfiguration()),
+			fieldStatus:                p.GetStatus().String(),
 		})
 	}
 	return flattenedPackages
