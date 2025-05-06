@@ -76,10 +76,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	// Set required version to 'latest' if not provided
-	if cluster.GetConfiguration().GetVersion() == "" {
-		cluster.GetConfiguration().Version = "latest"
-	}
 	// Create the cluster
 	var header metadata.MD
 	resp, err := client.CreateCluster(clientCtx, &qcCluster.CreateClusterRequest{

@@ -42,9 +42,9 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	// Get all packages
 	var header metadata.MD
 	resp, err := client.ListPackages(clientCtx, &qcBooking.ListPackagesRequest{
-		AccountId:     accountUUID.String(),
-		CloudProvider: newPointer(d.Get("cloud_provider").(string)),
-		CloudRegion:   d.Get("cloud_region").(string),
+		AccountId:             accountUUID.String(),
+		CloudProviderId:       newPointer(d.Get("cloud_provider").(string)),
+		CloudProviderRegionId: newPointer(d.Get("cloud_region").(string)),
 	}, grpc.Header(&header))
 	// enrich prefix with request ID
 	errorPrefix += getRequestID(header)

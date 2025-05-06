@@ -232,11 +232,11 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 	cloudRegion := d.Get(clusterCloudRegionFieldName)
 
 	cluster := &qcCluster.Cluster{
-		Id:            id.(string),
-		Name:          name.(string),
-		CloudProvider: cloudProvider.(string),
-		CloudRegion:   cloudRegion.(string),
-		AccountId:     accountID,
+		Id:                    id.(string),
+		Name:                  name.(string),
+		CloudProviderId:       cloudProvider.(string),
+		CloudProviderRegionId: cloudRegion.(string),
+		AccountId:             accountID,
 	}
 	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
 		cluster.DeletedAt = parseTime(v.(string))
@@ -246,8 +246,8 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 	}
 	if v, ok := d.GetOk(clusterPrivateRegionIDFieldName); ok {
 		// Note this field has been merged with cloud-region (if provider indicates hybrid cloud)
-		if cluster.CloudProvider == hybridCloudClusterID {
-			cluster.CloudRegion = v.(string)
+		if cluster.CloudProviderId == hybridCloudClusterID {
+			cluster.CloudProviderRegionId = v.(string)
 		}
 	}
 	if v, ok := d.GetOk(configurationFieldName); ok {
@@ -272,7 +272,7 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 			config.NumberOfNodes = uint32(v.(int))
 		}
 		if v, ok := item[clusterVersionFieldName]; ok {
-			config.Version = v.(string)
+			config.Version = newPointer(v.(string))
 		}
 		if v, ok := item[nodeConfigurationFieldName]; ok {
 			packageId, additionalResources := expandNodeConfiguration(v.([]interface{}))
@@ -347,17 +347,17 @@ func flattenClusters(clusters []*qcCluster.Cluster) []interface{} {
 // flattenCluster creates a map from a cluster for easy storage in Terraform.
 func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 	var privateRegionIdStr string
-	if cluster.CloudProvider == hybridCloudClusterID {
+	if cluster.CloudProviderId == hybridCloudClusterID {
 		// For backewards compatibility extract the region ID into separate field.
-		privateRegionIdStr = cluster.GetCloudRegion()
+		privateRegionIdStr = cluster.GetCloudProviderRegionId()
 	}
 	return map[string]interface{}{
 		clusterIdentifierFieldName:          cluster.GetId(),
 		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
 		clusterAccountIDFieldName:           cluster.GetAccountId(),
 		clusterNameFieldName:                cluster.GetName(),
-		clusterCloudProviderFieldName:       cluster.GetCloudProvider(),
-		clusterCloudRegionFieldName:         cluster.GetCloudRegion(),
+		clusterCloudProviderFieldName:       cluster.GetCloudProviderId(),
+		clusterCloudRegionFieldName:         cluster.GetCloudProviderRegionId(),
 		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
 		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),

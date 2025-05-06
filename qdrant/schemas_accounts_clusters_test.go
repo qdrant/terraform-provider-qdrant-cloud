@@ -14,15 +14,15 @@ import (
 
 func TestResourceClusterFlatten(t *testing.T) {
 	cluster := &qcCluster.Cluster{
-		Id:            "00000000-0000-0000-0000-000000000001",
-		CreatedAt:     timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
-		AccountId:     "00000000-1000-0000-0000-000000000001",
-		Name:          "testName",
-		CloudProvider: "Azure",
-		CloudRegion:   "Uksouth",
-		DeletedAt:     timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Id:                    "00000000-0000-0000-0000-000000000001",
+		CreatedAt:             timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId:             "00000000-1000-0000-0000-000000000001",
+		Name:                  "testName",
+		CloudProviderId:       "Azure",
+		CloudProviderRegionId: "Uksouth",
+		DeletedAt:             timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Configuration: &qcCluster.ClusterConfiguration{
-			Version:       "v1.0",
+			Version:       newPointer("v1.0"),
 			NumberOfNodes: 5,
 			PackageId:     "00000009-1000-0000-0000-000000000001",
 			AdditionalResources: &qcCluster.AdditionalResources{
@@ -43,8 +43,8 @@ func TestResourceClusterFlatten(t *testing.T) {
 		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
 		clusterAccountIDFieldName:           cluster.GetAccountId(),
 		clusterNameFieldName:                cluster.GetName(),
-		clusterCloudProviderFieldName:       cluster.GetCloudProvider(),
-		clusterCloudRegionFieldName:         cluster.GetCloudRegion(),
+		clusterCloudProviderFieldName:       cluster.GetCloudProviderId(),
+		clusterCloudRegionFieldName:         cluster.GetCloudProviderRegionId(),
 		clusterPrivateRegionIDFieldName:     "",
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
 		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),
@@ -73,15 +73,15 @@ func TestResourceClusterFlatten(t *testing.T) {
 
 func TestExpandCluster(t *testing.T) {
 	expected := &qcCluster.Cluster{
-		Id:            "00000000-0000-0000-0000-000000000001",
-		CreatedAt:     timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
-		AccountId:     "00000000-1000-0000-0000-000000000001",
-		Name:          "testName",
-		CloudProvider: "Azure",
-		CloudRegion:   "Uksouth",
-		DeletedAt:     timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
+		Id:                    "00000000-0000-0000-0000-000000000001",
+		CreatedAt:             timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId:             "00000000-1000-0000-0000-000000000001",
+		Name:                  "testName",
+		CloudProviderId:       "Azure",
+		CloudProviderRegionId: "Uksouth",
+		DeletedAt:             timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Configuration: &qcCluster.ClusterConfiguration{
-			Version:       "v1.0",
+			Version:       newPointer("v1.0"),
 			NumberOfNodes: 5,
 			PackageId:     "00000009-1000-0000-0000-000000000001",
 			AdditionalResources: &qcCluster.AdditionalResources{
@@ -100,8 +100,8 @@ func TestExpandCluster(t *testing.T) {
 		clusterCreatedAtFieldName:           formatTime(expected.GetCreatedAt()),
 		clusterAccountIDFieldName:           expected.GetAccountId(),
 		clusterNameFieldName:                expected.GetName(),
-		clusterCloudProviderFieldName:       expected.GetCloudProvider(),
-		clusterCloudRegionFieldName:         expected.GetCloudRegion(),
+		clusterCloudProviderFieldName:       expected.GetCloudProviderId(),
+		clusterCloudRegionFieldName:         expected.GetCloudProviderRegionId(),
 		clusterPrivateRegionIDFieldName:     "",
 		clusterMarkedForDeletionAtFieldName: formatTime(expected.GetDeletedAt()),
 		clusterURLFieldName:                 expected.GetState().GetEndpoint().GetUrl(),
