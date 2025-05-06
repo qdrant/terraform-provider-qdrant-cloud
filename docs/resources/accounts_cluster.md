@@ -100,7 +100,7 @@ Required:
 
 Optional:
 
-- `resource_configurations` (Block List) The resource configurations of the package (see [below for nested schema](#nestedblock--configuration--node_configuration--resource_configurations))
+- `resource_configurations` (Block List) The resource configuration of the package (see [below for nested schema](#nestedblock--configuration--node_configuration--resource_configurations))
 
 <a id="nestedblock--configuration--node_configuration--resource_configurations"></a>
 ### Nested Schema for `configuration.node_configuration.resource_configurations`

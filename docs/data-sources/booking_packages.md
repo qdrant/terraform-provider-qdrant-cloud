@@ -63,14 +63,16 @@ Read-Only:
 - `currency` (String)
 - `id` (String)
 - `name` (String)
-- `resource_configurations` (List of Object) (see [below for nested schema](#nestedobjatt--packages--resource_configurations))
+- `resource_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--packages--resource_configuration))
+- `status` (String)
+- `type` (String)
 - `unit_int_price_per_hour` (Number)
 
-<a id="nestedobjatt--packages--resource_configurations"></a>
-### Nested Schema for `packages.resource_configurations`
+<a id="nestedobjatt--packages--resource_configuration"></a>
+### Nested Schema for `packages.resource_configuration`
 
 Read-Only:
 
-- `amount` (Number)
-- `resource_type` (String)
-- `resource_unit` (String)
+- `cpu` (String)
+- `disk` (String)
+- `ram` (String)
