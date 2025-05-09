@@ -170,8 +170,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.2.3 h1:NP0eAhjcjImqslEwo/1hq7gpajME0fTLTezBKDqfXqo=
 github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSgv7Sy7s/s=
-github.com/qdrant/qdrant-cloud-public-api v0.3.0 h1:udkipCiUMAZDiPDNS0Tlm/wyrHMyyxm6TxJyY575/tI=
-github.com/qdrant/qdrant-cloud-public-api v0.3.0/go.mod h1:TtciEbQcw6j+psZsCLXJPT4c8zAtoH2xI5hbRZLd2wU=
+github.com/qdrant/qdrant-cloud-public-api v0.4.0 h1:ETjr7yBiqbCYT4XaRoxTqnIZlHYsN83uwtO/6sR1Z+8=
+github.com/qdrant/qdrant-cloud-public-api v0.4.0/go.mod h1:TtciEbQcw6j+psZsCLXJPT4c8zAtoH2xI5hbRZLd2wU=
 github.com/rivo/uniseg v0.2.0 h1:S1pD9weZBuJdFmowNwbpi7BJ8TNftyUImj/0WQi72jY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
