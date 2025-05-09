@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v1"
 )
 
 const (
@@ -79,7 +79,7 @@ func accountsAuthKeySchema() map[string]*schema.Schema {
 }
 
 // flattenAuthKeys flattens the API keys response into a slice of map[string]interface{}.
-func flattenAuthKeys(keys []qc.ApiKeySchema) []interface{} {
+func flattenAuthKeys(keys []*qcAuth.DatabaseApiKey) []interface{} {
 	var flattenedKeys []interface{}
 	for _, key := range keys {
 		flattenedKeys = append(flattenedKeys, flattenAuthKey(key))
@@ -88,13 +88,13 @@ func flattenAuthKeys(keys []qc.ApiKeySchema) []interface{} {
 }
 
 // flattenAuthKey flattens the API key response into a slice of map[string]interface{}.
-func flattenAuthKey(key qc.ApiKeySchema) map[string]interface{} {
+func flattenAuthKey(key *qcAuth.DatabaseApiKey) map[string]interface{} {
 	result := map[string]interface{}{
-		authKeysKeysIDFieldName:         key.Id.String(),
-		authKeysKeysCreatedAtFieldName:  formatTime(key.CreatedAt),
-		authKeysKeysClusterIDsFieldName: uuidArrayAsStringArray(key.ClusterIds),
-		authKeysKeysPrefixFieldName:     derefPointer(key.Prefix),
-		authKeysKeysTokenFieldName:      derefPointer(key.Token),
+		authKeysKeysIDFieldName:         key.GetId(),
+		authKeysKeysCreatedAtFieldName:  formatTime(key.GetCreatedAt()),
+		authKeysKeysClusterIDsFieldName: key.GetClusterIds(),
+		authKeysKeysPrefixFieldName:     key.GetPrefix(),
+		authKeysKeysTokenFieldName:      key.GetKey(),
 	}
 	return result
 }

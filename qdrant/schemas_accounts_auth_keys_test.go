@@ -4,28 +4,28 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v1"
 )
 
 func TestFlattenAuthKeySchema(t *testing.T) {
-	createdAt := time.Now()
-	keys := []qc.ApiKeySchema{
+	createdAt := timestamppb.New(time.Now())
+	keys := []*qcAuth.DatabaseApiKey{
 		{
-			Id:         newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000001")),
-			CreatedAt:  newPointer(createdAt),
-			ClusterIds: []uuid.UUID{uuid.MustParse("00000000-0000-0000-0001-000000000001"), uuid.MustParse("00000000-0000-0000-0002-000000000001")},
-			Prefix:     newPointer("prefix1"),
-			Token:      newPointer("token1"),
+			Id:         "00000000-0000-0000-0000-000000000001",
+			CreatedAt:  createdAt,
+			ClusterIds: []string{"00000000-0000-0000-0001-000000000001", "00000000-0000-0000-0002-000000000001"},
+			Prefix:     "prefix1",
+			Key:        "token1",
 		},
 		{
-			Id:         newPointer(uuid.MustParse("00000000-0000-0000-0000-000000000002")),
-			CreatedAt:  newPointer(createdAt),
-			ClusterIds: []uuid.UUID{uuid.MustParse("00000000-0000-0000-0003-000000000002")},
-			Prefix:     newPointer("prefix2"),
-			Token:      newPointer("token2"),
+			Id:         "00000000-0000-0000-0000-000000000002",
+			CreatedAt:  createdAt,
+			ClusterIds: []string{"00000000-0000-0000-0003-000000000002"},
+			Prefix:     "prefix2",
+			Key:        "token2",
 		},
 	}
 
@@ -51,13 +51,13 @@ func TestFlattenAuthKeySchema(t *testing.T) {
 }
 
 func TestFlattenCreateAuthKey(t *testing.T) {
-	createdAt := time.Now()
-	key := qc.ApiKeySchema{
-		Id:         newPointer(uuid.MustParse("10000000-0000-0000-0000-000000000002")),
-		CreatedAt:  newPointer(createdAt),
-		ClusterIds: []uuid.UUID{uuid.MustParse("10000000-0000-0000-0003-000000000002")},
-		Prefix:     newPointer("prefix3"),
-		Token:      newPointer("token3"),
+	createdAt := timestamppb.New(time.Now())
+	key := &qcAuth.DatabaseApiKey{
+		Id:         "10000000-0000-0000-0000-000000000002",
+		CreatedAt:  createdAt,
+		ClusterIds: []string{"10000000-0000-0000-0003-000000000002"},
+		Prefix:     "prefix3",
+		Key:        "token3",
 	}
 
 	expected := map[string]interface{}{
