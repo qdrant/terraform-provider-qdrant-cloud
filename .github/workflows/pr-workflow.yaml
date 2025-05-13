@@ -4,6 +4,9 @@ on:
     types: [ synchronize, opened, reopened]
     branches: [ 'main' ]
 
+env:
+  GOPRIVATE: github.com/qdrant/qdrant-cloud-public-api
+
 jobs:
   linter:
     name: Linter
@@ -12,6 +15,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup access for private go modules
+        run: |
+          git config --global url.'https://${{ secrets.GH_TOKEN }}@github.com'.insteadOf 'https://github.com'
 
       - uses: actions/setup-go@v5
         with:

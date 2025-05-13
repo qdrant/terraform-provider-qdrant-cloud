@@ -5,32 +5,36 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	qc "github.com/qdrant/terraform-provider-qdrant-cloud/v1/internal/client"
+	qcBooking "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/booking/v1"
 )
 
 // Constant keys and descriptions for schema fields.
 const (
 	// Field keys.
-	fieldPackages               = "packages"
-	fieldID                     = "id"
-	fieldName                   = "name"
-	fieldCurrency               = "currency"
-	fieldUnitIntPricePerHour    = "unit_int_price_per_hour"
-	fieldResourceConfigurations = "resource_configurations"
-	fieldAmount                 = "amount"
-	fieldResourceType           = "resource_type"
-	fieldResourceUnit           = "resource_unit"
+	fieldPackages              = "packages"
+	fieldID                    = "id"
+	fieldName                  = "name"
+	fieldType                  = "type"
+	fieldCurrency              = "currency"
+	fieldUnitIntPricePerHour   = "unit_int_price_per_hour"
+	fieldStatus                = "status"
+	fieldResourceConfiguration = "resource_configuration"
+	fieldResourceRam           = "ram"
+	fieldResourceCpu           = "cpu"
+	fieldResourceDisk          = "disk"
 
 	// Descriptions.
-	descriptionPackages               = "List of packages"
-	descriptionID                     = "The ID of the package"
-	descriptionName                   = "The name of the package"
-	descriptionCurrency               = "The currency of the package prices"
-	descriptionUnitIntPricePerHour    = "The unit price per hour in integer format"
-	descriptionResourceConfigurations = "The resource configurations of the package"
-	descriptionAmount                 = "The amount of the resource"
-	descriptionResourceType           = "The type of the resource"
-	descriptionResourceUnit           = "The unit of the resource"
+	descriptionPackages              = "List of packages"
+	descriptionID                    = "The ID of the package"
+	descriptionName                  = "The name of the package"
+	descriptionType                  = "The type of the package"
+	descriptionCurrency              = "The currency of the package prices"
+	descriptionUnitIntPricePerHour   = "The unit price per hour in integer format"
+	descriptionStatus                = "The status of the package"
+	descriptionResourceConfiguration = "The resource configuration of the package"
+	descriptionResourceRam           = "The amount of RAM (e.g., '1GiB')"
+	descriptionResourceCpu           = "The amount of CPU (e.g., '1000m' (1 vCPU))"
+	descriptionResourceDisk          = "The amount of disk (e.g., '100GiB')"
 )
 
 // packagesSchema defines the schema structure for a packages within the Terraform provider.
@@ -72,6 +76,11 @@ func packageSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
+		fieldType: {
+			Description: descriptionType,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
 		fieldCurrency: {
 			Description: descriptionCurrency,
 			Type:        schema.TypeString,
@@ -82,34 +91,39 @@ func packageSchema() map[string]*schema.Schema {
 			Type:        schema.TypeInt,
 			Computed:    true,
 		},
-		fieldResourceConfigurations: {
-			Description: descriptionResourceConfigurations,
+		fieldResourceConfiguration: {
+			Description: descriptionResourceConfiguration,
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Schema: resourceConfigurationsSchema(true),
+				Schema: resourceConfigurationSchema(true),
 			},
+		},
+		fieldStatus: {
+			Description: descriptionStatus,
+			Type:        schema.TypeString,
+			Computed:    true,
 		},
 	}
 }
 
 // resourceConfigurationsSchema defines the schema structure for resource configurations.
-func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
+func resourceConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		fieldAmount: {
-			Description: descriptionAmount,
-			Type:        schema.TypeInt,
-			Required:    !asDataSource,
-			Computed:    asDataSource,
-		},
-		fieldResourceType: {
-			Description: descriptionResourceType,
+		fieldResourceRam: {
+			Description: descriptionResourceRam,
 			Type:        schema.TypeString,
 			Required:    !asDataSource,
 			Computed:    asDataSource,
 		},
-		fieldResourceUnit: {
-			Description: descriptionResourceUnit,
+		fieldResourceCpu: {
+			Description: descriptionResourceCpu,
+			Type:        schema.TypeString,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		fieldResourceDisk: {
+			Description: descriptionResourceDisk,
 			Type:        schema.TypeString,
 			Required:    !asDataSource,
 			Computed:    asDataSource,
@@ -118,29 +132,29 @@ func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 }
 
 // flattenPackages flattens the package data into a format that Terraform can understand.
-func flattenPackages(packages []qc.PackageSchema) []interface{} {
+func flattenPackages(packages []*qcBooking.Package) []interface{} {
 	var flattenedPackages []interface{}
 	for _, p := range packages {
 		flattenedPackages = append(flattenedPackages, map[string]interface{}{
-			fieldID:                     p.Id.String(),
-			fieldName:                   p.Name,
-			fieldCurrency:               string(p.Currency),
-			fieldUnitIntPricePerHour:    derefPointer(p.UnitIntPricePerHour),
-			fieldResourceConfigurations: flattenResourceConfigurations(p.ResourceConfigurations),
+			fieldID:                    p.GetId(),
+			fieldName:                  p.GetName(),
+			fieldType:                  p.GetType(),
+			fieldCurrency:              p.GetCurrency(),
+			fieldUnitIntPricePerHour:   int(p.GetUnitIntPricePerHour()),
+			fieldResourceConfiguration: flattenResourceConfiguration(p.GetResourceConfiguration()),
+			fieldStatus:                p.GetStatus().String(),
 		})
 	}
 	return flattenedPackages
 }
 
-// flattenResourceConfigurations flattens the resource configurations data into a format that Terraform can understand.
-func flattenResourceConfigurations(rcs []qc.ResourceConfigurationSchema) []interface{} {
-	var flattenedResourceConfigurations []interface{}
-	for _, rc := range rcs {
-		flattenedResourceConfigurations = append(flattenedResourceConfigurations, map[string]interface{}{
-			fieldAmount:       rc.Amount,
-			fieldResourceType: string(rc.ResourceType),
-			fieldResourceUnit: string(rc.ResourceUnit),
-		})
+// flattenResourceConfiguration flattens the resource configuration data into a format that Terraform can understand.
+func flattenResourceConfiguration(rc *qcBooking.ResourceConfiguration) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			fieldResourceRam:  rc.GetRam(),
+			fieldResourceCpu:  rc.GetCpu(),
+			fieldResourceDisk: rc.GetDisk(),
+		},
 	}
-	return flattenedResourceConfigurations
 }
