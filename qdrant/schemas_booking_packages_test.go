@@ -77,12 +77,13 @@ func TestFlattenResourceConfiguration(t *testing.T) {
 		Disk: "disk_3",
 	}
 
-	expected :=
+	expected := []interface{}{
 		map[string]interface{}{
 			fieldResourceRam:  "ram_3",
 			fieldResourceCpu:  "cpu_3",
 			fieldResourceDisk: "disk_3",
-		}
+		},
+	}
 
 	assert.Equal(t, expected, flattenResourceConfiguration(rcs))
 }

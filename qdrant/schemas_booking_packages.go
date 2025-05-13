@@ -149,10 +149,12 @@ func flattenPackages(packages []*qcBooking.Package) []interface{} {
 }
 
 // flattenResourceConfiguration flattens the resource configuration data into a format that Terraform can understand.
-func flattenResourceConfiguration(rc *qcBooking.ResourceConfiguration) map[string]interface{} {
-	return map[string]interface{}{
-		fieldResourceRam:  rc.GetRam(),
-		fieldResourceCpu:  rc.GetCpu(),
-		fieldResourceDisk: rc.GetDisk(),
+func flattenResourceConfiguration(rc *qcBooking.ResourceConfiguration) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			fieldResourceRam:  rc.GetRam(),
+			fieldResourceCpu:  rc.GetCpu(),
+			fieldResourceDisk: rc.GetDisk(),
+		},
 	}
 }
