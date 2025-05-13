@@ -272,7 +272,10 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 			config.NumberOfNodes = uint32(v.(int))
 		}
 		if v, ok := item[clusterVersionFieldName]; ok {
-			config.Version = newPointer(v.(string))
+			version := v.(string)
+			if version != "" {
+				config.Version = newPointer(v.(string))
+			}
 		}
 		if v, ok := item[nodeConfigurationFieldName]; ok {
 			packageId, additionalResources := expandNodeConfiguration(v.([]interface{}))
