@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	requestIDHeaderField = "qc-trace-id"
+	requestIDTrailerField = "qc-trace-id"
 )
 
-// getRequestID fetches the humanized Request ID from the current HTTP Response (or an empty string if not available).
-func getRequestID(header metadata.MD) string {
-	reqIDs := header.Get(requestIDHeaderField)
+// getRequestID fetches the humanized Request ID from the provided metadata (or an empty string if not available).
+func getRequestID(metadata metadata.MD) string {
+	reqIDs := metadata.Get(requestIDTrailerField)
 	if len(reqIDs) == 0 {
 		return ""
 	}

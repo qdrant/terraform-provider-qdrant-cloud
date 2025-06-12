@@ -40,14 +40,14 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Get all packages
-	var header metadata.MD
+	var trailer metadata.MD
 	resp, err := client.ListPackages(clientCtx, &qcBooking.ListPackagesRequest{
 		AccountId:             accountUUID.String(),
 		CloudProviderId:       newPointer(d.Get("cloud_provider").(string)),
 		CloudProviderRegionId: newPointer(d.Get("cloud_region").(string)),
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}

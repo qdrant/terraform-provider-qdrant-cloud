@@ -53,12 +53,12 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// List all clusters for the provided account
-	var header metadata.MD
+	var trailer metadata.MD
 	resp, err := client.ListClusters(clientCtx, &qcCluster.ListClustersRequest{
 		AccountId: accountUUID.String(),
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		if d.HasError() {
@@ -96,13 +96,13 @@ func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, 
 	// Get the cluster ID
 	clusterID := d.Get("id").(string)
 	// Fetch the cluster
-	var header metadata.MD
+	var trailer metadata.MD
 	resp, err := client.GetCluster(clientCtx, &qcCluster.GetClusterRequest{
 		AccountId: accountUUID.String(),
 		ClusterId: clusterID,
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
