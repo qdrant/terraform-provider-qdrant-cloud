@@ -43,12 +43,12 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// List the API Keys for the provided account
-	var header metadata.MD
+	var trailer metadata.MD
 	resp, err := client.ListDatabaseApiKeys(clientCtx, &qcAuth.ListDatabaseApiKeysRequest{
 		AccountId: accountUUID.String(),
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	// Handle the response in case of error
 	if err != nil {
 		d := diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))

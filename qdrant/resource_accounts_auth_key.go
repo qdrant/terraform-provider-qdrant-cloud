@@ -46,12 +46,12 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Execute the request and handle the response
-	var header metadata.MD
+	var trailer metadata.MD
 	resp, err := client.ListDatabaseApiKeys(clientCtx, &qcAuth.ListDatabaseApiKeysRequest{
 		AccountId: accountUUID.String(),
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -102,15 +102,15 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 	}
 	// Create the request body
-	var header metadata.MD
+	var trailer metadata.MD
 	resp, err := client.CreateDatabaseApiKey(clientCtx, &qcAuth.CreateDatabaseApiKeyRequest{
 		DatabaseApiKey: &qcAuth.DatabaseApiKey{
 			AccountId:  accountUUID.String(),
 			ClusterIds: clusterIDs,
 		},
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -146,13 +146,13 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	// Get API Key ID
 	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Delete the key
-	var header metadata.MD
+	var trailer metadata.MD
 	_, err = client.DeleteDatabaseApiKey(clientCtx, &qcAuth.DeleteDatabaseApiKeyRequest{
 		AccountId:        accountUUID.String(),
 		DatabaseApiKeyId: apiKeyID,
-	}, grpc.Header(&header))
+	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
-	errorPrefix += getRequestID(header)
+	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
