@@ -43,7 +43,7 @@ func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m inte
 	var trailer metadata.MD
 	resp, err := client.ListPackages(clientCtx, &qcBooking.ListPackagesRequest{
 		AccountId:             accountUUID.String(),
-		CloudProviderId:       newPointer(d.Get("cloud_provider").(string)),
+		CloudProviderId:       d.Get("cloud_provider").(string),
 		CloudProviderRegionId: newPointer(d.Get("cloud_region").(string)),
 	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
