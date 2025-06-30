@@ -26,6 +26,24 @@ const (
 	clusterPrivateRegionIDFieldName            = "private_region_id"
 	clusterMarkedForDeletionAtFieldName        = "marked_for_deletion_at"
 	clusterURLFieldName                        = "url"
+	clusterStatusFieldName                     = "status"
+	clusterStatusVersionFieldName              = "version"
+	clusterStatusNodesUpFieldName              = "nodes_up"
+	clusterStatusRestartedAtFieldName          = "restarted_at"
+	clusterStatusPhaseFieldName                = "phase"
+	clusterStatusReasonFieldName               = "reason"
+	clusterStatusResourcesFieldName            = "resources"
+	clusterStatusScalabilityInfoFieldName      = "scalability_info"
+	clusterNodeResourcesSummaryDiskFieldName   = "disk"
+	clusterNodeResourcesSummaryRamFieldName    = "ram"
+	clusterNodeResourcesSummaryCpuFieldName    = "cpu"
+	clusterNodeResourcesBaseFieldName          = "base"
+	clusterNodeResourcesComplimentaryFieldName = "complimentary"
+	clusterNodeResourcesAdditionalFieldName    = "additional"
+	clusterNodeResourcesReservedFieldName      = "reserved"
+	clusterNodeResourcesAvailableFieldName     = "available"
+	clusterScalabilityInfoStatusFieldName      = "status"
+	clusterScalabilityInfoReasonFieldName      = "reason"
 	configurationFieldName                     = "configuration"
 	nodeConfigurationFieldName                 = "node_configuration"
 	numberOfNodesFieldName                     = "number_of_nodes"
@@ -137,6 +155,14 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 				Schema: accountsClusterConfigurationSchema(asDataSource),
 			},
 		},
+		clusterStatusFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The status of the cluster"),
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: accountsClusterStatusSchema(),
+			},
+		},
 	}
 }
 
@@ -218,6 +244,130 @@ func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 	}
 }
 
+// accountsClusterStatusSchema defines the schema for a cluster status.
+func accountsClusterStatusSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterStatusVersionFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Version of the cluster software"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterStatusNodesUpFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Number of cluster nodes that are up and running"),
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		clusterStatusRestartedAtFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The date and time when the cluster was restarted"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterStatusPhaseFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Current phase of the cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterStatusReasonFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Reason for the current phase of the cluster"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterStatusResourcesFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The resources used by the cluster per node"),
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterNodeResourcesSummarySchema(),
+			},
+		},
+		clusterStatusScalabilityInfoFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Whether the cluster can be scaled up or down"),
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterScalabilityInfoSchema(),
+			},
+		},
+	}
+}
+
+// clusterNodeResourcesSummarySchema defines the schema for a cluster node resources summary.
+func clusterNodeResourcesSummarySchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterNodeResourcesSummaryDiskFieldName: {
+			Description: "Disk resources",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterNodeResourcesSchema(),
+			},
+		},
+		clusterNodeResourcesSummaryRamFieldName: {
+			Description: "Memory resources",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterNodeResourcesSchema(),
+			},
+		},
+		clusterNodeResourcesSummaryCpuFieldName: {
+			Description: "CPU resources",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterNodeResourcesSchema(),
+			},
+		},
+	}
+}
+
+// clusterNodeResourcesSchema defines the schema for a cluster node resources.
+func clusterNodeResourcesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterNodeResourcesBaseFieldName: {
+			Description: "Base resources that are part of the standard allocation for the cluster per node.",
+			Type:        schema.TypeFloat,
+			Computed:    true,
+		},
+		clusterNodeResourcesComplimentaryFieldName: {
+			Description: "Complimentary resources provided to the cluster at no additional cost.",
+			Type:        schema.TypeFloat,
+			Computed:    true,
+		},
+		clusterNodeResourcesAdditionalFieldName: {
+			Description: "Additional resources allocated to the cluster.",
+			Type:        schema.TypeFloat,
+			Computed:    true,
+		},
+		clusterNodeResourcesReservedFieldName: {
+			Description: "The reserved is the amount used by the system, which cannot be used by the database itself.",
+			Type:        schema.TypeFloat,
+			Computed:    true,
+		},
+		clusterNodeResourcesAvailableFieldName: {
+			Description: "The available is the total (base+complimentary+additional) - reserved",
+			Type:        schema.TypeFloat,
+			Computed:    true,
+		},
+	}
+}
+
+// clusterScalabilityInfoSchema defines the schema for a cluster scalability info.
+func clusterScalabilityInfoSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterScalabilityInfoStatusFieldName: {
+			Description: "The current scalability status of the cluster.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterScalabilityInfoReasonFieldName: {
+			Description: "Optional human-readable reason providing more context about the scalability status.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+	}
+}
+
 func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster, error) {
 	// Check if we need to override the default
 	if v, ok := d.GetOk(clusterAccountIDFieldName); ok {
@@ -261,6 +411,7 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 			},
 		}
 	}
+	// The status is a read-only object, so no need to expand it.
 	return cluster, nil
 }
 
@@ -365,6 +516,7 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
 		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),
 		configurationFieldName:              flattenClusterConfiguration(cluster.GetConfiguration()),
+		clusterStatusFieldName:              flattenClusterState(cluster.GetState()),
 	}
 }
 
@@ -401,4 +553,65 @@ func flattenResourceConfigurationsFromAdditionalResources(additionalResources *q
 		})
 	}
 	return flattenedResourceConfigurations
+}
+
+// flattenClusterState creates a map from a cluster state for easy storage in Terraform.
+func flattenClusterState(state *qcCluster.ClusterState) []interface{} {
+	if state == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterStatusVersionFieldName:         state.GetVersion(),
+			clusterStatusNodesUpFieldName:         int(state.GetNodesUp()),
+			clusterStatusRestartedAtFieldName:     formatTime(state.GetRestartedAt()),
+			clusterStatusPhaseFieldName:           state.GetPhase().String(),
+			clusterStatusReasonFieldName:          state.GetReason(),
+			clusterStatusResourcesFieldName:       flattenClusterNodeResourcesSummary(state.GetResources()),
+			clusterStatusScalabilityInfoFieldName: flattenClusterScalabilityInfo(state.GetScalabilityInfo()),
+		},
+	}
+}
+
+// flattenClusterNodeResourcesSummary creates a map from a cluster node resources summary for easy storage in Terraform.
+func flattenClusterNodeResourcesSummary(summary *qcCluster.ClusterNodeResourcesSummary) []interface{} {
+	if summary == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterNodeResourcesSummaryDiskFieldName: flattenClusterNodeResources(summary.GetDisk()),
+			clusterNodeResourcesSummaryRamFieldName:  flattenClusterNodeResources(summary.GetRam()),
+			clusterNodeResourcesSummaryCpuFieldName:  flattenClusterNodeResources(summary.GetCpu()),
+		},
+	}
+}
+
+// flattenClusterNodeResources creates a map from a cluster node resources for easy storage in Terraform.
+func flattenClusterNodeResources(resources *qcCluster.ClusterNodeResources) []interface{} {
+	if resources == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterNodeResourcesBaseFieldName:          resources.GetBase(),
+			clusterNodeResourcesComplimentaryFieldName: resources.GetComplimentary(),
+			clusterNodeResourcesAdditionalFieldName:    resources.GetAdditional(),
+			clusterNodeResourcesReservedFieldName:      resources.GetReserved(),
+			clusterNodeResourcesAvailableFieldName:     resources.GetAvailable(),
+		},
+	}
+}
+
+// flattenClusterScalabilityInfo creates a map from a cluster scalability info for easy storage in Terraform.
+func flattenClusterScalabilityInfo(info *qcCluster.ClusterScalabilityInfo) []interface{} {
+	if info == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterScalabilityInfoStatusFieldName: info.GetStatus().String(),
+			clusterScalabilityInfoReasonFieldName: info.GetReason(),
+		},
+	}
 }

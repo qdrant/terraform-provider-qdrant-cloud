@@ -30,8 +30,22 @@ func TestResourceClusterFlatten(t *testing.T) {
 			},
 		},
 		State: &qcCluster.ClusterState{
+			Version:     "v1.1.1",
+			NodesUp:     5,
+			RestartedAt: timestamppb.New(time.Date(2023, 2, 1, 0, 0, 0, 0, time.UTC)),
+			Phase:       qcCluster.ClusterPhase_CLUSTER_PHASE_HEALTHY,
+			Reason:      "All good",
 			Endpoint: &qcCluster.ClusterEndpoint{
 				Url: "http://example.com",
+			},
+			Resources: &qcCluster.ClusterNodeResourcesSummary{
+				Disk: &qcCluster.ClusterNodeResources{Base: 100, Complimentary: 10, Additional: 8, Reserved: 5, Available: 113},
+				Ram:  &qcCluster.ClusterNodeResources{Base: 8, Complimentary: 1, Additional: 0, Reserved: 0.5, Available: 8.5},
+				Cpu:  &qcCluster.ClusterNodeResources{Base: 4, Complimentary: 0, Additional: 0, Reserved: 0.2, Available: 3.8},
+			},
+			ScalabilityInfo: &qcCluster.ClusterScalabilityInfo{
+				Status: qcCluster.ClusterScalabilityStatus_CLUSTER_SCALABILITY_STATUS_SCALABLE,
+				Reason: newPointer("Can be scaled"),
 			},
 		},
 	}
@@ -48,6 +62,52 @@ func TestResourceClusterFlatten(t *testing.T) {
 		clusterPrivateRegionIDFieldName:     "",
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
 		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),
+		clusterStatusFieldName: []interface{}{
+			map[string]interface{}{
+				clusterStatusVersionFieldName:     cluster.GetState().GetVersion(),
+				clusterStatusNodesUpFieldName:     int(cluster.GetState().GetNodesUp()),
+				clusterStatusRestartedAtFieldName: formatTime(cluster.GetState().GetRestartedAt()),
+				clusterStatusPhaseFieldName:       cluster.GetState().GetPhase().String(),
+				clusterStatusReasonFieldName:      cluster.GetState().GetReason(),
+				clusterStatusResourcesFieldName: []interface{}{
+					map[string]interface{}{
+						clusterNodeResourcesSummaryDiskFieldName: []interface{}{
+							map[string]interface{}{
+								clusterNodeResourcesBaseFieldName:          100.0,
+								clusterNodeResourcesComplimentaryFieldName: 10.0,
+								clusterNodeResourcesAdditionalFieldName:    8.0,
+								clusterNodeResourcesReservedFieldName:      5.0,
+								clusterNodeResourcesAvailableFieldName:     113.0,
+							},
+						},
+						clusterNodeResourcesSummaryRamFieldName: []interface{}{
+							map[string]interface{}{
+								clusterNodeResourcesBaseFieldName:          8.0,
+								clusterNodeResourcesComplimentaryFieldName: 1.0,
+								clusterNodeResourcesAdditionalFieldName:    0.0,
+								clusterNodeResourcesReservedFieldName:      0.5,
+								clusterNodeResourcesAvailableFieldName:     8.5,
+							},
+						},
+						clusterNodeResourcesSummaryCpuFieldName: []interface{}{
+							map[string]interface{}{
+								clusterNodeResourcesBaseFieldName:          4.0,
+								clusterNodeResourcesComplimentaryFieldName: 0.0,
+								clusterNodeResourcesAdditionalFieldName:    0.0,
+								clusterNodeResourcesReservedFieldName:      0.2,
+								clusterNodeResourcesAvailableFieldName:     3.8,
+							},
+						},
+					},
+				},
+				clusterStatusScalabilityInfoFieldName: []interface{}{
+					map[string]interface{}{
+						clusterScalabilityInfoStatusFieldName: cluster.GetState().GetScalabilityInfo().GetStatus().String(),
+						clusterScalabilityInfoReasonFieldName: cluster.GetState().GetScalabilityInfo().GetReason(),
+					},
+				},
+			},
+		},
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
 				clusterVersionFieldName: cluster.GetConfiguration().GetVersion(),
