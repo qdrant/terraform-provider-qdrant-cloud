@@ -54,8 +54,13 @@ func accountsAuthKeysV2DataSourceSchema() map[string]*schema.Schema {
 }
 
 // accountsAuthKeyV2ResourceSchema returns the schema for a single auth key resource.
-func accountsAuthKeyV2ResourceSchema(isDataSource bool) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
+func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		// We should not set Max Items
+		maxItems = 0
+	}
+	s := map[string]*schema.Schema{
 		authKeysV2IDFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Auth Key Identifier"),
 			Type:        schema.TypeString,
@@ -64,22 +69,22 @@ func accountsAuthKeyV2ResourceSchema(isDataSource bool) map[string]*schema.Schem
 		authKeysV2AccountIDFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Account Identifier"),
 			Type:        schema.TypeString,
-			Optional:    !isDataSource,
+			Optional:    !asDataSource,
 			Computed:    true,
 		},
 		authKeysV2ClusterIDFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Cluster Identifier for which this Auth Key is attached"),
 			Type:        schema.TypeString,
-			Required:    !isDataSource,
-			Computed:    isDataSource,
-			ForceNew:    !isDataSource,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+			ForceNew:    !asDataSource,
 		},
 		authKeysV2NameFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Auth Key Name"),
 			Type:        schema.TypeString,
-			Required:    !isDataSource,
-			Computed:    isDataSource,
-			ForceNew:    !isDataSource,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+			ForceNew:    !asDataSource,
 		},
 		authKeysV2CreatedAtFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Timestamp when the Auth Key is created"),
@@ -89,9 +94,9 @@ func accountsAuthKeyV2ResourceSchema(isDataSource bool) map[string]*schema.Schem
 		authKeysV2ExpiresAtFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Timestamp when the Auth Key expires"),
 			Type:        schema.TypeString,
-			Optional:    !isDataSource,
+			Optional:    !asDataSource,
 			Computed:    true,
-			ForceNew:    !isDataSource,
+			ForceNew:    !asDataSource,
 		},
 		authKeysV2CreatedByEmailFieldName: {
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Email of the user who created the key"),
@@ -109,57 +114,61 @@ func accountsAuthKeyV2ResourceSchema(isDataSource bool) map[string]*schema.Schem
 			Computed:    true,
 		},
 		authKeysV2GlobalAccessRuleFieldName: {
-			Description:   "A rule granting global access to the entire database. Cannot be used together with `collection_access_rules`.",
-			Type:          schema.TypeList,
-			Optional:      !isDataSource,
-			Computed:      isDataSource,
-			ForceNew:      !isDataSource,
-			MaxItems:      1,
-			ConflictsWith: []string{authKeysV2CollectionAccessRulesFieldName},
+			Description: "A rule granting global access to the entire database. Cannot be used with `collection_access_rules`.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			ForceNew:    !asDataSource,
+			MaxItems:    maxItems,
 			Elem: &schema.Resource{
-				Schema: globalAccessRuleSchema(isDataSource),
+				Schema: globalAccessRuleSchema(asDataSource),
 			},
 		},
 		authKeysV2CollectionAccessRulesFieldName: {
-			Description:   "A list of rules granting access to specific collections. Cannot be used together with `global_access_rule`.",
-			Type:          schema.TypeList,
-			Optional:      !isDataSource,
-			Computed:      isDataSource,
-			ForceNew:      !isDataSource,
-			ConflictsWith: []string{authKeysV2GlobalAccessRuleFieldName},
+			Description: "A list of rules granting access to specific collections. Cannot be used with `global_access_rule`.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			ForceNew:    !asDataSource,
 			Elem: &schema.Resource{
-				Schema: collectionAccessRuleSchema(isDataSource),
+				Schema: collectionAccessRuleSchema(asDataSource),
 			},
 		},
 	}
+
+	if !asDataSource {
+		s[authKeysV2GlobalAccessRuleFieldName].ConflictsWith = []string{authKeysV2CollectionAccessRulesFieldName}
+		s[authKeysV2CollectionAccessRulesFieldName].ConflictsWith = []string{authKeysV2GlobalAccessRuleFieldName}
+	}
+	return s
 }
 
 // globalAccessRuleSchema defines the schema for a global access rule.
-func globalAccessRuleSchema(isDataSource bool) map[string]*schema.Schema {
+func globalAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		authKeysV2AccessTypeFieldName: {
 			Description: "Access type for global access. Can be `GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE`.",
 			Type:        schema.TypeString,
-			Required:    !isDataSource,
-			Computed:    isDataSource,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 	}
 }
 
 // collectionAccessRuleSchema defines the schema for a collection-specific access rule.
-func collectionAccessRuleSchema(isDataSource bool) map[string]*schema.Schema {
+func collectionAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		authKeysV2CollectionNameFieldName: {
 			Description: "Name of the collection.",
 			Type:        schema.TypeString,
-			Required:    !isDataSource,
-			Computed:    isDataSource,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 		authKeysV2AccessTypeFieldName: {
 			Description: "Access type for the collection. Can be `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_WRITE`.",
 			Type:        schema.TypeString,
-			Required:    !isDataSource,
-			Computed:    isDataSource,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
 		},
 		authKeysV2PayloadFieldName: {
 			Description: "Payload restrictions.",

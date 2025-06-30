@@ -41,3 +41,12 @@ provider "qdrant-cloud" {
 
 `, apiKey, apiURL)
 }
+
+// TestProvider_InternalValidate checks the provider's internal validity.
+// This test is crucial for catching schema errors, such as incorrect
+// `ConflictsWith` configurations, early in the development cycle.
+func TestProvider_InternalValidate(t *testing.T) {
+	if err := Provider().InternalValidate(); err != nil {
+		t.Fatalf("provider.InternalValidate() failed: %v", err)
+	}
+}
