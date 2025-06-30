@@ -77,6 +77,7 @@ output "url" {
 - `created_at` (String) Cluster Schema Timestamp when the cluster is created field
 - `id` (String) Cluster Schema Identifier of the cluster field
 - `marked_for_deletion_at` (String) Cluster Schema Timestamp when this cluster was marked for deletion field
+- `status` (List of Object) Cluster Schema The status of the cluster field (see [below for nested schema](#nestedatt--status))
 - `url` (String) Cluster Schema The URL of the endpoint of the Qdrant cluster field
 
 <a id="nestedblock--configuration"></a>
@@ -110,3 +111,73 @@ Required:
 - `amount` (Number) The amount of the resource
 - `resource_type` (String) The type of the resource
 - `resource_unit` (String) The unit of the resource
+
+
+
+
+<a id="nestedatt--status"></a>
+### Nested Schema for `status`
+
+Read-Only:
+
+- `nodes_up` (Number)
+- `phase` (String)
+- `reason` (String)
+- `resources` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources))
+- `restarted_at` (String)
+- `scalability_info` (List of Object) (see [below for nested schema](#nestedobjatt--status--scalability_info))
+- `version` (String)
+
+<a id="nestedobjatt--status--resources"></a>
+### Nested Schema for `status.resources`
+
+Read-Only:
+
+- `cpu` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources--cpu))
+- `disk` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources--disk))
+- `ram` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources--ram))
+
+<a id="nestedobjatt--status--resources--cpu"></a>
+### Nested Schema for `status.resources.cpu`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+<a id="nestedobjatt--status--resources--disk"></a>
+### Nested Schema for `status.resources.disk`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+<a id="nestedobjatt--status--resources--ram"></a>
+### Nested Schema for `status.resources.ram`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+
+<a id="nestedobjatt--status--scalability_info"></a>
+### Nested Schema for `status.scalability_info`
+
+Read-Only:
+
+- `reason` (String)
+- `status` (String)

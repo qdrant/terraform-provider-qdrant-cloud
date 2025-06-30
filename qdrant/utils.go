@@ -91,5 +91,8 @@ func parseTime(v string) *timestamppb.Timestamp {
 // formatTime formats the provided proto timestamp into a string
 // The resulted string will be in RCF3339 format, so it can be parsed with parseTime again.
 func formatTime(ts *timestamppb.Timestamp) string {
+	if ts == nil {
+		return ""
+	}
 	return ts.AsTime().Format(time.RFC3339)
 }

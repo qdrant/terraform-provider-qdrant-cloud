@@ -95,7 +95,7 @@ output "curl_command" {
 
 ### Required
 
-- `api_key` (String) The API Key for Qdrant Cloud API operations.
+- `api_key` (String, Sensitive) The API Key for Qdrant Cloud API operations.
 
 ### Optional
 

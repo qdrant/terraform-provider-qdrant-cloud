@@ -66,6 +66,7 @@ Read-Only:
 - `marked_for_deletion_at` (String)
 - `name` (String)
 - `private_region_id` (String)
+- `status` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--status))
 - `url` (String)
 
 <a id="nestedobjatt--clusters--configuration"></a>
@@ -93,3 +94,73 @@ Read-Only:
 - `amount` (Number)
 - `resource_type` (String)
 - `resource_unit` (String)
+
+
+
+
+<a id="nestedobjatt--clusters--status"></a>
+### Nested Schema for `clusters.status`
+
+Read-Only:
+
+- `nodes_up` (Number)
+- `phase` (String)
+- `reason` (String)
+- `resources` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--status--resources))
+- `restarted_at` (String)
+- `scalability_info` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--status--scalability_info))
+- `version` (String)
+
+<a id="nestedobjatt--clusters--status--resources"></a>
+### Nested Schema for `clusters.status.resources`
+
+Read-Only:
+
+- `cpu` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--status--resources--cpu))
+- `disk` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--status--resources--disk))
+- `ram` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--status--resources--ram))
+
+<a id="nestedobjatt--clusters--status--resources--cpu"></a>
+### Nested Schema for `clusters.status.resources.cpu`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+<a id="nestedobjatt--clusters--status--resources--disk"></a>
+### Nested Schema for `clusters.status.resources.disk`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+<a id="nestedobjatt--clusters--status--resources--ram"></a>
+### Nested Schema for `clusters.status.resources.ram`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+
+<a id="nestedobjatt--clusters--status--scalability_info"></a>
+### Nested Schema for `clusters.status.scalability_info`
+
+Read-Only:
+
+- `reason` (String)
+- `status` (String)
