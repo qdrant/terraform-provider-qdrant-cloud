@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -27,6 +28,21 @@ func TestResourceClusterFlatten(t *testing.T) {
 			PackageId:     "00000009-1000-0000-0000-000000000001",
 			AdditionalResources: &qcCluster.AdditionalResources{
 				Disk: 8,
+			},
+			DatabaseConfiguration: &qcCluster.DatabaseConfiguration{
+				Collection: &qcCluster.DatabaseConfigurationCollection{
+					ReplicationFactor:      newPointer(uint32(2)),
+					WriteConsistencyFactor: 1,
+				},
+				Service: &qcCluster.DatabaseConfigurationService{
+					ApiKey:         &commonv1.SecretKeyRef{Name: "api-key-secret", Key: "api-key"},
+					ReadOnlyApiKey: &commonv1.SecretKeyRef{Name: "ro-api-key-secret", Key: "ro-api-key"},
+				},
+				LogLevel: newPointer(qcCluster.DatabaseConfigurationLogLevel_DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG),
+				Tls: &qcCluster.DatabaseConfigurationTls{
+					Cert: &commonv1.SecretKeyRef{Name: "cert-secret", Key: "cert.pem"},
+					Key:  &commonv1.SecretKeyRef{Name: "key-secret", Key: "key.pem"},
+				},
 			},
 		},
 		State: &qcCluster.ClusterState{
@@ -124,6 +140,51 @@ func TestResourceClusterFlatten(t *testing.T) {
 						},
 					},
 				},
+				databaseConfigurationFieldName: []interface{}{
+					map[string]interface{}{
+						dbConfigCollectionFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigCollectionReplicationFactor:      2,
+								dbConfigCollectionWriteConsistencyFactor: 1,
+							},
+						},
+						dbConfigServiceFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigServiceApiKeyFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigSecretKeyRefSecretNameFieldName: "api-key-secret",
+										dbConfigSecretKeyRefSecretKeyFieldName:  "api-key",
+									},
+								},
+								dbConfigServiceReadOnlyApiKeyFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigSecretKeyRefSecretNameFieldName: "ro-api-key-secret",
+										dbConfigSecretKeyRefSecretKeyFieldName:  "ro-api-key",
+									},
+								},
+								dbConfigServiceJwtRbacFieldName:   false,
+								dbConfigServiceEnableTlsFieldName: false,
+							},
+						},
+						dbConfigLogLevelFieldName: "DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG",
+						dbConfigTlsFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigTlsCertFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigSecretKeyRefSecretNameFieldName: "cert-secret",
+										dbConfigSecretKeyRefSecretKeyFieldName:  "cert.pem",
+									},
+								},
+								dbConfigTlsKeyFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigSecretKeyRefSecretNameFieldName: "key-secret",
+										dbConfigSecretKeyRefSecretKeyFieldName:  "key.pem",
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -146,6 +207,17 @@ func TestExpandCluster(t *testing.T) {
 			PackageId:     "00000009-1000-0000-0000-000000000001",
 			AdditionalResources: &qcCluster.AdditionalResources{
 				Disk: 10,
+			},
+			DatabaseConfiguration: &qcCluster.DatabaseConfiguration{
+				Collection: &qcCluster.DatabaseConfigurationCollection{
+					ReplicationFactor: newPointer(uint32(3)),
+				},
+				Service: &qcCluster.DatabaseConfigurationService{
+					ApiKey: &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
+				},
+				Tls: &qcCluster.DatabaseConfigurationTls{
+					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
+				},
 			},
 		},
 		State: &qcCluster.ClusterState{
@@ -177,6 +249,35 @@ func TestExpandCluster(t *testing.T) {
 								fieldAmount:       int(expected.GetConfiguration().GetAdditionalResources().GetDisk()),
 								fieldResourceUnit: string(ResourceUnitGi),
 								fieldResourceType: string(ResourceTypeDisk),
+							},
+						},
+					},
+				},
+				databaseConfigurationFieldName: []interface{}{
+					map[string]interface{}{
+						dbConfigCollectionFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigCollectionReplicationFactor: 3,
+							},
+						},
+						dbConfigServiceFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigServiceApiKeyFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigSecretKeyRefSecretNameFieldName: "api-key-secret-expand",
+										dbConfigSecretKeyRefSecretKeyFieldName:  "api-key-expand",
+									},
+								},
+							},
+						},
+						dbConfigTlsFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigTlsCertFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigSecretKeyRefSecretNameFieldName: "cert-secret-expand",
+										dbConfigSecretKeyRefSecretKeyFieldName:  "cert.pem-expand",
+									},
+								},
 							},
 						},
 					},

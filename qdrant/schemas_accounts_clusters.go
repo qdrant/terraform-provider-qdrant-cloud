@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
 )
@@ -52,6 +53,29 @@ const (
 	resourceConfigurationAmountFieldName       = "amount"
 	resourceConfigurationResourceTypeFieldName = "resource_type"
 	resourceConfigurationResourceUnitFieldName = "resource_unit"
+	databaseConfigurationFieldName             = "database_configuration"
+	dbConfigCollectionFieldName                = "collection"
+	dbConfigStorageFieldName                   = "storage"
+	dbConfigServiceFieldName                   = "service"
+	dbConfigLogLevelFieldName                  = "log_level"
+	dbConfigTlsFieldName                       = "tls"
+	dbConfigInferenceFieldName                 = "inference"
+	dbConfigCollectionReplicationFactor        = "replication_factor"
+	dbConfigCollectionWriteConsistencyFactor   = "write_consistency_factor"
+	dbConfigCollectionVectorsFieldName         = "vectors"
+	dbConfigCollectionVectorsOnDiskFieldName   = "on_disk"
+	dbConfigStoragePerformanceFieldName        = "performance"
+	dbConfigStoragePerfOptimizerCpuBudget      = "optimizer_cpu_budget"
+	dbConfigStoragePerfAsyncScorer             = "async_scorer"
+	dbConfigServiceApiKeyFieldName             = "api_key"
+	dbConfigServiceReadOnlyApiKeyFieldName     = "read_only_api_key"
+	dbConfigServiceJwtRbacFieldName            = "jwt_rbac"
+	dbConfigServiceEnableTlsFieldName          = "enable_tls"
+	dbConfigSecretKeyRefSecretNameFieldName    = "secret_name"
+	dbConfigSecretKeyRefSecretKeyFieldName     = "secret_key"
+	dbConfigTlsCertFieldName                   = "cert"
+	dbConfigTlsKeyFieldName                    = "key"
+	dbConfigInferenceEnabledFieldName          = "enabled"
 
 	// Backward compatibility.
 	fieldAmount       = "amount"
@@ -196,6 +220,16 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 				Schema: accountsClusterNodeConfigurationSchema(asDataSource),
 			},
 		},
+		databaseConfigurationFieldName: {
+			Description: "Configuration for the Qdrant database engine, primarily for hybrid cloud setups.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationSchema(asDataSource),
+			},
+		},
 	}
 }
 
@@ -240,6 +274,230 @@ func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    !asDataSource,
 			Computed:    asDataSource,
+		},
+	}
+}
+
+// databaseConfigurationSchema defines the schema for the database configuration.
+func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		dbConfigCollectionFieldName: {
+			Description: "Default collection parameters.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationCollectionSchema(asDataSource),
+			},
+		},
+		dbConfigStorageFieldName: {
+			Description: "Storage-related configuration.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationStorageSchema(asDataSource),
+			},
+		},
+		dbConfigServiceFieldName: {
+			Description: "Service-related configuration.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationServiceSchema(asDataSource),
+			},
+		},
+		dbConfigLogLevelFieldName: {
+			Description: "Logging level for the database.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigTlsFieldName: {
+			Description: "TLS configuration for the database.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationTlsSchema(asDataSource),
+			},
+		},
+		dbConfigInferenceFieldName: {
+			Description: "Inference service configuration.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationInferenceSchema(asDataSource),
+			},
+		},
+	}
+}
+
+// databaseConfigurationCollectionSchema defines the schema for collection configuration.
+func databaseConfigurationCollectionSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		dbConfigCollectionReplicationFactor: {
+			Type:     schema.TypeInt,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		dbConfigCollectionWriteConsistencyFactor: {
+			Type:     schema.TypeInt,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		dbConfigCollectionVectorsFieldName: {
+			Type:     schema.TypeList,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+			MaxItems: maxItems,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					dbConfigCollectionVectorsOnDiskFieldName: {
+						Type:     schema.TypeBool,
+						Optional: !asDataSource,
+						Computed: asDataSource,
+					},
+				},
+			},
+		},
+	}
+}
+
+// databaseConfigurationStorageSchema defines the schema for storage configuration.
+func databaseConfigurationStorageSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		dbConfigStoragePerformanceFieldName: {
+			Type:     schema.TypeList,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+			MaxItems: maxItems,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					dbConfigStoragePerfOptimizerCpuBudget: {
+						Type:     schema.TypeInt,
+						Optional: !asDataSource,
+						Computed: asDataSource,
+					},
+					dbConfigStoragePerfAsyncScorer: {
+						Type:     schema.TypeBool,
+						Optional: !asDataSource,
+						Computed: asDataSource,
+					},
+				},
+			},
+		},
+	}
+}
+
+// databaseConfigurationServiceSchema defines the schema for service configuration.
+func databaseConfigurationServiceSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		dbConfigServiceApiKeyFieldName: {
+			Description: "Secret to use for the main API key.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem:        secretKeyRefSchema(asDataSource),
+		},
+		dbConfigServiceReadOnlyApiKeyFieldName: {
+			Description: "Secret to use for the read-only API key.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem:        secretKeyRefSchema(asDataSource),
+		},
+		dbConfigServiceJwtRbacFieldName: {
+			Type:     schema.TypeBool,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		dbConfigServiceEnableTlsFieldName: {
+			Type:     schema.TypeBool,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+	}
+}
+
+// databaseConfigurationTlsSchema defines the schema for TLS configuration.
+func databaseConfigurationTlsSchema(asDataSource bool) map[string]*schema.Schema {
+	maxItems := 1
+	if asDataSource {
+		maxItems = 0
+	}
+	return map[string]*schema.Schema{
+		dbConfigTlsCertFieldName: {
+			Description: "Secret to use for the certificate.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem:        secretKeyRefSchema(asDataSource),
+		},
+		dbConfigTlsKeyFieldName: {
+			Description: "Secret to use for the private key.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem:        secretKeyRefSchema(asDataSource),
+		},
+	}
+}
+
+// databaseConfigurationInferenceSchema defines the schema for inference configuration.
+func databaseConfigurationInferenceSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		dbConfigInferenceEnabledFieldName: {
+			Type:     schema.TypeBool,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+	}
+}
+
+// secretKeyRefSchema defines the schema for a secret key reference.
+func secretKeyRefSchema(asDataSource bool) *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			dbConfigSecretKeyRefSecretNameFieldName: {
+				Description: "The name of the secret.",
+				Type:        schema.TypeString,
+				Required:    !asDataSource,
+				Computed:    asDataSource,
+			},
+			dbConfigSecretKeyRefSecretKeyFieldName: {
+				Description: "The key within the secret.",
+				Type:        schema.TypeString,
+				Required:    !asDataSource,
+				Computed:    asDataSource,
+			},
 		},
 	}
 }
@@ -433,6 +691,9 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 			config.PackageId = packageId
 			config.AdditionalResources = additionalResources
 		}
+		if v, ok := item[databaseConfigurationFieldName]; ok {
+			config.DatabaseConfiguration = expandDatabaseConfiguration(v.([]interface{}))
+		}
 	}
 	return config
 }
@@ -524,9 +785,10 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			clusterVersionFieldName:    clusterConfig.GetVersion(),
-			numberOfNodesFieldName:     int(clusterConfig.GetNumberOfNodes()),
-			nodeConfigurationFieldName: flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
+			clusterVersionFieldName:        clusterConfig.GetVersion(),
+			numberOfNodesFieldName:         int(clusterConfig.GetNumberOfNodes()),
+			nodeConfigurationFieldName:     flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
+			databaseConfigurationFieldName: flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
 		},
 	}
 }
@@ -553,6 +815,173 @@ func flattenResourceConfigurationsFromAdditionalResources(additionalResources *q
 		})
 	}
 	return flattenedResourceConfigurations
+}
+
+// expandDatabaseConfiguration expands the Terraform resource data into a database configuration object.
+func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfiguration {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	item := v[0].(map[string]interface{})
+	config := &qcCluster.DatabaseConfiguration{}
+
+	if val, ok := item[dbConfigCollectionFieldName]; ok && len(val.([]interface{})) > 0 {
+		collItem := val.([]interface{})[0].(map[string]interface{})
+		collConfig := &qcCluster.DatabaseConfigurationCollection{}
+		if v, ok := collItem[dbConfigCollectionReplicationFactor]; ok {
+			collConfig.ReplicationFactor = newPointer(uint32(v.(int)))
+		}
+		if v, ok := collItem[dbConfigCollectionWriteConsistencyFactor]; ok {
+			collConfig.WriteConsistencyFactor = int32(v.(int))
+		}
+		if v, ok := collItem[dbConfigCollectionVectorsFieldName]; ok && len(v.([]interface{})) > 0 {
+			vecItem := v.([]interface{})[0].(map[string]interface{})
+			if onDisk, ok := vecItem[dbConfigCollectionVectorsOnDiskFieldName]; ok {
+				collConfig.Vectors = &qcCluster.DatabaseConfigurationCollectionVectors{
+					OnDisk: newPointer(onDisk.(bool)),
+				}
+			}
+		}
+		config.Collection = collConfig
+	}
+
+	if val, ok := item[dbConfigStorageFieldName]; ok && len(val.([]interface{})) > 0 {
+		storageItem := val.([]interface{})[0].(map[string]interface{})
+		storageConfig := &qcCluster.DatabaseConfigurationStorage{}
+		if v, ok := storageItem[dbConfigStoragePerformanceFieldName]; ok && len(v.([]interface{})) > 0 {
+			perfItem := v.([]interface{})[0].(map[string]interface{})
+			perfConfig := &qcCluster.DatabaseConfigurationStoragePerformance{}
+			if budget, ok := perfItem[dbConfigStoragePerfOptimizerCpuBudget]; ok {
+				perfConfig.OptimizerCpuBudget = int32(budget.(int))
+			}
+			if scorer, ok := perfItem[dbConfigStoragePerfAsyncScorer]; ok {
+				perfConfig.AsyncScorer = scorer.(bool)
+			}
+			storageConfig.Performance = perfConfig
+		}
+		config.Storage = storageConfig
+	}
+
+	if val, ok := item[dbConfigServiceFieldName]; ok && len(val.([]interface{})) > 0 {
+		serviceItem := val.([]interface{})[0].(map[string]interface{})
+		serviceConfig := &qcCluster.DatabaseConfigurationService{}
+		if v, ok := serviceItem[dbConfigServiceApiKeyFieldName]; ok {
+			serviceConfig.ApiKey = expandSecretKeyRef(v.([]interface{}))
+		}
+		if v, ok := serviceItem[dbConfigServiceReadOnlyApiKeyFieldName]; ok {
+			serviceConfig.ReadOnlyApiKey = expandSecretKeyRef(v.([]interface{}))
+		}
+		if v, ok := serviceItem[dbConfigServiceJwtRbacFieldName]; ok {
+			serviceConfig.JwtRbac = v.(bool)
+		}
+		if v, ok := serviceItem[dbConfigServiceEnableTlsFieldName]; ok {
+			serviceConfig.EnableTls = v.(bool)
+		}
+		config.Service = serviceConfig
+	}
+
+	if val, ok := item[dbConfigLogLevelFieldName]; ok {
+		strVal := val.(string)
+		if strVal != "" {
+			logLevel := qcCluster.DatabaseConfigurationLogLevel(qcCluster.DatabaseConfigurationLogLevel_value[strVal])
+			config.LogLevel = &logLevel
+		}
+	}
+
+	// TLS and Inference are simple boolean flags in their respective objects
+	if val, ok := item[dbConfigTlsFieldName]; ok && len(val.([]interface{})) > 0 {
+		tlsItem := val.([]interface{})[0].(map[string]interface{})
+		tlsConfig := &qcCluster.DatabaseConfigurationTls{}
+		if v, ok := tlsItem[dbConfigTlsCertFieldName]; ok {
+			tlsConfig.Cert = expandSecretKeyRef(v.([]interface{}))
+		}
+		if v, ok := tlsItem[dbConfigTlsKeyFieldName]; ok {
+			tlsConfig.Key = expandSecretKeyRef(v.([]interface{}))
+		}
+		config.Tls = tlsConfig
+	}
+	if val, ok := item[dbConfigInferenceFieldName]; ok && len(val.([]interface{})) > 0 {
+		infItem := val.([]interface{})[0].(map[string]interface{})
+		if enabled, ok := infItem[dbConfigInferenceEnabledFieldName]; ok {
+			config.Inference = &qcCluster.DatabaseConfigurationInference{Enabled: enabled.(bool)}
+		}
+	}
+
+	return config
+}
+
+// expandSecretKeyRef expands a secret key reference from Terraform data.
+func expandSecretKeyRef(v []interface{}) *commonv1.SecretKeyRef {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	item := v[0].(map[string]interface{})
+	return &commonv1.SecretKeyRef{
+		Name: item[dbConfigSecretKeyRefSecretNameFieldName].(string),
+		Key:  item[dbConfigSecretKeyRefSecretKeyFieldName].(string),
+	}
+}
+
+// flattenDatabaseConfiguration flattens the database configuration for storage in Terraform.
+func flattenDatabaseConfiguration(config *qcCluster.DatabaseConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if coll := config.GetCollection(); coll != nil {
+		collMap := map[string]interface{}{
+			dbConfigCollectionReplicationFactor:      int(coll.GetReplicationFactor()),
+			dbConfigCollectionWriteConsistencyFactor: int(coll.GetWriteConsistencyFactor()),
+		}
+		if vec := coll.GetVectors(); vec != nil {
+			collMap[dbConfigCollectionVectorsFieldName] = []interface{}{
+				map[string]interface{}{
+					dbConfigCollectionVectorsOnDiskFieldName: vec.GetOnDisk(),
+				},
+			}
+		}
+		m[dbConfigCollectionFieldName] = []interface{}{collMap}
+	}
+
+	if service := config.GetService(); service != nil {
+		serviceMap := map[string]interface{}{
+			dbConfigServiceApiKeyFieldName:         flattenSecretKeyRef(service.GetApiKey()),
+			dbConfigServiceReadOnlyApiKeyFieldName: flattenSecretKeyRef(service.GetReadOnlyApiKey()),
+			dbConfigServiceJwtRbacFieldName:        service.GetJwtRbac(),
+			dbConfigServiceEnableTlsFieldName:      service.GetEnableTls(),
+		}
+		m[dbConfigServiceFieldName] = []interface{}{serviceMap}
+	}
+
+	if tls := config.GetTls(); tls != nil {
+		m[dbConfigTlsFieldName] = []interface{}{
+			map[string]interface{}{
+				dbConfigTlsCertFieldName: flattenSecretKeyRef(tls.GetCert()),
+				dbConfigTlsKeyFieldName:  flattenSecretKeyRef(tls.GetKey()),
+			},
+		}
+	}
+
+	if config.LogLevel != nil {
+		m[dbConfigLogLevelFieldName] = config.GetLogLevel().String()
+	}
+
+	return []interface{}{m}
+}
+
+// flattenSecretKeyRef flattens a secret key reference for storage in Terraform.
+func flattenSecretKeyRef(ref *commonv1.SecretKeyRef) []interface{} {
+	if ref == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			dbConfigSecretKeyRefSecretNameFieldName: ref.GetName(),
+			dbConfigSecretKeyRefSecretKeyFieldName:  ref.GetKey(),
+		},
+	}
 }
 
 // flattenClusterState creates a map from a cluster state for easy storage in Terraform.
