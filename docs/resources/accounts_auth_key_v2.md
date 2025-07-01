@@ -33,7 +33,7 @@ Account AuthKey Resource (v2)
 - `created_by_email` (String) Auth Keys V2 Schema Email of the user who created the key field
 - `id` (String) Auth Keys V2 Schema Auth Key Identifier field
 - `postfix` (String) Auth Keys V2 Schema Postfix of the Auth Key field
-- `token` (String, Sensitive) Auth Keys V2 Schema Secret token for this Auth Key field
+- `token` (String) Auth Keys V2 Schema Secret token for this Auth Key field
 
 <a id="nestedblock--collection_access_rules"></a>
 ### Nested Schema for `collection_access_rules`
