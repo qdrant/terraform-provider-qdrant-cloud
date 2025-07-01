@@ -112,6 +112,7 @@ func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schem
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Secret token for this Auth Key"),
 			Type:        schema.TypeString,
 			Computed:    true,
+			Sensitive:   true,
 		},
 		authKeysV2GlobalAccessRuleFieldName: {
 			Description: "A rule granting global access to the entire database. Cannot be used with `collection_access_rules`.",
@@ -205,12 +206,8 @@ func flattenAuthKeyV2(key *authv2.DatabaseApiKey) map[string]interface{} {
 	}
 
 	globalRules, collectionRules := separateAccessRules(key.GetAccessRules())
-	if len(globalRules) > 0 {
-		data[authKeysV2GlobalAccessRuleFieldName] = flattenGlobalAccessRules(globalRules)
-	}
-	if len(collectionRules) > 0 {
-		data[authKeysV2CollectionAccessRulesFieldName] = flattenCollectionAccessRules(collectionRules)
-	}
+	data[authKeysV2GlobalAccessRuleFieldName] = flattenGlobalAccessRules(globalRules)
+	data[authKeysV2CollectionAccessRulesFieldName] = flattenCollectionAccessRules(collectionRules)
 
 	return data
 }
@@ -233,7 +230,7 @@ func separateAccessRules(rules []*authv2.AccessRule) ([]*authv2.GlobalAccessRule
 // flattenGlobalAccessRules flattens a list of global access rules into a format suitable for Terraform state.
 func flattenGlobalAccessRules(rules []*authv2.GlobalAccessRule) []interface{} {
 	if len(rules) == 0 {
-		return nil
+		return []interface{}{}
 	}
 	return []interface{}{
 		map[string]interface{}{
@@ -244,6 +241,9 @@ func flattenGlobalAccessRules(rules []*authv2.GlobalAccessRule) []interface{} {
 
 // flattenCollectionAccessRules flattens a list of collection access rules into a format suitable for Terraform state.
 func flattenCollectionAccessRules(rules []*authv2.CollectionAccessRule) []interface{} {
+	if len(rules) == 0 {
+		return []interface{}{}
+	}
 	flattened := make([]interface{}, len(rules))
 	for i, rule := range rules {
 		flattened[i] = map[string]interface{}{

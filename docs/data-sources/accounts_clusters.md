@@ -74,9 +74,122 @@ Read-Only:
 
 Read-Only:
 
+- `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration))
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--node_configuration))
 - `number_of_nodes` (Number)
 - `version` (String)
+
+<a id="nestedobjatt--clusters--configuration--database_configuration"></a>
+### Nested Schema for `clusters.configuration.database_configuration`
+
+Read-Only:
+
+- `collection` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--collection))
+- `inference` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--inference))
+- `log_level` (String)
+- `service` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--service))
+- `storage` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--storage))
+- `tls` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--tls))
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--collection"></a>
+### Nested Schema for `clusters.configuration.database_configuration.collection`
+
+Read-Only:
+
+- `replication_factor` (Number)
+- `vectors` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--collection--vectors))
+- `write_consistency_factor` (Number)
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--collection--vectors"></a>
+### Nested Schema for `clusters.configuration.database_configuration.collection.vectors`
+
+Read-Only:
+
+- `on_disk` (Boolean)
+
+
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--inference"></a>
+### Nested Schema for `clusters.configuration.database_configuration.inference`
+
+Read-Only:
+
+- `enabled` (Boolean)
+
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--service"></a>
+### Nested Schema for `clusters.configuration.database_configuration.service`
+
+Read-Only:
+
+- `api_key` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--service--api_key))
+- `enable_tls` (Boolean)
+- `jwt_rbac` (Boolean)
+- `read_only_api_key` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--service--read_only_api_key))
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--service--api_key"></a>
+### Nested Schema for `clusters.configuration.database_configuration.service.api_key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--service--read_only_api_key"></a>
+### Nested Schema for `clusters.configuration.database_configuration.service.read_only_api_key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--storage"></a>
+### Nested Schema for `clusters.configuration.database_configuration.storage`
+
+Read-Only:
+
+- `performance` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--storage--performance))
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--storage--performance"></a>
+### Nested Schema for `clusters.configuration.database_configuration.storage.performance`
+
+Read-Only:
+
+- `async_scorer` (Boolean)
+- `optimizer_cpu_budget` (Number)
+
+
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--tls"></a>
+### Nested Schema for `clusters.configuration.database_configuration.tls`
+
+Read-Only:
+
+- `cert` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--tls--cert))
+- `key` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--tls--key))
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--tls--cert"></a>
+### Nested Schema for `clusters.configuration.database_configuration.tls.cert`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--tls--key"></a>
+### Nested Schema for `clusters.configuration.database_configuration.tls.key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+
 
 <a id="nestedobjatt--clusters--configuration--node_configuration"></a>
 ### Nested Schema for `clusters.configuration.node_configuration`

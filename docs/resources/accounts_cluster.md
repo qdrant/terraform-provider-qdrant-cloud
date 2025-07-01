@@ -90,6 +90,7 @@ Required:
 
 Optional:
 
+- `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))
 - `version` (String) Cluster Schema Version of the Qdrant cluster field
 
 <a id="nestedblock--configuration--node_configuration"></a>
@@ -111,6 +112,118 @@ Required:
 - `amount` (Number) The amount of the resource
 - `resource_type` (String) The type of the resource
 - `resource_unit` (String) The unit of the resource
+
+
+
+<a id="nestedblock--configuration--database_configuration"></a>
+### Nested Schema for `configuration.database_configuration`
+
+Optional:
+
+- `collection` (Block List, Max: 1) Default collection parameters. (see [below for nested schema](#nestedblock--configuration--database_configuration--collection))
+- `inference` (Block List, Max: 1) Inference service configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--inference))
+- `log_level` (String) Logging level for the database.
+- `service` (Block List, Max: 1) Service-related configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--service))
+- `storage` (Block List, Max: 1) Storage-related configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--storage))
+- `tls` (Block List, Max: 1) TLS configuration for the database. (see [below for nested schema](#nestedblock--configuration--database_configuration--tls))
+
+<a id="nestedblock--configuration--database_configuration--collection"></a>
+### Nested Schema for `configuration.database_configuration.collection`
+
+Optional:
+
+- `replication_factor` (Number)
+- `vectors` (Block List, Max: 1) (see [below for nested schema](#nestedblock--configuration--database_configuration--collection--vectors))
+- `write_consistency_factor` (Number)
+
+<a id="nestedblock--configuration--database_configuration--collection--vectors"></a>
+### Nested Schema for `configuration.database_configuration.collection.vectors`
+
+Optional:
+
+- `on_disk` (Boolean)
+
+
+
+<a id="nestedblock--configuration--database_configuration--inference"></a>
+### Nested Schema for `configuration.database_configuration.inference`
+
+Optional:
+
+- `enabled` (Boolean)
+
+
+<a id="nestedblock--configuration--database_configuration--service"></a>
+### Nested Schema for `configuration.database_configuration.service`
+
+Optional:
+
+- `api_key` (Block List, Max: 1) Secret to use for the main API key. (see [below for nested schema](#nestedblock--configuration--database_configuration--service--api_key))
+- `enable_tls` (Boolean)
+- `jwt_rbac` (Boolean)
+- `read_only_api_key` (Block List, Max: 1) Secret to use for the read-only API key. (see [below for nested schema](#nestedblock--configuration--database_configuration--service--read_only_api_key))
+
+<a id="nestedblock--configuration--database_configuration--service--api_key"></a>
+### Nested Schema for `configuration.database_configuration.service.api_key`
+
+Required:
+
+- `secret_key` (String) The key within the secret.
+- `secret_name` (String) The name of the secret.
+
+
+<a id="nestedblock--configuration--database_configuration--service--read_only_api_key"></a>
+### Nested Schema for `configuration.database_configuration.service.read_only_api_key`
+
+Required:
+
+- `secret_key` (String) The key within the secret.
+- `secret_name` (String) The name of the secret.
+
+
+
+<a id="nestedblock--configuration--database_configuration--storage"></a>
+### Nested Schema for `configuration.database_configuration.storage`
+
+Optional:
+
+- `performance` (Block List, Max: 1) (see [below for nested schema](#nestedblock--configuration--database_configuration--storage--performance))
+
+<a id="nestedblock--configuration--database_configuration--storage--performance"></a>
+### Nested Schema for `configuration.database_configuration.storage.performance`
+
+Optional:
+
+- `async_scorer` (Boolean)
+- `optimizer_cpu_budget` (Number)
+
+
+
+<a id="nestedblock--configuration--database_configuration--tls"></a>
+### Nested Schema for `configuration.database_configuration.tls`
+
+Optional:
+
+- `cert` (Block List, Max: 1) Secret to use for the certificate. (see [below for nested schema](#nestedblock--configuration--database_configuration--tls--cert))
+- `key` (Block List, Max: 1) Secret to use for the private key. (see [below for nested schema](#nestedblock--configuration--database_configuration--tls--key))
+
+<a id="nestedblock--configuration--database_configuration--tls--cert"></a>
+### Nested Schema for `configuration.database_configuration.tls.cert`
+
+Required:
+
+- `secret_key` (String) The key within the secret.
+- `secret_name` (String) The name of the secret.
+
+
+<a id="nestedblock--configuration--database_configuration--tls--key"></a>
+### Nested Schema for `configuration.database_configuration.tls.key`
+
+Required:
+
+- `secret_key` (String) The key within the secret.
+- `secret_name` (String) The name of the secret.
+
 
 
 
