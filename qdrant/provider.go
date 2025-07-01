@@ -26,6 +26,7 @@ func Provider() *schema.Provider {
 				Required:    true,                                               // API key is a required field.
 				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_KEY", nil), // Default can be set via an environment variable.
 				Description: "The API Key for Qdrant Cloud API operations.",     // Description of the API key usage.
+				Sensitive:   true,
 			},
 			"api_url": {
 				Type:        schema.TypeString,                                                     // Data type of the API URL.
@@ -39,18 +40,26 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_ACCOUNT_ID", ""),
 				Description: "Default Account Identifier for the Qdrant cloud",
 			},
+			"insecure": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Allow insecure gRPC connections. This is useful for development environments with self-signed certificates. Defaults to false.",
+			},
 		},
 		// ResourcesMap defines all the resources that this provider offers.
 		ResourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_key": resourceAccountsAuthKey(), // Resource for Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_cluster":  resourceAccountsCluster(), // Resource for managing Qdrant Cloud account clusters.
+			"qdrant-cloud_accounts_auth_key":    resourceAccountsAuthKey(),   // Resource for Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_auth_key_v2": resourceAccountsAuthKeyV2(), // Resource for Qdrant Cloud accounts' authorization keys v2.
+			"qdrant-cloud_accounts_cluster":     resourceAccountsCluster(),   // Resource for managing Qdrant Cloud account clusters.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_keys": dataSourceAccountsAuthKeys(), // Data source for retrieving Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_clusters":  dataSourceAccountsClusters(), // Data source for listing Qdrant Cloud clusters under an account.
-			"qdrant-cloud_accounts_cluster":   dataSourceAccountsCluster(),  // Data source for retrieving details of a specific Qdrant cluster.
-			"qdrant-cloud_booking_packages":   dataSourceBookingPackages(),  // Data source for Qdrant booking packages.
+			"qdrant-cloud_accounts_auth_keys":    dataSourceAccountsAuthKeys(),   // Data source for retrieving Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_auth_keys_v2": dataSourceAccountsAuthKeysV2(), // Data source for retrieving Qdrant Cloud accounts' authorization keys v2.
+			"qdrant-cloud_accounts_clusters":     dataSourceAccountsClusters(),   // Data source for listing Qdrant Cloud clusters under an account.
+			"qdrant-cloud_accounts_cluster":      dataSourceAccountsCluster(),    // Data source for retrieving details of a specific Qdrant cluster.
+			"qdrant-cloud_booking_packages":      dataSourceBookingPackages(),    // Data source for Qdrant booking packages.
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,
@@ -70,6 +79,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	if aid, ok := d.GetOk("account_id"); ok {
 		accountID = aid.(string)
 	}
+	insecure := d.Get("insecure").(bool)
 	var diags diag.Diagnostics
 
 	// Validate that the API key is not empty, returning an error diagnostic if it is.
@@ -92,6 +102,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		ApiKey:    apiKey,
 		BaseURL:   apiURL,
 		AccountID: accountID,
+		Insecure:  insecure,
 	}
 
 	return &config, diags
@@ -104,4 +115,5 @@ type ProviderConfig struct {
 	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
 	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
 	AccountID string // The default Account Identifier for the Qdrant cloud, if any
+	Insecure  bool   // Insecure allows for insecure gRPC connections, useful for development.
 }

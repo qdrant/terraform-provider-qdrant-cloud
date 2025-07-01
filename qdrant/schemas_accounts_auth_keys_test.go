@@ -46,7 +46,27 @@ func TestFlattenAuthKeySchema(t *testing.T) {
 		},
 	}
 
-	flattened := flattenAuthKeys(keys)
+	flattened := flattenAuthKeys(keys, true)
+	assert.Equal(t, expected, flattened)
+
+	expected = []interface{}{
+		map[string]interface{}{
+			authKeysKeysIDFieldName:         "00000000-0000-0000-0000-000000000001",
+			authKeysKeysCreatedAtFieldName:  formatTime(createdAt),
+			authKeysKeysClusterIDsFieldName: []string{"00000000-0000-0000-0001-000000000001", "00000000-0000-0000-0002-000000000001"},
+			authKeysKeysPrefixFieldName:     "prefix1",
+			// Dropped: authKeysKeysTokenFieldName:      "token1",
+		},
+		map[string]interface{}{
+			authKeysKeysIDFieldName:         "00000000-0000-0000-0000-000000000002",
+			authKeysKeysCreatedAtFieldName:  formatTime(createdAt),
+			authKeysKeysClusterIDsFieldName: []string{"00000000-0000-0000-0003-000000000002"},
+			authKeysKeysPrefixFieldName:     "prefix2",
+			// Dropped: authKeysKeysTokenFieldName:      "token2",
+		},
+	}
+
+	flattened = flattenAuthKeys(keys, false)
 	assert.Equal(t, expected, flattened)
 }
 
@@ -68,5 +88,5 @@ func TestFlattenCreateAuthKey(t *testing.T) {
 		authKeysKeysTokenFieldName:      "token3",
 	}
 
-	assert.Equal(t, expected, flattenAuthKey(key))
+	assert.Equal(t, expected, flattenAuthKey(key, true))
 }

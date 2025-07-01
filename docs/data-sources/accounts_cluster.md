@@ -59,6 +59,7 @@ output "cluster" {
 - `marked_for_deletion_at` (String) Cluster Schema Timestamp when this cluster was marked for deletion field
 - `name` (String) Cluster Schema Name of the cluster field
 - `private_region_id` (String) Cluster Schema Identifier of the Private Region field
+- `status` (List of Object) Cluster Schema The status of the cluster field (see [below for nested schema](#nestedatt--status))
 - `url` (String) Cluster Schema The URL of the endpoint of the Qdrant cluster field
 
 <a id="nestedatt--configuration"></a>
@@ -66,9 +67,122 @@ output "cluster" {
 
 Read-Only:
 
+- `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration))
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_configuration))
 - `number_of_nodes` (Number)
 - `version` (String)
+
+<a id="nestedobjatt--configuration--database_configuration"></a>
+### Nested Schema for `configuration.database_configuration`
+
+Read-Only:
+
+- `collection` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--collection))
+- `inference` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--inference))
+- `log_level` (String)
+- `service` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--service))
+- `storage` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--storage))
+- `tls` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--tls))
+
+<a id="nestedobjatt--configuration--database_configuration--collection"></a>
+### Nested Schema for `configuration.database_configuration.collection`
+
+Read-Only:
+
+- `replication_factor` (Number)
+- `vectors` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--collection--vectors))
+- `write_consistency_factor` (Number)
+
+<a id="nestedobjatt--configuration--database_configuration--collection--vectors"></a>
+### Nested Schema for `configuration.database_configuration.collection.vectors`
+
+Read-Only:
+
+- `on_disk` (Boolean)
+
+
+
+<a id="nestedobjatt--configuration--database_configuration--inference"></a>
+### Nested Schema for `configuration.database_configuration.inference`
+
+Read-Only:
+
+- `enabled` (Boolean)
+
+
+<a id="nestedobjatt--configuration--database_configuration--service"></a>
+### Nested Schema for `configuration.database_configuration.service`
+
+Read-Only:
+
+- `api_key` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--service--api_key))
+- `enable_tls` (Boolean)
+- `jwt_rbac` (Boolean)
+- `read_only_api_key` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--service--read_only_api_key))
+
+<a id="nestedobjatt--configuration--database_configuration--service--api_key"></a>
+### Nested Schema for `configuration.database_configuration.service.api_key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+<a id="nestedobjatt--configuration--database_configuration--service--read_only_api_key"></a>
+### Nested Schema for `configuration.database_configuration.service.read_only_api_key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+
+<a id="nestedobjatt--configuration--database_configuration--storage"></a>
+### Nested Schema for `configuration.database_configuration.storage`
+
+Read-Only:
+
+- `performance` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--storage--performance))
+
+<a id="nestedobjatt--configuration--database_configuration--storage--performance"></a>
+### Nested Schema for `configuration.database_configuration.storage.performance`
+
+Read-Only:
+
+- `async_scorer` (Boolean)
+- `optimizer_cpu_budget` (Number)
+
+
+
+<a id="nestedobjatt--configuration--database_configuration--tls"></a>
+### Nested Schema for `configuration.database_configuration.tls`
+
+Read-Only:
+
+- `cert` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--tls--cert))
+- `key` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration--tls--key))
+
+<a id="nestedobjatt--configuration--database_configuration--tls--cert"></a>
+### Nested Schema for `configuration.database_configuration.tls.cert`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+<a id="nestedobjatt--configuration--database_configuration--tls--key"></a>
+### Nested Schema for `configuration.database_configuration.tls.key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+
 
 <a id="nestedobjatt--configuration--node_configuration"></a>
 ### Nested Schema for `configuration.node_configuration`
@@ -86,3 +200,73 @@ Read-Only:
 - `amount` (Number)
 - `resource_type` (String)
 - `resource_unit` (String)
+
+
+
+
+<a id="nestedatt--status"></a>
+### Nested Schema for `status`
+
+Read-Only:
+
+- `nodes_up` (Number)
+- `phase` (String)
+- `reason` (String)
+- `resources` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources))
+- `restarted_at` (String)
+- `scalability_info` (List of Object) (see [below for nested schema](#nestedobjatt--status--scalability_info))
+- `version` (String)
+
+<a id="nestedobjatt--status--resources"></a>
+### Nested Schema for `status.resources`
+
+Read-Only:
+
+- `cpu` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources--cpu))
+- `disk` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources--disk))
+- `ram` (List of Object) (see [below for nested schema](#nestedobjatt--status--resources--ram))
+
+<a id="nestedobjatt--status--resources--cpu"></a>
+### Nested Schema for `status.resources.cpu`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+<a id="nestedobjatt--status--resources--disk"></a>
+### Nested Schema for `status.resources.disk`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+<a id="nestedobjatt--status--resources--ram"></a>
+### Nested Schema for `status.resources.ram`
+
+Read-Only:
+
+- `additional` (Number)
+- `available` (Number)
+- `base` (Number)
+- `complimentary` (Number)
+- `reserved` (Number)
+
+
+
+<a id="nestedobjatt--status--scalability_info"></a>
+### Nested Schema for `status.scalability_info`
+
+Read-Only:
+
+- `reason` (String)
+- `status` (String)

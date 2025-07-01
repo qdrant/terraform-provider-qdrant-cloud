@@ -61,7 +61,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 			continue
 		}
 		// Process the correct one,
-		for k, v := range flattenAuthKey(apiKey) {
+		for k, v := range flattenAuthKey(apiKey, false) {
 			if err := d.Set(k, v); err != nil {
 				return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 			}
@@ -115,7 +115,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Flatten cluster and store in Terraform state
-	for k, v := range flattenAuthKey(resp.GetDatabaseApiKey()) {
+	for k, v := range flattenAuthKey(resp.GetDatabaseApiKey(), true) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}

@@ -95,9 +95,10 @@ output "curl_command" {
 
 ### Required
 
-- `api_key` (String) The API Key for Qdrant Cloud API operations.
+- `api_key` (String, Sensitive) The API Key for Qdrant Cloud API operations.
 
 ### Optional
 
 - `account_id` (String) Default Account Identifier for the Qdrant cloud
 - `api_url` (String) The URL of the Qdrant Cloud API.
+- `insecure` (Boolean) Allow insecure gRPC connections. This is useful for development environments with self-signed certificates. Defaults to false.

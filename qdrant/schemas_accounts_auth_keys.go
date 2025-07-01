@@ -79,22 +79,24 @@ func accountsAuthKeySchema() map[string]*schema.Schema {
 }
 
 // flattenAuthKeys flattens the API keys response into a slice of map[string]interface{}.
-func flattenAuthKeys(keys []*qcAuth.DatabaseApiKey) []interface{} {
+func flattenAuthKeys(keys []*qcAuth.DatabaseApiKey, tokenAvailable bool) []interface{} {
 	var flattenedKeys []interface{}
 	for _, key := range keys {
-		flattenedKeys = append(flattenedKeys, flattenAuthKey(key))
+		flattenedKeys = append(flattenedKeys, flattenAuthKey(key, tokenAvailable))
 	}
 	return flattenedKeys
 }
 
 // flattenAuthKey flattens the API key response into a slice of map[string]interface{}.
-func flattenAuthKey(key *qcAuth.DatabaseApiKey) map[string]interface{} {
+func flattenAuthKey(key *qcAuth.DatabaseApiKey, tokenAvailable bool) map[string]interface{} {
 	result := map[string]interface{}{
 		authKeysKeysIDFieldName:         key.GetId(),
 		authKeysKeysCreatedAtFieldName:  formatTime(key.GetCreatedAt()),
 		authKeysKeysClusterIDsFieldName: key.GetClusterIds(),
 		authKeysKeysPrefixFieldName:     key.GetPrefix(),
-		authKeysKeysTokenFieldName:      key.GetKey(),
+	}
+	if tokenAvailable {
+		result[authKeysKeysTokenFieldName] = key.GetKey()
 	}
 	return result
 }
