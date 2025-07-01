@@ -40,6 +40,12 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_ACCOUNT_ID", ""),
 				Description: "Default Account Identifier for the Qdrant cloud",
 			},
+			"insecure": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Allow insecure gRPC connections. This is useful for development environments with self-signed certificates. Defaults to false.",
+			},
 		},
 		// ResourcesMap defines all the resources that this provider offers.
 		ResourcesMap: map[string]*schema.Resource{
@@ -73,6 +79,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	if aid, ok := d.GetOk("account_id"); ok {
 		accountID = aid.(string)
 	}
+	insecure := d.Get("insecure").(bool)
 	var diags diag.Diagnostics
 
 	// Validate that the API key is not empty, returning an error diagnostic if it is.
@@ -95,6 +102,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		ApiKey:    apiKey,
 		BaseURL:   apiURL,
 		AccountID: accountID,
+		Insecure:  insecure,
 	}
 
 	return &config, diags
@@ -107,4 +115,5 @@ type ProviderConfig struct {
 	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
 	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
 	AccountID string // The default Account Identifier for the Qdrant cloud, if any
+	Insecure  bool   // Insecure allows for insecure gRPC connections, useful for development.
 }

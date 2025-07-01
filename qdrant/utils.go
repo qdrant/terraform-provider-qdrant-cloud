@@ -41,7 +41,9 @@ func getClientConnection(ctx context.Context, m interface{}) (*grpc.ClientConn, 
 		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: provided ClientConfig.BaseURL not set"))
 	}
 	// Set up a connection to the server.
-	tc := credentials.NewTLS(&tls.Config{})
+	tc := credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: clientConfig.Insecure,
+	})
 	conn, err := grpc.NewClient(clientConfig.BaseURL, grpc.WithTransportCredentials(tc))
 	if err != nil {
 		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: cannot create gRPC client: %w", err))
