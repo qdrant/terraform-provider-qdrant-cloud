@@ -32,8 +32,8 @@ Account AuthKey Resource (v2)
 - `created_at` (String) Auth Keys V2 Schema Timestamp when the Auth Key is created field
 - `created_by_email` (String) Auth Keys V2 Schema Email of the user who created the key field
 - `id` (String) Auth Keys V2 Schema Auth Key Identifier field
+- `key` (String) Auth Keys V2 Schema Secret key for this Auth Key field
 - `postfix` (String) Auth Keys V2 Schema Postfix of the Auth Key field
-- `token` (String) Auth Keys V2 Schema Secret token for this Auth Key field
 
 <a id="nestedblock--collection_access_rules"></a>
 ### Nested Schema for `collection_access_rules`

@@ -24,7 +24,7 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 			ExpiresAt:      expiresAt,
 			CreatedByEmail: "user1@example.com",
 			Postfix:        "post1",
-			Key:            "token1",
+			Key:            "key1",
 			AccessRules: []*authv2.AccessRule{
 				{
 					Scope: &authv2.AccessRule_GlobalAccess{
@@ -44,7 +44,7 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 			ExpiresAt:      nil,
 			CreatedByEmail: "user2@example.com",
 			Postfix:        "post2",
-			Key:            "token2",
+			Key:            "key2",
 			AccessRules: []*authv2.AccessRule{
 				{
 					Scope: &authv2.AccessRule_CollectionAccess{
@@ -79,7 +79,7 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 			authKeysV2ExpiresAtFieldName:      formatTime(expiresAt),
 			authKeysV2CreatedByEmailFieldName: "user1@example.com",
 			authKeysV2PostfixFieldName:        "post1",
-			authKeysV2TokenFieldName:          "token1",
+			authKeysV2KeyFieldName:            "key1",
 			authKeysV2GlobalAccessRuleFieldName: []interface{}{
 				map[string]interface{}{
 					authKeysV2AccessTypeFieldName: "GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE",
@@ -95,7 +95,7 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 			authKeysV2ExpiresAtFieldName:      "",
 			authKeysV2CreatedByEmailFieldName: "user2@example.com",
 			authKeysV2PostfixFieldName:        "post2",
-			authKeysV2TokenFieldName:          "token2",
+			authKeysV2KeyFieldName:            "key2",
 			authKeysV2CollectionAccessRulesFieldName: []interface{}{
 				map[string]interface{}{
 					authKeysV2CollectionNameFieldName: "collection1",

@@ -41,9 +41,9 @@ Read-Only:
 - `expires_at` (String)
 - `global_access_rule` (List of Object) (see [below for nested schema](#nestedobjatt--keys--global_access_rule))
 - `id` (String)
+- `key` (String)
 - `name` (String)
 - `postfix` (String)
-- `token` (String)
 
 <a id="nestedobjatt--keys--collection_access_rules"></a>
 ### Nested Schema for `keys.collection_access_rules`

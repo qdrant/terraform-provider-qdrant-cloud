@@ -19,7 +19,7 @@ const (
 	authKeysV2ExpiresAtFieldName             = "expires_at"
 	authKeysV2CreatedByEmailFieldName        = "created_by_email"
 	authKeysV2PostfixFieldName               = "postfix"
-	authKeysV2TokenFieldName                 = "token"
+	authKeysV2KeyFieldName                   = "key"
 	authKeysV2GlobalAccessRuleFieldName      = "global_access_rule"
 	authKeysV2CollectionAccessRulesFieldName = "collection_access_rules"
 	authKeysV2AccessTypeFieldName            = "access_type"
@@ -108,8 +108,8 @@ func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schem
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
-		authKeysV2TokenFieldName: {
-			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Secret token for this Auth Key"),
+		authKeysV2KeyFieldName: {
+			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Secret key for this Auth Key"),
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
@@ -204,7 +204,7 @@ func flattenAuthKeyV2(key *authv2.DatabaseApiKey, keyAvailable bool) map[string]
 		authKeysV2PostfixFieldName:        key.GetPostfix(),
 	}
 	if keyAvailable {
-		data[authKeysV2TokenFieldName] = key.GetKey()
+		data[authKeysV2KeyFieldName] = key.GetKey()
 	}
 	globalRules, collectionRules := separateAccessRules(key.GetAccessRules())
 	if len(globalRules) > 0 {
