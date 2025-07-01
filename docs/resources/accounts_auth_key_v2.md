@@ -23,7 +23,7 @@ Account AuthKey Resource (v2)
 ### Optional
 
 - `account_id` (String) Auth Keys V2 Schema Account Identifier field
-- `collection_access_rules` (Block List) A list of rules granting access to specific collections. Cannot be used with `global_access_rule`. (see [below for nested schema](#nestedblock--collection_access_rules))
+- `collection_access_rules` (Block List, Max: 20) A list of rules granting access to specific collections. Cannot be used with `global_access_rule`. (see [below for nested schema](#nestedblock--collection_access_rules))
 - `expires_at` (String) Auth Keys V2 Schema Timestamp when the Auth Key expires field
 - `global_access_rule` (Block List, Max: 1) A rule granting global access to the entire database. Cannot be used with `collection_access_rules`. (see [below for nested schema](#nestedblock--global_access_rule))
 

@@ -419,8 +419,8 @@ func databaseConfigurationServiceSchema(asDataSource bool) map[string]*schema.Sc
 		dbConfigServiceApiKeyFieldName: {
 			Description: "Secret to use for the main API key.",
 			Type:        schema.TypeList,
-			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Optional:    true,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem:        secretKeyRefSchema(asDataSource),
 		},
@@ -434,8 +434,8 @@ func databaseConfigurationServiceSchema(asDataSource bool) map[string]*schema.Sc
 		},
 		dbConfigServiceJwtRbacFieldName: {
 			Type:     schema.TypeBool,
-			Optional: !asDataSource,
-			Computed: asDataSource,
+			Optional: true,
+			Computed: true,
 		},
 		dbConfigServiceEnableTlsFieldName: {
 			Type:     schema.TypeBool,

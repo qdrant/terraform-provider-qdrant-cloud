@@ -116,9 +116,9 @@ func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schem
 		authKeysV2GlobalAccessRuleFieldName: {
 			Description: "A rule granting global access to the entire database. Cannot be used with `collection_access_rules`.",
 			Type:        schema.TypeList,
-			Optional:    !asDataSource,
-			Computed:    asDataSource,
-			ForceNew:    !asDataSource,
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: globalAccessRuleSchema(asDataSource),
@@ -127,9 +127,10 @@ func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schem
 		authKeysV2CollectionAccessRulesFieldName: {
 			Description: "A list of rules granting access to specific collections. Cannot be used with `global_access_rule`.",
 			Type:        schema.TypeList,
-			Optional:    !asDataSource,
-			Computed:    asDataSource,
-			ForceNew:    !asDataSource,
+			Optional:    true,
+			Computed:    true,
+			ForceNew:    true,
+			MaxItems:    20,
 			Elem: &schema.Resource{
 				Schema: collectionAccessRuleSchema(asDataSource),
 			},

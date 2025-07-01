@@ -101,3 +101,4 @@ output "curl_command" {
 
 - `account_id` (String) Default Account Identifier for the Qdrant cloud
 - `api_url` (String) The URL of the Qdrant Cloud API.
+- `insecure` (Boolean) Allow insecure gRPC connections. This is useful for development environments with self-signed certificates. Defaults to false.
