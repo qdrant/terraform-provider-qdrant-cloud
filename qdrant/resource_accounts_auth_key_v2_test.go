@@ -46,7 +46,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 	}
 }
 
-resource "qdrant-cloud_accounts_auth_key_v2" "test" {
+resource "qdrant-cloud_accounts_database_api_key_v2" "test" {
 	name = "tf-acc-test-key-res-v2"
 	cluster_id = qdrant-cloud_accounts_cluster.test.id
 	global_access_rule {
@@ -56,11 +56,11 @@ resource "qdrant-cloud_accounts_auth_key_v2" "test" {
 	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr("qdrant-cloud_accounts_auth_key_v2.test", "name", "tf-acc-test-key-res-v2"),
-		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_auth_key_v2.test", "id"),
-		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_auth_key_v2.test", "token"),
-		resource.TestCheckResourceAttr("qdrant-cloud_accounts_auth_key_v2.test", "global_access_rule.0.access_type", "GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY"),
-		resource.TestCheckResourceAttrPair("qdrant-cloud_accounts_auth_key_v2.test", "cluster_id", "qdrant-cloud_accounts_cluster.test", "id"),
+		resource.TestCheckResourceAttr("qdrant-cloud_accounts_database_api_key_v2.test", "name", "tf-acc-test-key-res-v2"),
+		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_database_api_key_v2.test", "id"),
+		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_database_api_key_v2.test", "token"),
+		resource.TestCheckResourceAttr("qdrant-cloud_accounts_database_api_key_v2.test", "global_access_rule.0.access_type", "GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY"),
+		resource.TestCheckResourceAttrPair("qdrant-cloud_accounts_database_api_key_v2.test", "cluster_id", "qdrant-cloud_accounts_cluster.test", "id"),
 	)
 
 	resource.Test(t, resource.TestCase{

@@ -16,7 +16,7 @@ import (
 // Returns a schema.Resource pointer configured with schema definitions and the CRUD functions.
 func resourceAccountsAuthKeyV2() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Account AuthKey Resource (v2)",
+		Description:   "Account Database API Key Resource (v2)",
 		ReadContext:   resourceAPIKeyV2Read,
 		CreateContext: resourceAPIKeyV2Create,
 		UpdateContext: nil, // Not available in the public API

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	authKeysV2FieldTemplate                  = "Auth Keys V2 Schema %s field"
+	authKeysV2FieldTemplate                  = "Database API Keys V2 Schema %s field"
 	authKeysV2AccountIDFieldName             = "account_id"
 	authKeysV2KeysFieldName                  = "keys"
 	authKeysV2ClusterIDFieldName             = "cluster_id"
@@ -27,26 +27,26 @@ const (
 	authKeysV2PayloadFieldName               = "payload"
 )
 
-// accountsAuthKeysV2DataSourceSchema returns the schema for the auth keys data source.
+// accountsAuthKeysV2DataSourceSchema returns the schema for the Database API keys (v2) data source.
 func accountsAuthKeysV2DataSourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		authKeysV2AccountIDFieldName: {
-			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Account Identifier where all those Auth Keys belongs to"),
+			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Account Identifier where all those Database API Keys belongs to"),
 			Type:        schema.TypeString,
 			Computed:    true,
 			Optional:    true,
 		},
 		authKeysV2ClusterIDFieldName: {
-			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Cluster Identifier for which this Auth Key is attached"),
+			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Cluster Identifier for which this Database API Key is attached"),
 			Type:        schema.TypeString,
 			Required:    true,
 		},
 		authKeysV2KeysFieldName: {
-			Description: fmt.Sprintf(authKeysV2FieldTemplate, "List of Auth Keys"),
+			Description: fmt.Sprintf(authKeysV2FieldTemplate, "List of Database API Keys"),
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem: &schema.Resource{
-				Description: fmt.Sprintf(authKeysV2FieldTemplate, "Individual Auth Key"),
+				Description: fmt.Sprintf(authKeysV2FieldTemplate, "Individual Database API Key"),
 				Schema:      accountsAuthKeyV2ResourceSchema(true),
 			},
 		},
