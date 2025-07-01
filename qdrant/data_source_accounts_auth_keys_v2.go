@@ -51,7 +51,7 @@ func dataAccountsAuthKeysV2Read(ctx context.Context, d *schema.ResourceData, m i
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 
-	if err := d.Set(authKeysV2KeysFieldName, flattenAuthKeysV2(resp.GetItems())); err != nil {
+	if err := d.Set(authKeysV2KeysFieldName, flattenAuthKeysV2(resp.GetItems(), false)); err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if err := d.Set(authKeysV2AccountIDFieldName, accountUUID.String()); err != nil {

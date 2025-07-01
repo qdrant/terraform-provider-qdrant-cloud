@@ -56,7 +56,7 @@ func resourceAPIKeyV2Read(ctx context.Context, d *schema.ResourceData, m interfa
 
 	for _, apiKey := range resp.GetItems() {
 		if apiKey.GetId() == apiKeyID {
-			for k, v := range flattenAuthKeyV2(apiKey) {
+			for k, v := range flattenAuthKeyV2(apiKey, false) {
 				if err := d.Set(k, v); err != nil {
 					return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 				}
@@ -99,7 +99,7 @@ func resourceAPIKeyV2Create(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 
-	for k, v := range flattenAuthKeyV2(resp.GetDatabaseApiKey()) {
+	for k, v := range flattenAuthKeyV2(resp.GetDatabaseApiKey(), true) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
@@ -203,6 +203,14 @@ func expandAuthKeyV2(d *schema.ResourceData, accountID string) (*authv2.Database
 				Scope: &authv2.AccessRule_CollectionAccess{CollectionAccess: collectionRule},
 			})
 		}
+	}
+	if len(rules) == 0 {
+		// Insert the default
+		rules = append(rules, &authv2.AccessRule{
+			Scope: &authv2.AccessRule_GlobalAccess{
+				GlobalAccess: &authv2.GlobalAccessRule{AccessType: authv2.GlobalAccessRuleAccessType_GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE},
+			},
+		})
 	}
 	key.AccessRules = rules
 

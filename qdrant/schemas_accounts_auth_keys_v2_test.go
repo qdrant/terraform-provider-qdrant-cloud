@@ -111,6 +111,6 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 		},
 	}
 
-	flattened := flattenAuthKeysV2(keys)
+	flattened := flattenAuthKeysV2(keys, true)
 	assert.Equal(t, expected, flattened)
 }

@@ -112,7 +112,6 @@ func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schem
 			Description: fmt.Sprintf(authKeysV2FieldTemplate, "Secret token for this Auth Key"),
 			Type:        schema.TypeString,
 			Computed:    true,
-			Sensitive:   true,
 		},
 		authKeysV2GlobalAccessRuleFieldName: {
 			Description: "A rule granting global access to the entire database. Cannot be used with `collection_access_rules`.",
@@ -183,16 +182,16 @@ func collectionAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
 }
 
 // flattenAuthKeysV2 flattens the API keys response into a slice of map[string]interface{}.
-func flattenAuthKeysV2(keys []*authv2.DatabaseApiKey) []interface{} {
+func flattenAuthKeysV2(keys []*authv2.DatabaseApiKey, keyAvailable bool) []interface{} {
 	var flattenedKeys []interface{}
 	for _, key := range keys {
-		flattenedKeys = append(flattenedKeys, flattenAuthKeyV2(key))
+		flattenedKeys = append(flattenedKeys, flattenAuthKeyV2(key, keyAvailable))
 	}
 	return flattenedKeys
 }
 
 // flattenAuthKeyV2 flattens the API key response into a map[string]interface{}.
-func flattenAuthKeyV2(key *authv2.DatabaseApiKey) map[string]interface{} {
+func flattenAuthKeyV2(key *authv2.DatabaseApiKey, keyAvailable bool) map[string]interface{} {
 	data := map[string]interface{}{
 		authKeysV2IDFieldName:             key.GetId(),
 		authKeysV2AccountIDFieldName:      key.GetAccountId(),
@@ -202,13 +201,17 @@ func flattenAuthKeyV2(key *authv2.DatabaseApiKey) map[string]interface{} {
 		authKeysV2ExpiresAtFieldName:      formatTime(key.GetExpiresAt()),
 		authKeysV2CreatedByEmailFieldName: key.GetCreatedByEmail(),
 		authKeysV2PostfixFieldName:        key.GetPostfix(),
-		authKeysV2TokenFieldName:          key.GetKey(),
 	}
-
+	if keyAvailable {
+		data[authKeysV2TokenFieldName] = key.GetKey()
+	}
 	globalRules, collectionRules := separateAccessRules(key.GetAccessRules())
-	data[authKeysV2GlobalAccessRuleFieldName] = flattenGlobalAccessRules(globalRules)
-	data[authKeysV2CollectionAccessRulesFieldName] = flattenCollectionAccessRules(collectionRules)
-
+	if len(globalRules) > 0 {
+		data[authKeysV2GlobalAccessRuleFieldName] = flattenGlobalAccessRules(globalRules)
+	}
+	if len(collectionRules) > 0 {
+		data[authKeysV2CollectionAccessRulesFieldName] = flattenCollectionAccessRules(collectionRules)
+	}
 	return data
 }
 

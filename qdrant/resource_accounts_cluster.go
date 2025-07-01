@@ -111,6 +111,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
+	// Do not provide state in update
+	cluster.State = nil
 	// Update the cluster
 	var trailer metadata.MD
 	resp, err := client.UpdateCluster(clientCtx, &qcCluster.UpdateClusterRequest{
