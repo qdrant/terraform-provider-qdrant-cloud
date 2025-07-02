@@ -16,7 +16,7 @@ import (
 // Returns a schema.Resource pointer configured with schema definitions and the read context function.
 func dataSourceAccountsAuthKeysV2() *schema.Resource {
 	return &schema.Resource{
-		Description: "Account AuthKey Data Source (v2)",
+		Description: "Account Database API Keys Data Source (v2)",
 		ReadContext: dataAccountsAuthKeysV2Read,
 		Schema:      accountsAuthKeysV2DataSourceSchema(),
 	}

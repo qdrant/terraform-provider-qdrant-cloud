@@ -46,7 +46,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 	}
 }
 
-resource "qdrant-cloud_accounts_auth_key_v2" "test" {
+resource "qdrant-cloud_accounts_database_api_key_v2" "test" {
 	name = "tf-acc-test-key-ds-v2"
 	cluster_id = qdrant-cloud_accounts_cluster.test.id
 	global_access_rule {
@@ -54,19 +54,19 @@ resource "qdrant-cloud_accounts_auth_key_v2" "test" {
 	}
 }
 
-data "qdrant-cloud_accounts_auth_keys_v2" "test" {
+data "qdrant-cloud_accounts_database_api_keys_v2" "test" {
 	cluster_id = qdrant-cloud_accounts_cluster.test.id
-	depends_on = [qdrant-cloud_accounts_auth_key_v2.test]
+	depends_on = [qdrant-cloud_accounts_database_api_key_v2.test]
 }
 	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttrPair(
-			"data.qdrant-cloud_accounts_auth_keys_v2.test", "cluster_id",
+			"data.qdrant-cloud_accounts_database_api_keys_v2.test", "cluster_id",
 			"qdrant-cloud_accounts_cluster.test", "id",
 		),
-		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_auth_keys_v2.test", "keys.#"),
-		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_auth_keys_v2.test", "keys.0.id"),
+		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_database_api_keys_v2.test", "keys.#"),
+		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_database_api_keys_v2.test", "keys.0.id"),
 	)
 
 	resource.Test(t, resource.TestCase{

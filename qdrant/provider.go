@@ -49,17 +49,17 @@ func Provider() *schema.Provider {
 		},
 		// ResourcesMap defines all the resources that this provider offers.
 		ResourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_key":    resourceAccountsAuthKey(),   // Resource for Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_auth_key_v2": resourceAccountsAuthKeyV2(), // Resource for Qdrant Cloud accounts' authorization keys v2.
-			"qdrant-cloud_accounts_cluster":     resourceAccountsCluster(),   // Resource for managing Qdrant Cloud account clusters.
+			"qdrant-cloud_accounts_auth_key":            resourceAccountsAuthKey(),   // Resource for Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_database_api_key_v2": resourceAccountsAuthKeyV2(), // Resource for Qdrant Cloud accounts' authorization keys v2.
+			"qdrant-cloud_accounts_cluster":             resourceAccountsCluster(),   // Resource for managing Qdrant Cloud account clusters.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_keys":    dataSourceAccountsAuthKeys(),   // Data source for retrieving Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_auth_keys_v2": dataSourceAccountsAuthKeysV2(), // Data source for retrieving Qdrant Cloud accounts' authorization keys v2.
-			"qdrant-cloud_accounts_clusters":     dataSourceAccountsClusters(),   // Data source for listing Qdrant Cloud clusters under an account.
-			"qdrant-cloud_accounts_cluster":      dataSourceAccountsCluster(),    // Data source for retrieving details of a specific Qdrant cluster.
-			"qdrant-cloud_booking_packages":      dataSourceBookingPackages(),    // Data source for Qdrant booking packages.
+			"qdrant-cloud_accounts_auth_keys":            dataSourceAccountsAuthKeys(),   // Data source for retrieving Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_database_api_keys_v2": dataSourceAccountsAuthKeysV2(), // Data source for retrieving Qdrant Cloud accounts' authorization keys v2.
+			"qdrant-cloud_accounts_clusters":             dataSourceAccountsClusters(),   // Data source for listing Qdrant Cloud clusters under an account.
+			"qdrant-cloud_accounts_cluster":              dataSourceAccountsCluster(),    // Data source for retrieving details of a specific Qdrant cluster.
+			"qdrant-cloud_booking_packages":              dataSourceBookingPackages(),    // Data source for Qdrant booking packages.
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,
