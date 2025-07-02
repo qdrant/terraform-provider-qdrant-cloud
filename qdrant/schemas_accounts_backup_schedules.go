@@ -49,7 +49,7 @@ func accountsBackupScheduleResourceSchema(asDataSource bool) map[string]*schema.
 			Computed:    asDataSource,
 		},
 		backupScheduleRetentionPeriodFieldName: {
-			Description: fmt.Sprintf(backupScheduleFieldTemplate, `Retention period as a Go duration string (e.g., "72h"). The "d" unit for days is not supported.`),
+			Description: fmt.Sprintf(backupScheduleFieldTemplate, `Retention period as a Go duration string (e.g., "72h").`),
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
