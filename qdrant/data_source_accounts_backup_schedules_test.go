@@ -49,7 +49,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 resource "qdrant-cloud_accounts_backup_schedule" "test" {
 	cluster_id            = qdrant-cloud_accounts_cluster.test.id
 	cron_expression       = "0 12 * * *"
-	retention_period      = "3d"
+	retention_period      = "72h"
 	name                  = "tf-acc-test-backup-schedule-ds"
 }
 

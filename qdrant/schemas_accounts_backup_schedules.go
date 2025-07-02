@@ -22,7 +22,7 @@ const (
 )
 
 func accountsBackupScheduleResourceSchema(asDataSource bool) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
+	s := map[string]*schema.Schema{
 		backupScheduleIDFieldName: {
 			Description: fmt.Sprintf(backupScheduleFieldTemplate, "ID"),
 			Type:        schema.TypeString,
@@ -49,7 +49,7 @@ func accountsBackupScheduleResourceSchema(asDataSource bool) map[string]*schema.
 			Computed:    asDataSource,
 		},
 		backupScheduleRetentionPeriodFieldName: {
-			Description: fmt.Sprintf(backupScheduleFieldTemplate, "Retention period (e.g. 3d)"),
+			Description: fmt.Sprintf(backupScheduleFieldTemplate, `Retention period as a Go duration string (e.g., "72h"). The "d" unit for days is not supported.`),
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
@@ -70,6 +70,11 @@ func accountsBackupScheduleResourceSchema(asDataSource bool) map[string]*schema.
 			Computed:    true,
 		},
 	}
+
+	if !asDataSource {
+		s[backupScheduleRetentionPeriodFieldName].DiffSuppressFunc = suppressDurationDiff
+	}
+	return s
 }
 
 func accountsBackupSchedulesDataSourceSchema() map[string]*schema.Schema {

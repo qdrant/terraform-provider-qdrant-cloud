@@ -26,5 +26,5 @@ Backup Schedule Data Source
 - `created_at` (String) Backup Schedule Schema Creation time field
 - `cron_expression` (String) Backup Schedule Schema Cron expression for the schedule field
 - `deleted_at` (String) Backup Schedule Schema Deletion time field
-- `retention_period` (String) Backup Schedule Schema Retention period (e.g. 3d) field
+- `retention_period` (String) Backup Schedule Schema Retention period as a Go duration string (e.g., "72h"). field
 - `status` (String) Backup Schedule Schema Status field

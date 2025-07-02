@@ -23,7 +23,7 @@ Backup Schedule Resource
 ### Optional
 
 - `account_id` (String) Backup Schedule Schema Account ID field
-- `retention_period` (String) Backup Schedule Schema Retention period (e.g. 3d) field
+- `retention_period` (String) Backup Schedule Schema Retention period as a Go duration string (e.g., "72h"). field
 
 ### Read-Only
 

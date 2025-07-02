@@ -118,3 +118,17 @@ func formatDuration(d *durationpb.Duration) string {
 	}
 	return d.AsDuration().String()
 }
+
+// suppressDurationDiff is a DiffSuppressFunc that suppresses diffs for duration strings
+// if they are semantically equivalent (e.g., "1h" and "60m").
+func suppressDurationDiff(k, old, new string, d *schema.ResourceData) bool {
+	oldDuration, err := time.ParseDuration(old)
+	if err != nil {
+		return false
+	}
+	newDuration, err := time.ParseDuration(new)
+	if err != nil {
+		return false
+	}
+	return oldDuration == newDuration
+}

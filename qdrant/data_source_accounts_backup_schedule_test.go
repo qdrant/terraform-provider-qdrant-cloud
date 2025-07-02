@@ -49,7 +49,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 resource "qdrant-cloud_accounts_backup_schedule" "test" {
 	cluster_id       = qdrant-cloud_accounts_cluster.test.id
 	cron_expression  = "0 6 1 * *" // Run at 6am on the 1st of every month
-	retention_period = "5d0h0m0s"
+	retention_period = "120h" // 5 days
 }
 
 data "qdrant-cloud_accounts_backup_schedule" "test" {

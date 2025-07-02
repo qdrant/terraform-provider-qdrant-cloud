@@ -167,3 +167,18 @@ func TestGetAccountUUID_EmptyString(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", id.String())
 }
+
+func TestSuppressDurationDiff(t *testing.T) {
+	t.Run("equal durations", func(t *testing.T) {
+		assert.True(t, suppressDurationDiff("key", "72h", "72h0m0s", nil))
+	})
+	t.Run("unequal durations", func(t *testing.T) {
+		assert.False(t, suppressDurationDiff("key", "72h", "73h", nil))
+	})
+	t.Run("invalid old duration", func(t *testing.T) {
+		assert.False(t, suppressDurationDiff("key", "invalid", "72h", nil))
+	})
+	t.Run("invalid new duration", func(t *testing.T) {
+		assert.False(t, suppressDurationDiff("key", "72h", "invalid", nil))
+	})
+}

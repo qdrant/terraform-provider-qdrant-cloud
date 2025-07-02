@@ -48,16 +48,14 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 
 resource "qdrant-cloud_accounts_backup_schedule" "test" {
 	cluster_id            = qdrant-cloud_accounts_cluster.test.id
-	cron_expression       = "0 0 * * *"
-	retention_period      = "7d"
-	name                  = "tf-acc-test-backup-schedule"
+	cron_expression       = "0 0 1 * *" // Run at midnight on the 1st of every month
+	retention_period      = "168h"      // 7 days
 }
 	`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
 	check := resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttr("qdrant-cloud_accounts_backup_schedule.test", "name", "tf-acc-test-backup-schedule"),
-		resource.TestCheckResourceAttr("qdrant-cloud_accounts_backup_schedule.test", "cron_expression", "0 0 * * *"),
-		resource.TestCheckResourceAttr("qdrant-cloud_accounts_backup_schedule.test", "retention_period", "7d0h0m0s"),
+		resource.TestCheckResourceAttr("qdrant-cloud_accounts_backup_schedule.test", "cron_expression", "0 0 1 * *"),
+		resource.TestCheckResourceAttr("qdrant-cloud_accounts_backup_schedule.test", "retention_period", "168h0m0s"),
 		resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_backup_schedule.test", "id"),
 	)
 
