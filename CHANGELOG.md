@@ -44,3 +44,4 @@ TESTS:
 3. **V2 API Key Unit Tests**: Added unit tests for the v2 API key schema and flattening logic.
 4. **Provider Schema Validation Test**: Added a unit test to run the provider's internal validation, ensuring schema correctness for all resources and data sources.
 5. **Utilities**: Added unit tests for utility functions, improving coverage for data parsing and handling.
+6. **Backup Schedules**: Added unit tests.
