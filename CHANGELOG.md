@@ -34,6 +34,8 @@ FEATURES:
 
 1. **Database Configuration**: Added support for `database_configuration` within a cluster's configuration, allowing users to set database-specific parameters.
 2. **API Key Management V2**: Users can create, read, and delete v2 API keys with granular access controls for their Qdrant Cloud account. This is implemented in `resource_accounts_auth_key_v2.go` and `data_source_accounts_auth_keys_v2.go`.
+3. **Backup Schedules**: Added support for creating, reading, updating, and deleting backup schedules for clusters. This is implemented in `resource_accounts_backup_schedule.go` and `data_source_accounts_backup_schedules.go`.
+
 
 TESTS:
 
@@ -41,3 +43,4 @@ TESTS:
 2. **V2 API Key Acceptance Tests**: Added acceptance tests for the v2 API key resource and data source to ensure they function correctly against the live Qdrant Cloud API.
 3. **V2 API Key Unit Tests**: Added unit tests for the v2 API key schema and flattening logic.
 4. **Provider Schema Validation Test**: Added a unit test to run the provider's internal validation, ensuring schema correctness for all resources and data sources.
+5. **Utilities**: Added unit tests for utility functions, improving coverage for data parsing and handling.

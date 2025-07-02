@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -26,7 +27,7 @@ func getRequestID(metadata metadata.MD) string {
 	if len(reqIDs) == 0 {
 		return ""
 	}
-	return fmt.Sprintf(" [%s]", strings.Join(reqIDs, "-"))
+	return fmt.Sprintf(" [%s]", strings.Join(reqIDs, "|"))
 }
 
 // getClientConnection creates a client connection from the provided interface.
@@ -97,4 +98,23 @@ func formatTime(ts *timestamppb.Timestamp) string {
 		return ""
 	}
 	return ts.AsTime().Format(time.RFC3339)
+}
+
+// parseDuration parses the provided value and returns it as  (or nil if it cannot be parsed).
+// The provided string should be in Go duration format.
+func parseDuration(v string) *durationpb.Duration {
+	result, err := time.ParseDuration(v)
+	if err != nil {
+		return nil
+	}
+	return durationpb.New(result)
+}
+
+// formatDuration formats the provided proto duration into a string
+// The resulted string will be in Go duration format, so it can be parsed with parseDuration again.
+func formatDuration(d *durationpb.Duration) string {
+	if d == nil {
+		return ""
+	}
+	return d.AsDuration().String()
 }
