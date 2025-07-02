@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -15,7 +16,7 @@ import (
 func TestGetRequestID(t *testing.T) {
 	t.Run("no request id", func(t *testing.T) {
 		md := metadata.MD{}
-		assert.Equal(t, "", getRequestID(md))
+		assert.Empty(t, getRequestID(md))
 	})
 
 	t.Run("with request id", func(t *testing.T) {
@@ -42,7 +43,7 @@ func TestGetAccountUUID(t *testing.T) {
 		})
 
 		id, err := getAccountUUID(d, providerConfig)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "00000000-0000-0000-0000-000000000001", id.String())
 	})
 
@@ -52,7 +53,7 @@ func TestGetAccountUUID(t *testing.T) {
 		}, map[string]interface{}{})
 
 		id, err := getAccountUUID(d, providerConfig)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, "00000000-0000-0000-0000-000000000002", id.String())
 	})
 
@@ -62,7 +63,7 @@ func TestGetAccountUUID(t *testing.T) {
 		}, map[string]interface{}{})
 
 		_, err := getAccountUUID(d, &ProviderConfig{})
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Equal(t, "cannot find account ID", err.Error())
 	})
 
@@ -85,7 +86,7 @@ func TestGetDefaultAccountID(t *testing.T) {
 	})
 
 	t.Run("invalid type", func(t *testing.T) {
-		assert.Equal(t, "", getDefaultAccountID("not-a-config"))
+		assert.Empty(t, getDefaultAccountID("not-a-config"))
 	})
 }
 
@@ -109,7 +110,7 @@ func TestTimeParsing(t *testing.T) {
 	})
 
 	t.Run("formatTime nil", func(t *testing.T) {
-		assert.Equal(t, "", formatTime(nil))
+		assert.Empty(t, formatTime(nil))
 	})
 }
 
@@ -133,7 +134,7 @@ func TestDurationParsing(t *testing.T) {
 	})
 
 	t.Run("formatDuration nil", func(t *testing.T) {
-		assert.Equal(t, "", formatDuration(nil))
+		assert.Empty(t, formatDuration(nil))
 	})
 }
 
@@ -147,7 +148,7 @@ func TestGetAccountUUID_NilUUID(t *testing.T) {
 	}
 
 	id, err := getAccountUUID(d, providerConfig)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, uuid.Nil, id)
 }
 
@@ -163,6 +164,6 @@ func TestGetAccountUUID_EmptyString(t *testing.T) {
 	}
 
 	id, err := getAccountUUID(d, providerConfig)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "00000000-0000-0000-0000-000000000002", id.String())
 }
