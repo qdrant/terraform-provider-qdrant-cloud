@@ -3,12 +3,12 @@
 page_title: "qdrant-cloud_accounts_auth_key Resource - terraform-provider-qdrant-cloud"
 subcategory: ""
 description: |-
-  Account AuthKey Resource
+  Account AuthKey Resource [Deprecated, see qdrant-cloud_accounts_database_api_key_v2 instead]
 ---
 
 # qdrant-cloud_accounts_auth_key (Resource)
 
-Account AuthKey Resource
+Account AuthKey Resource [Deprecated, see `qdrant-cloud_accounts_database_api_key_v2` instead]
 
 ## Example Usage
 
