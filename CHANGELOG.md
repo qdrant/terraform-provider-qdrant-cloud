@@ -30,6 +30,10 @@ FEATURES:
 
 ## 1.5.x
 
+DEPRECATIONS:
+
+1. **V1 Auth Key**: The `qdrant-cloud_accounts_auth_key` resource and `qdrant-cloud_accounts_auth_keys` data source have been deprecated in favor of their v2 counterparts (`qdrant-cloud_accounts_database_api_key_v2` and `qdrant-cloud_accounts_database_api_keys_v2`).
+
 FEATURES:
 
 1. **Database Configuration**: Added support for `database_configuration` within a cluster's configuration, allowing users to set database-specific parameters.

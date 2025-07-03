@@ -17,9 +17,10 @@ import (
 // Returns a schema.Resource pointer configured with schema definitions and the read context function.
 func dataSourceAccountsAuthKeys() *schema.Resource {
 	return &schema.Resource{
-		Description: "Account AuthKey Data Source",
-		ReadContext: dataAccountsAuthKeysRead,
-		Schema:      accountsAuthKeysSchema(),
+		Description:        "Account AuthKey Data Source [Deprecated, see `qdrant-cloud_accounts_database_api_keys_v2` instead]",
+		ReadContext:        dataAccountsAuthKeysRead,
+		Schema:             accountsAuthKeysSchema(),
+		DeprecationMessage: "The `qdrant-cloud_accounts_auth_keys` data source is deprecated and will be removed in a future version. Please use the `qdrant-cloud_accounts_database_api_keys_v2` data source instead.",
 	}
 }
 

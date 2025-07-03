@@ -16,12 +16,13 @@ import (
 // Returns a schema.Resource pointer configured with schema definitions and the CRUD functions.
 func resourceAccountsAuthKey() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Account AuthKey Resource",
-		ReadContext:   resourceAPIKeyRead,
-		CreateContext: resourceAPIKeyCreate,
-		UpdateContext: nil, // Not available in the public API
-		DeleteContext: resourceAPIKeyDelete,
-		Schema:        accountsAuthKeySchema(),
+		Description:        "Account AuthKey Resource [Deprecated, see `qdrant-cloud_accounts_database_api_key_v2` instead]",
+		ReadContext:        resourceAPIKeyRead,
+		CreateContext:      resourceAPIKeyCreate,
+		UpdateContext:      nil, // Not available in the public API
+		DeleteContext:      resourceAPIKeyDelete,
+		Schema:             accountsAuthKeySchema(),
+		DeprecationMessage: "The `qdrant-cloud_accounts_auth_key` resource is deprecated and will be removed in a future version. Please use the `qdrant-cloud_accounts_database_api_key_v2` resource instead.",
 	}
 }
 
