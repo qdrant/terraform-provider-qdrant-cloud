@@ -45,7 +45,7 @@ Required:
 
 Optional:
 
-- `payload` (Map of String) Payload restrictions.
+- `payload` (Map of String, Deprecated) Payload restrictions.
 
 
 <a id="nestedblock--global_access_rule"></a>
