@@ -140,24 +140,29 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 			Computed:    asDataSource,
 		},
 		clusterCloudProviderFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud provider where the cluster resides"),
-			Type:        schema.TypeString,
-			Required:    !asDataSource,
-			ForceNew:    !asDataSource, // Cross provider migration isn't supported
-			Computed:    asDataSource,
+			Description: fmt.Sprintf(clusterFieldTemplate, `Cloud provider where the cluster is hosted.
+Must match one of the provider IDs returned by the "qdrant.cloud.platform.v1.PlatformService.ListCloudProviders" method.
+For Hybrid cloud this should be "hybrid".`),
+			Type:     schema.TypeString,
+			Required: !asDataSource,
+			ForceNew: !asDataSource, // Cross provider migration isn't supported
+			Computed: asDataSource,
 		},
 		clusterCloudRegionFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Cloud region where the cluster resides"),
-			Type:        schema.TypeString,
-			Required:    !asDataSource,
-			ForceNew:    !asDataSource, // Cross region migration isn't supported
-			Computed:    asDataSource,
+			Description: fmt.Sprintf(clusterFieldTemplate, `Cloud provider region where the cluster is hosted.
+Must match one of the region IDs returned by the "qdrant.cloud.platform.v1.PlatformService.ListCloudProviderRegions" method.
+For hybrid this should be the hybrid cloud environment ID.`),
+			Type:     schema.TypeString,
+			Required: !asDataSource,
+			ForceNew: !asDataSource, // Cross region migration isn't supported
+			Computed: asDataSource,
 		},
 		clusterPrivateRegionIDFieldName: {
-			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Private Region"),
+			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Hybrid cloud region"),
 			Type:        schema.TypeString,
 			Computed:    asDataSource,
 			Optional:    !asDataSource,
+			Deprecated:  `Please use cloud_provider="hybrid" and the cloud_region field instead`,
 		},
 		clusterMarkedForDeletionAtFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp when this cluster was marked for deletion"),

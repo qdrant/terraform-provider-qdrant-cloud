@@ -62,15 +62,19 @@ output "url" {
 
 ### Required
 
-- `cloud_provider` (String) Cluster Schema Cloud provider where the cluster resides field
-- `cloud_region` (String) Cluster Schema Cloud region where the cluster resides field
+- `cloud_provider` (String) Cluster Schema Cloud provider where the cluster is hosted.
+Must match one of the provider IDs returned by the "qdrant.cloud.platform.v1.PlatformService.ListCloudProviders" method.
+For Hybrid cloud this should be "hybrid". field
+- `cloud_region` (String) Cluster Schema Cloud provider region where the cluster is hosted.
+Must match one of the region IDs returned by the "qdrant.cloud.platform.v1.PlatformService.ListCloudProviderRegions" method.
+For hybrid this should be the hybrid cloud environment ID. field
 - `configuration` (Block List, Min: 1, Max: 1) Cluster Schema The configuration options of a cluster field (see [below for nested schema](#nestedblock--configuration))
 - `name` (String) Cluster Schema Name of the cluster field
 
 ### Optional
 
 - `account_id` (String) Cluster Schema Identifier of the account field
-- `private_region_id` (String) Cluster Schema Identifier of the Private Region field
+- `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
 
 ### Read-Only
 
