@@ -175,6 +175,7 @@ func collectionAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
 			Description: "Payload restrictions.",
 			Type:        schema.TypeMap,
 			Optional:    true,
+			Deprecated:  "This field should not be used anymore and will be removed shortly",
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
