@@ -59,9 +59,6 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 						CollectionAccess: &authv2.CollectionAccessRule{
 							CollectionName: "collection2",
 							AccessType:     authv2.CollectionAccessRuleAccessType_COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY,
-							Payload: map[string]string{
-								"filter_key": "filter_value",
-							},
 						},
 					},
 				},
@@ -100,12 +97,10 @@ func TestFlattenAuthKeyV2Schema(t *testing.T) {
 				map[string]interface{}{
 					authKeysV2CollectionNameFieldName: "collection1",
 					authKeysV2AccessTypeFieldName:     "COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_WRITE",
-					authKeysV2PayloadFieldName:        map[string]string(nil),
 				},
 				map[string]interface{}{
 					authKeysV2CollectionNameFieldName: "collection2",
 					authKeysV2AccessTypeFieldName:     "COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY",
-					authKeysV2PayloadFieldName:        map[string]string{"filter_key": "filter_value"},
 				},
 			},
 		},
