@@ -24,7 +24,6 @@ const (
 	authKeysV2CollectionAccessRulesFieldName = "collection_access_rules"
 	authKeysV2AccessTypeFieldName            = "access_type"
 	authKeysV2CollectionNameFieldName        = "collection_name"
-	authKeysV2PayloadFieldName               = "payload"
 )
 
 // accountsAuthKeysV2DataSourceSchema returns the schema for the Database API keys (v2) data source.
@@ -171,15 +170,6 @@ func collectionAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
 			Required:    !asDataSource,
 			Computed:    asDataSource,
 		},
-		authKeysV2PayloadFieldName: {
-			Description: "Payload restrictions.",
-			Type:        schema.TypeMap,
-			Optional:    true,
-			Deprecated:  "This field should not be used anymore and will be removed shortly",
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
 	}
 }
 
@@ -254,7 +244,6 @@ func flattenCollectionAccessRules(rules []*authv2.CollectionAccessRule) []interf
 		flattened[i] = map[string]interface{}{
 			authKeysV2CollectionNameFieldName: rule.GetCollectionName(),
 			authKeysV2AccessTypeFieldName:     rule.GetAccessType().String(),
-			authKeysV2PayloadFieldName:        rule.GetPayload(),
 		}
 	}
 	return flattened

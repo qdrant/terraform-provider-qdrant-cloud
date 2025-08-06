@@ -52,7 +52,6 @@ Read-Only:
 
 - `access_type` (String)
 - `collection_name` (String)
-- `payload` (Map of String)
 
 
 <a id="nestedobjatt--keys--global_access_rule"></a>

@@ -43,10 +43,6 @@ Required:
 - `access_type` (String) Access type for the collection. Can be `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_WRITE`.
 - `collection_name` (String) Name of the collection.
 
-Optional:
-
-- `payload` (Map of String, Deprecated) Payload restrictions.
-
 
 <a id="nestedblock--global_access_rule"></a>
 ### Nested Schema for `global_access_rule`

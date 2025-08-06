@@ -192,13 +192,6 @@ func expandAuthKeyV2(d *schema.ResourceData, accountID string) (*authv2.Database
 				CollectionName: ruleMap[authKeysV2CollectionNameFieldName].(string),
 				AccessType:     accessType,
 			}
-			if payload, ok := ruleMap[authKeysV2PayloadFieldName]; ok && payload != nil {
-				payloadMap := make(map[string]string)
-				for k, val := range payload.(map[string]interface{}) {
-					payloadMap[k] = val.(string)
-				}
-				collectionRule.Payload = payloadMap
-			}
 			rules = append(rules, &authv2.AccessRule{
 				Scope: &authv2.AccessRule_CollectionAccess{CollectionAccess: collectionRule},
 			})
