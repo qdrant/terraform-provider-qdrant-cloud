@@ -1,6 +1,6 @@
-# Example: Auth Key
+# Example: Database API Key
 
-This example shows how to use the Terraform Qdrant Cloud provider to manage Auth Keys resources in Qdrant Cloud.
+This example shows how to use the Terraform Qdrant Cloud provider to manage Datbase API Key resources in Qdrant Cloud.
 
 ## Prerequisites
 
