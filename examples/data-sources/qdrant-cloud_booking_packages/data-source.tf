@@ -25,3 +25,11 @@ data "qdrant-cloud_booking_packages" "test" {
 output "packages" {
   value = data.qdrant-cloud_booking_packages.test.packages
 }
+
+// Get a package with a specific configuration
+locals {
+  desired_package = [
+    for pkg in data.qdrant-cloud_booking_packages.test.packages : pkg
+    if pkg.resource_configuration[0].cpu == "16000m" && pkg.resource_configuration[0].ram == "64Gi"
+  ]
+}

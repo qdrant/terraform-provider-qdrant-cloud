@@ -27,44 +27,25 @@ locals {
   ]
 }
 
-// Create a cluster
+// Create a cluster (for the sake of having an ID, see below)
 resource "qdrant-cloud_accounts_cluster" "example" {
   name           = "example-cluster"
   cloud_provider = data.qdrant-cloud_booking_packages.all_packages.cloud_provider
   cloud_region   = data.qdrant-cloud_booking_packages.all_packages.cloud_region
   configuration {
     number_of_nodes = 1
-    database_configuration {
-      service {
-        jwt_rbac = true
-      }
-    }
     node_configuration {
       package_id = local.desired_package[0].id
     }
   }
 }
 
-// Create an V2 Auth Key, which refers to the cluster provided above
-resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
-  cluster_id = qdrant-cloud_accounts_cluster.example.id
-  name       = "example-key"
-}
-
-// Output some of the cluster info
-output "cluster_id" {
-  value = qdrant-cloud_accounts_cluster.example.id
-}
-
-output "cluster_version" {
-  value = qdrant-cloud_accounts_cluster.example.version
-}
-
-output "url" {
-  value = qdrant-cloud_accounts_cluster.example.url
+// Create an Auth Key, which refers to the cluster provided above
+resource "qdrant-cloud_accounts_auth_key" "example-key" {
+  cluster_ids = [qdrant-cloud_accounts_cluster.example.id]
 }
 
 // Output the token (which can be used to access the database cluster)
 output "token" {
-  value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
+  value = qdrant-cloud_accounts_auth_key.example-key.token
 }

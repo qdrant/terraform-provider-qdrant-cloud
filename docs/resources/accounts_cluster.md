@@ -62,8 +62,8 @@ resource "qdrant-cloud_accounts_cluster" "example" {
 
 // Create an V2 Auth Key, which refers to the cluster provided above
 resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
-  cluster_id   = qdrant-cloud_accounts_cluster.example.id
-  name         = "example-key"
+  cluster_id = qdrant-cloud_accounts_cluster.example.id
+  name       = "example-key"
 }
 
 // Output some of the cluster info
@@ -81,7 +81,7 @@ output "url" {
 
 // Output the token (which can be used to access the database cluster)
 output "token" {
-  value       = qdrant-cloud_accounts_database_api_key_v2.example-key.key
+  value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
 }
 ```
 

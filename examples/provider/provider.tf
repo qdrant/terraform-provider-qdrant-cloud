@@ -44,8 +44,8 @@ resource "qdrant-cloud_accounts_cluster" "example" {
 }
 
 resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
-  cluster_id   = qdrant-cloud_accounts_cluster.example.id
-  name         = "example-key"
+  cluster_id = qdrant-cloud_accounts_cluster.example.id
+  name       = "example-key"
 }
 
 output "cluster_id" {
@@ -57,7 +57,7 @@ output "url" {
 }
 
 output "token" {
-  value       = qdrant-cloud_accounts_database_api_key_v2.example-key.key
+  value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
 }
 
 output "curl_command" {

@@ -55,20 +55,38 @@ provider "qdrant-cloud" {
   account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
 }
 
-resource "qdrant-cloud_accounts_cluster" "example" {
-  name           = "tf-example-cluster"
+// Get the cluster package
+data "qdrant-cloud_booking_packages" "all_packages" {
   cloud_provider = "gcp"
   cloud_region   = "us-east4"
+}
+locals {
+  desired_package = [
+    for pkg in data.qdrant-cloud_booking_packages.all_packages.packages : pkg
+    if pkg.resource_configuration[0].cpu == "16000m" && pkg.resource_configuration[0].ram == "64Gi"
+  ]
+}
+
+resource "qdrant-cloud_accounts_cluster" "example" {
+  name           = "tf-example-cluster"
+  cloud_provider = data.qdrant-cloud_booking_packages.all_packages.cloud_provider
+  cloud_region   = data.qdrant-cloud_booking_packages.all_packages.cloud_region
   configuration {
     number_of_nodes = 1
+    database_configuration {
+      service {
+        jwt_rbac = true
+      }
+    }
     node_configuration {
-      package_id = "7c939d96-d671-4051-aa16-3b8b7130fa42" # gpx1
+      package_id = local.desired_package[0].id
     }
   }
 }
 
-resource "qdrant-cloud_accounts_auth_key" "example-key" {
-  cluster_ids = [qdrant-cloud_accounts_cluster.example.id]
+resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
+  cluster_id = qdrant-cloud_accounts_cluster.example.id
+  name       = "example-key"
 }
 
 output "cluster_id" {
@@ -80,12 +98,11 @@ output "url" {
 }
 
 output "token" {
-  value       = qdrant-cloud_accounts_auth_key.example-key.token
-  description = "Token is available only once, after creation."
+  value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
 }
 
 output "curl_command" {
-  value       = "curl \\\n    -X GET '${qdrant-cloud_accounts_cluster.example.url}' \\\n    --header 'api-key: ${qdrant-cloud_accounts_auth_key.example-key.token}'"
+  value       = "curl \\\n    -X GET '${qdrant-cloud_accounts_cluster.example.url}' \\\n    --header 'api-key: ${qdrant-cloud_accounts_database_api_key_v2.example-key.key}'"
   description = "Generating a curl command test cluster access using the API key."
 }
 ```
