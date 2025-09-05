@@ -107,7 +107,7 @@ output "curl_command" {
 }
 ```
 
-The Qdrant Cloud API Key and Account ID can also be provided using environment these variables:
+The Qdrant Cloud API Key and Account ID can also be provided using these environment variables:
 
 * `QDRANT_CLOUD_API_KEY`
 * `QDRANT_CLOUD_ACCOUNT_ID`
