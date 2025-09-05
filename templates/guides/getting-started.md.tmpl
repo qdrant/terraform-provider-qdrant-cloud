@@ -38,7 +38,7 @@ provider "qdrant-cloud" {
 
 ## Example Usage
 
-### Creating your first Cluster (including access token):
+### Create your first Cluster (including Database Key):
 
 ```hcl
 // Get the cluster package
@@ -71,7 +71,7 @@ resource "qdrant-cloud_accounts_cluster" "example" {
   }
 }
 
-// Create an V2 Auth Key, which refers to the cluster provided above
+// Create an V2 Database Key, which refers to the cluster provided above
 resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
   cluster_id   = qdrant-cloud_accounts_cluster.example.id
   name         = "example-key"
@@ -95,8 +95,8 @@ output "url" {
   value = qdrant-cloud_accounts_cluster.example.url
 }
 
-// Output the token (which can be used to access the database cluster)
-output "token" {
+// Output the Database API Key (which can be used to access the database cluster)
+output "key" {
   value       = qdrant-cloud_accounts_database_api_key_v2.example-key.key
 }
 ```

@@ -66,8 +66,8 @@ resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
   name       = "example-key"
 }
 
-// Output the token (which can be used to access the database cluster)
-output "token" {
+// Output the Database API Key (which can be used to access the database cluster)
+output "key" {
   value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
 }
 ```
