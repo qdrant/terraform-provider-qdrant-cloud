@@ -17,8 +17,8 @@ provider "qdrant-cloud" {
 
 // Get the cluster package
 data "qdrant-cloud_booking_packages" "all_packages" {
-  cloud_provider = "gcp"
-  cloud_region   = "us-east4"
+  cloud_provider = "aws"       // Required. Please refer to the documentation (https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest/docs/guides/getting-started) for the available options.
+  cloud_region   = "us-west-2" // Required. Please refer to the documentation (https://registry.terraform.io/providers/qdrant/qdrant-cloud/latest/docs/guides/getting-started) for the available options.
 }
 locals {
   desired_package = [
