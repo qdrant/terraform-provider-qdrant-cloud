@@ -1,6 +1,6 @@
 # Example: Database API Key (deprecated)
 
-This example shows how to use the Terraform Qdrant Cloud provider to manage the deprecated V1 Datbase API Key resources in Qdrant Cloud.
+This example shows how to use the Terraform Qdrant Cloud provider to manage the deprecated V1 Database API Key resources in Qdrant Cloud.
 
 ## Prerequisites
 

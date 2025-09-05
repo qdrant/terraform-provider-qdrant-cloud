@@ -56,7 +56,7 @@ output "url" {
   value = qdrant-cloud_accounts_cluster.example.url
 }
 
-output "token" {
+output "key" {
   value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
 }
 
