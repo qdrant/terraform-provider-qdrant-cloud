@@ -1,3 +1,4 @@
+// Setup Terraform, including the qdrant-cloud providers
 terraform {
   required_version = ">= 1.7.0"
   required_providers {
@@ -8,9 +9,9 @@ terraform {
   }
 }
 
+// Add the provider to specify some provider wide settings
 provider "qdrant-cloud" {
   api_key    = "" // API Key generated in Qdrant Cloud (required)
-  api_url    = "" // URL where the public API of Qdrant cloud can be found (optional: defaults to production URL).
   account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
 }
 
@@ -26,8 +27,9 @@ locals {
   ]
 }
 
+// Create a cluster (for the sake of having an ID, see below)
 resource "qdrant-cloud_accounts_cluster" "example" {
-  name           = "tf-example-cluster"
+  name           = "example-cluster"
   cloud_provider = data.qdrant-cloud_booking_packages.all_packages.cloud_provider
   cloud_region   = data.qdrant-cloud_booking_packages.all_packages.cloud_region
   configuration {
@@ -43,24 +45,13 @@ resource "qdrant-cloud_accounts_cluster" "example" {
   }
 }
 
+// Create an V2 Auth Key, which refers to the cluster provided above
 resource "qdrant-cloud_accounts_database_api_key_v2" "example-key" {
   cluster_id = qdrant-cloud_accounts_cluster.example.id
   name       = "example-key"
 }
 
-output "cluster_id" {
-  value = qdrant-cloud_accounts_cluster.example.id
-}
-
-output "url" {
-  value = qdrant-cloud_accounts_cluster.example.url
-}
-
+// Output the token (which can be used to access the database cluster)
 output "token" {
   value = qdrant-cloud_accounts_database_api_key_v2.example-key.key
-}
-
-output "curl_command" {
-  value       = "curl \\\n    -X GET '${qdrant-cloud_accounts_cluster.example.url}' \\\n    --header 'api-key: ${qdrant-cloud_accounts_database_api_key_v2.example-key.key}'"
-  description = "Generating a curl command test cluster access using the API key."
 }
