@@ -23,6 +23,9 @@ func resourceAccountsCluster() *schema.Resource {
 		UpdateContext: resourceClusterUpdate,
 		DeleteContext: resourceClusterDelete,
 		Schema:        accountsClusterSchema(false),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
