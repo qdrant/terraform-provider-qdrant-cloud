@@ -3,6 +3,7 @@ package qdrant
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +22,17 @@ func resourceAccountsBackupSchedule() *schema.Resource {
 		DeleteContext: resourceBackupScheduleDelete,
 		Schema:        accountsBackupScheduleResourceSchema(false),
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+					return nil, fmt.Errorf("unexpected format of ID (%s), expected <cluster_id>/<backup_schedule_id>", d.Id())
+				}
+				if err := d.Set(backupScheduleClusterIDFieldName, parts[0]); err != nil {
+					return nil, fmt.Errorf("error setting cluster_id: %w", err)
+				}
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 	}
 }

@@ -110,3 +110,14 @@ Required:
 Required:
 
 - `access_type` (String) Access type for global access. Can be `GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE`.
+
+
+
+
+## Import
+
+`qdrant-cloud_accounts_database_api_key_v2` can be imported using a composite ID of `<cluster_id>/<api_key_id>`, e.g.
+
+```
+$ terraform import qdrant-cloud_accounts_database_api_key_v2.example 12345678-0000-0000-0000-1234567890ab/abcdefgh-0000-0000-0000-1234567890ab
+```

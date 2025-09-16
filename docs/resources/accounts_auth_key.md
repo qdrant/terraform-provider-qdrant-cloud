@@ -3,12 +3,12 @@
 page_title: "qdrant-cloud_accounts_auth_key Resource - terraform-provider-qdrant-cloud"
 subcategory: ""
 description: |-
-  Account AuthKey Resource [Deprecated, see qdrant-cloud_accounts_database_api_key_v2 instead]
+  Account AuthKey Resource [Deprecated, see `qdrant-cloud_accounts_database_api_key_v2` instead]
 ---
 
 # qdrant-cloud_accounts_auth_key (Resource)
 
-Account AuthKey Resource [Deprecated, see `qdrant-cloud_accounts_database_api_key_v2` instead]
+> **Deprecated:** The `qdrant-cloud_accounts_auth_key` resource is deprecated and will be removed in a future version. Please use the `qdrant-cloud_accounts_database_api_key_v2` resource instead.
 
 ## Example Usage
 
@@ -79,3 +79,13 @@ output "key" {
 - `id` (String) Auth Keys Keys Schema Auth Key Identifier field
 - `prefix` (String) Auth Keys Keys Schema Prefix of the Auth Key (the first few bytes from the token) field
 - `token` (String) Auth Keys Keys Schema Secret token for this Auth Key (handle with care!) field
+
+
+
+## Import
+
+`qdrant-cloud_accounts_auth_key` can be imported using the auth key ID, e.g.
+
+```
+$ terraform import qdrant-cloud_accounts_auth_key.example 12345678-0000-0000-0000-1234567890ab
+```
