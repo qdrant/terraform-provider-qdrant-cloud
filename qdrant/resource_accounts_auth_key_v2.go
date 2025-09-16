@@ -29,7 +29,9 @@ func resourceAccountsAuthKeyV2() *schema.Resource {
 				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
 					return nil, fmt.Errorf("unexpected format of ID (%s), expected <cluster_id>/<api_key_id>", d.Id())
 				}
-				d.Set("cluster_id", parts[0])
+				if err := d.Set("cluster_id", parts[0]); err != nil {
+					return nil, fmt.Errorf("error setting cluster_id: %w", err)
+				}
 				d.SetId(parts[1])
 				return []*schema.ResourceData{d}, nil
 			},
