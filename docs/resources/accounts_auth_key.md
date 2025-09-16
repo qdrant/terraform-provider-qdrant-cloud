@@ -87,5 +87,5 @@ output "key" {
 `qdrant-cloud_accounts_auth_key` can be imported using the auth key ID, e.g.
 
 ```
-$ terraform import qdrant-cloud_accounts_auth_key.example <auth_key_id>
+$ terraform import qdrant-cloud_accounts_auth_key.example 12345678-0000-0000-0000-1234567890ab
 ```

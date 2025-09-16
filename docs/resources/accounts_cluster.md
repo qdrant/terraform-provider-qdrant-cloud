@@ -336,5 +336,5 @@ Read-Only:
 `qdrant-cloud_accounts_cluster` can be imported using the cluster ID, e.g.
 
 ```
-$ terraform import qdrant-cloud_accounts_cluster.example <cluster_id>
+$ terraform import qdrant-cloud_accounts_cluster.example 12345678-0000-0000-0000-1234567890ab
 ```
