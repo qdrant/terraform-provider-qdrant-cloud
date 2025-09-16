@@ -110,7 +110,7 @@ output "backup_schedule_id" {
 
 ## Import
 
-`qdrant-cloud_accounts_backup_schedule` can be imported using the backup schedule ID, e.g.
+`qdrant-cloud_accounts_backup_schedule` can be imported using a composite ID of `<cluster_id>/<backup_schedule_id>`, e.g.
 
 ```
 $ terraform import qdrant-cloud_accounts_backup_schedule.example <backup_schedule_id>
