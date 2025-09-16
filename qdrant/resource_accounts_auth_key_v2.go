@@ -3,6 +3,7 @@ package qdrant
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,6 +23,17 @@ func resourceAccountsAuthKeyV2() *schema.Resource {
 		UpdateContext: nil, // Not available in the public API
 		DeleteContext: resourceAPIKeyV2Delete,
 		Schema:        accountsAuthKeyV2ResourceSchema(false),
+		Importer: &schema.ResourceImporter{
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.Split(d.Id(), "/")
+				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+					return nil, fmt.Errorf("unexpected format of ID (%s), expected <cluster_id>/<api_key_id>", d.Id())
+				}
+				d.Set("cluster_id", parts[0])
+				d.SetId(parts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 	}
 }
 
@@ -53,7 +65,7 @@ func resourceAPIKeyV2Read(ctx context.Context, d *schema.ResourceData, m interfa
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Process the correct one, if any
 	for _, apiKey := range resp.GetItems() {
 		if apiKey.GetId() == apiKeyID {
 			for k, v := range flattenAuthKeyV2(apiKey, false) {
@@ -65,7 +77,6 @@ func resourceAPIKeyV2Read(ctx context.Context, d *schema.ResourceData, m interfa
 			return nil
 		}
 	}
-
 	// If the key is not found, it might have been deleted manually.
 	// Remove it from the state.
 	d.SetId("")

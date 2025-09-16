@@ -23,6 +23,9 @@ func resourceAccountsCluster() *schema.Resource {
 		UpdateContext: resourceClusterUpdate,
 		DeleteContext: resourceClusterDelete,
 		Schema:        accountsClusterSchema(false),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
@@ -45,7 +48,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, m interfac
 	var trailer metadata.MD
 	resp, err := client.GetCluster(clientCtx, &qcCluster.GetClusterRequest{
 		AccountId: accountUUID.String(),
-		ClusterId: d.Get("id").(string),
+		ClusterId: d.Id(),
 	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
@@ -152,7 +155,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	var trailer metadata.MD
 	_, err = client.DeleteCluster(clientCtx, &qcCluster.DeleteClusterRequest{
 		AccountId:     accountUUID.String(),
-		ClusterId:     d.Get(clusterIdentifierFieldName).(string),
+		ClusterId:     d.Id(),
 		DeleteBackups: newPointer(true),
 	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID

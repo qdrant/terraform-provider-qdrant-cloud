@@ -16,12 +16,15 @@ import (
 // Returns a schema.Resource pointer configured with schema definitions and the CRUD functions.
 func resourceAccountsAuthKey() *schema.Resource {
 	return &schema.Resource{
-		Description:        "Account AuthKey Resource [Deprecated, see `qdrant-cloud_accounts_database_api_key_v2` instead]",
-		ReadContext:        resourceAPIKeyRead,
-		CreateContext:      resourceAPIKeyCreate,
-		UpdateContext:      nil, // Not available in the public API
-		DeleteContext:      resourceAPIKeyDelete,
-		Schema:             accountsAuthKeySchema(),
+		Description:   "Account AuthKey Resource [Deprecated, see `qdrant-cloud_accounts_database_api_key_v2` instead]",
+		ReadContext:   resourceAPIKeyRead,
+		CreateContext: resourceAPIKeyCreate,
+		UpdateContext: nil, // Not available in the public API
+		DeleteContext: resourceAPIKeyDelete,
+		Schema:        accountsAuthKeySchema(),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		DeprecationMessage: "The `qdrant-cloud_accounts_auth_key` resource is deprecated and will be removed in a future version. Please use the `qdrant-cloud_accounts_database_api_key_v2` resource instead.",
 	}
 }
@@ -44,8 +47,6 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	// Get API Key ID
-	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Execute the request and handle the response
 	var trailer metadata.MD
 	resp, err := client.ListDatabaseApiKeys(clientCtx, &qcAuth.ListDatabaseApiKeysRequest{
@@ -56,8 +57,9 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
+	// Process the correct one, if any
 	for _, apiKey := range resp.GetItems() {
-		if apiKey.GetId() != apiKeyID {
+		if apiKey.GetId() != d.Id() {
 			// Skip unknown or incorrect ones
 			continue
 		}
@@ -67,10 +69,12 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 				return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 			}
 		}
-		d.SetId(apiKeyID)
 		return nil
 	}
-	return diag.Errorf("%s: API key ID cannot be found anymore", errorPrefix)
+	// If the key is not found, it might have been deleted manually.
+	// Remove it from the state.
+	d.SetId("")
+	return nil
 }
 
 // resourceAPIKeyCreate performs a create operation to generate a new API key associated with an account.
@@ -144,13 +148,11 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	// Get API Key ID
-	apiKeyID := d.Get(authKeysKeysIDFieldName).(string)
 	// Delete the key
 	var trailer metadata.MD
 	_, err = client.DeleteDatabaseApiKey(clientCtx, &qcAuth.DeleteDatabaseApiKeyRequest{
 		AccountId:        accountUUID.String(),
-		DatabaseApiKeyId: apiKeyID,
+		DatabaseApiKeyId: d.Id(),
 	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
