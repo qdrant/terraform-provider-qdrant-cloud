@@ -1,0 +1,262 @@
+package qdrant
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+
+	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
+)
+
+// resourceAccountsHybridCloudEnvironment defines the TF resource and wires CRUD + import.
+func resourceAccountsHybridCloudEnvironment() *schema.Resource {
+	return &schema.Resource{
+		Description: "Hybrid Cloud Environment Resource",
+		Schema:      accountsHybridCloudEnvironmentSchema(),
+
+		CreateContext: resourceHCEnvCreate,
+		ReadContext:   resourceHCEnvRead,
+		UpdateContext: resourceHCEnvUpdate,
+		DeleteContext: resourceHCEnvDelete,
+
+		// Accept only "<hc_env_id>" (account is taken from provider config or per-resource override)
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+	}
+}
+
+// resourceHCEnvCreate creates the environment, sets ID/state, then fetches bootstrap commands.
+func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error creating hybrid cloud environment"
+
+	conn, clientCtx, diags := getClientConnection(ctx, m)
+	if diags.HasError() {
+		return diags
+	}
+	client := qch.NewHybridCloudServiceClient(conn)
+
+	// Build payload from config (account_id override or provider default)
+	env, err := expandHCEnvForCreate(d, getDefaultAccountID(m))
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	var trailer metadata.MD
+	resp, err := client.CreateHybridCloudEnvironment(
+		clientCtx,
+		&qch.CreateHybridCloudEnvironmentRequest{
+			HybridCloudEnvironment: env,
+		},
+		grpc.Trailer(&trailer),
+	)
+	errorPrefix += getRequestID(trailer)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	created := resp.GetHybridCloudEnvironment()
+	d.SetId(created.GetId())
+
+	for k, v := range flattenHCEnv(created) {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		}
+	}
+
+	// fetch bootstrap commands immediately so users can consume them
+	if ds := setHCEnvBootstrapCommands(client, clientCtx, d, m, "error getting bootstrap commands"); ds.HasError() {
+		return ds
+	}
+
+	return nil
+}
+
+// resourceHCEnvRead refreshes state from API; if missing clears ID; fills bootstrap commands if empty.
+func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error reading hybrid cloud environment"
+
+	conn, clientCtx, diags := getClientConnection(ctx, m)
+	if diags.HasError() {
+		return diags
+	}
+	client := qch.NewHybridCloudServiceClient(conn)
+
+	accountUUID, err := getAccountUUID(d, m)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	var trailer metadata.MD
+	resp, err := client.GetHybridCloudEnvironment(clientCtx, &qch.GetHybridCloudEnvironmentRequest{
+		AccountId:                accountUUID.String(),
+		HybridCloudEnvironmentId: d.Id(),
+	}, grpc.Trailer(&trailer))
+	errorPrefix += getRequestID(trailer)
+
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			// Resource gone in the backend, clear state
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	env := resp.GetHybridCloudEnvironment()
+
+	// Canonical ID
+	d.SetId(env.GetId())
+
+	// Flatten into state (no 'status' block intentionally)
+	for k, v := range flattenHCEnv(env) {
+		if err := d.Set(k, v); err != nil {
+			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		}
+	}
+
+	// TODO will be implemented in the next iteration due to this new PAK potentially might
+	// invalidate the one that is being actively used for an existing hybrid cloud env
+
+	// // only fetch bootstrap commands if not already in state (e.g., after import)
+	// needFetch := true
+	// if v, ok := d.GetOk(hcEnvBootstrapCommandsFieldName); ok {
+	// 	if lst, ok2 := v.([]interface{}); ok2 && len(lst) > 0 {
+	// 		needFetch = false
+	// 	}
+	// }
+	// if needFetch {
+	// 	if ds := setHCEnvBootstrapCommands(client, clientCtx, d, m, "error getting bootstrap commands"); ds.HasError() {
+	// 		return ds
+	// 	}
+	// }
+
+	return nil
+}
+
+// resourceHCEnvUpdate updates mutable fields (e.g., name) and then re-reads for canonical state.
+func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	// If nothing to change, just refresh
+	if !d.HasChange(hcEnvNameFieldName) {
+		return resourceHCEnvRead(ctx, d, m)
+	}
+
+	errorPrefix := "error updating hybrid cloud environment"
+
+	conn, clientCtx, diags := getClientConnection(ctx, m)
+	if diags.HasError() {
+		return diags
+	}
+	client := qch.NewHybridCloudServiceClient(conn)
+
+	env, err := expandHCEnvForUpdate(d, getDefaultAccountID(m))
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	var trailer metadata.MD
+	_, err = client.UpdateHybridCloudEnvironment(
+		clientCtx,
+		&qch.UpdateHybridCloudEnvironmentRequest{
+			HybridCloudEnvironment: env,
+		},
+		grpc.Trailer(&trailer),
+	)
+	errorPrefix += getRequestID(trailer)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	return resourceHCEnvRead(ctx, d, m)
+}
+
+// resourceHCEnvDelete deletes the environment; treats NotFound as success and clears ID.
+func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error deleting hybrid cloud environment"
+
+	conn, clientCtx, diags := getClientConnection(ctx, m)
+	if diags.HasError() {
+		return diags
+	}
+	client := qch.NewHybridCloudServiceClient(conn)
+
+	accountUUID, err := getAccountUUID(d, m)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	var trailer metadata.MD
+	_, err = client.DeleteHybridCloudEnvironment(
+		clientCtx,
+		&qch.DeleteHybridCloudEnvironmentRequest{
+			AccountId:                accountUUID.String(),
+			HybridCloudEnvironmentId: d.Id(),
+		},
+		grpc.Trailer(&trailer),
+	)
+	errorPrefix += getRequestID(trailer)
+
+	if err != nil {
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	d.SetId("")
+	return nil
+}
+
+// setHCEnvBootstrapCommands calls GetBootstrapCommands and stores Sensitive list in state.
+func setHCEnvBootstrapCommands(
+	client qch.HybridCloudServiceClient,
+	clientCtx context.Context,
+	d *schema.ResourceData,
+	m interface{},
+	errorPrefix string,
+) diag.Diagnostics {
+	accountUUID, err := getAccountUUID(d, m)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	var trailer metadata.MD
+	resp, err := client.GetBootstrapCommands(
+		clientCtx,
+		&qch.GetBootstrapCommandsRequest{
+			AccountId:                accountUUID.String(),
+			HybridCloudEnvironmentId: d.Id(),
+		},
+		grpc.Trailer(&trailer),
+	)
+	errorPrefix += getRequestID(trailer)
+
+	if err != nil {
+		// Soft-fail on common "not ready yet" or permission issues
+		if st, ok := status.FromError(err); ok && (st.Code() == codes.FailedPrecondition || st.Code() == codes.PermissionDenied) {
+			return diag.Diagnostics{{
+				Severity: diag.Warning,
+				Summary:  "Bootstrap commands not available",
+				Detail:   "The environment may not be ready yet or your credentials lack permission. Re-run plan/apply later to refresh.",
+			}}
+		}
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	cmds := resp.GetCommands()
+	values := make([]interface{}, len(cmds))
+	for i, c := range cmds {
+		values[i] = c
+	}
+	if err := d.Set(hcEnvBootstrapCommandsFieldName, values); err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+	return nil
+}
