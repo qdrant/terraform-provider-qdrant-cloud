@@ -246,7 +246,7 @@ output "cluster_name_del" {
 	t.Run("creates and deletes a cluster without deleting backups", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			ProviderFactories: map[string]func() (*schema.Provider, error){
-				"qdrant-cloud": func() (*schema.Provider, error) {
+				"qdrant-cloud": func() (*schema.Provider, error) { //nolint: unparam // (error) is always nil
 					return Provider(), nil
 				},
 			},

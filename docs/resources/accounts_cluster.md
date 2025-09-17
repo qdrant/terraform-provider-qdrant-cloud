@@ -102,6 +102,7 @@ For hybrid this should be the hybrid cloud environment ID. field
 ### Optional
 
 - `account_id` (String) Cluster Schema Identifier of the account field
+- `delete_backups_on_destroy` (Boolean) Whether to delete backups when the cluster is destroyed.
 - `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
 
 ### Read-Only

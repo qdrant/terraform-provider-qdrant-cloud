@@ -37,6 +37,7 @@ Read-Only:
 - `cluster_id` (String)
 - `created_at` (String)
 - `cron_expression` (String)
+- `delete_backups_on_destroy` (Boolean)
 - `deleted_at` (String)
 - `id` (String)
 - `retention_period` (String)

@@ -62,6 +62,7 @@ Read-Only:
 - `cloud_region` (String)
 - `configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration))
 - `created_at` (String)
+- `delete_backups_on_destroy` (Boolean)
 - `id` (String)
 - `marked_for_deletion_at` (String)
 - `name` (String)
