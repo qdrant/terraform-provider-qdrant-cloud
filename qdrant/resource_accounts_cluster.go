@@ -156,7 +156,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	_, err = client.DeleteCluster(clientCtx, &qcCluster.DeleteClusterRequest{
 		AccountId:     accountUUID.String(),
 		ClusterId:     d.Id(),
-		DeleteBackups: newPointer(true),
+		DeleteBackups: newPointer(true), // TODO: make this configurable?
 	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
