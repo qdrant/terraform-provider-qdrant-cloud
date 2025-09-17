@@ -199,3 +199,64 @@ output "extra_disk_amount" {
 		testCase(t, "apply")
 	})
 }
+
+func TestResourceClusterDeleteWithoutBackups(t *testing.T) {
+	provider := fmt.Sprintf(`
+provider "qdrant-cloud" {
+  api_key = "%s"
+}
+	`, os.Getenv("QDRANT_CLOUD_API_KEY"))
+
+	config := provider + fmt.Sprintf(`
+data "qdrant-cloud_booking_packages" "test" {
+  cloud_provider = "gcp"
+  cloud_region   = "us-east4"
+}
+locals {
+  resource_data = data.qdrant-cloud_booking_packages.test.packages
+  // Filter on gpx1
+  gpx1_packages = [
+    for resource in local.resource_data : resource if resource.name == "gpx1"
+  ]
+  // Get the first gpx1 package
+  gpx1_package = local.gpx1_packages[0]
+}
+
+resource "qdrant-cloud_accounts_cluster" "test" {
+  name           = "test-cluster-delete-no-backups"
+  account_id     = "%s"
+  cloud_region   = "us-east4"
+  cloud_provider = "gcp"
+  delete_backups_on_destroy = false
+
+  configuration {
+    number_of_nodes = 1
+
+    node_configuration {
+      package_id = local.gpx1_package.id
+    }
+  }
+}
+
+output "cluster_name_del" {
+  value = qdrant-cloud_accounts_cluster.test.name
+}
+`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+
+	t.Run("creates and deletes a cluster without deleting backups", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProviderFactories: map[string]func() (*schema.Provider, error){
+				"qdrant-cloud": func() (*schema.Provider, error) { //nolint: unparam // (error) is always nil
+					return Provider(), nil
+				},
+			},
+			Steps: []resource.TestStep{
+				{
+					Config:  config,
+					Destroy: true, // Destroy will be called, testing delete_backups_on_destroy
+					Check:   resource.TestCheckOutput("cluster_name_del", "test-cluster-delete-no-backups"),
+				},
+			},
+		})
+	})
+}

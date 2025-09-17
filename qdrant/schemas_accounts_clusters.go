@@ -30,6 +30,7 @@ const (
 	clusterURLFieldName                        = "url"
 	clusterStatusFieldName                     = "status"
 	clusterStatusVersionFieldName              = "version"
+	clusterDeleteBackupsOnDestroyFieldName     = "delete_backups_on_destroy"
 	clusterStatusNodesUpFieldName              = "nodes_up"
 	clusterStatusRestartedAtFieldName          = "restarted_at"
 	clusterStatusPhaseFieldName                = "phase"
@@ -209,6 +210,12 @@ For hybrid this should be the hybrid cloud environment ID.`),
 			Elem: &schema.Resource{
 				Schema: accountsClusterStatusSchema(),
 			},
+		},
+		clusterDeleteBackupsOnDestroyFieldName: {
+			Description: "Whether to delete backups when the cluster is destroyed.",
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
 		},
 	}
 }

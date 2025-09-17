@@ -151,12 +151,14 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, m interf
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-	// Delete with all backups as well.
+	// Do we need to delete the backups?
+	deleteBackups := d.Get(clusterDeleteBackupsOnDestroyFieldName).(bool)
+	// Delete the cluster
 	var trailer metadata.MD
 	_, err = client.DeleteCluster(clientCtx, &qcCluster.DeleteClusterRequest{
 		AccountId:     accountUUID.String(),
 		ClusterId:     d.Id(),
-		DeleteBackups: newPointer(true), // TODO: make this configurable?
+		DeleteBackups: newPointer(deleteBackups),
 	}, grpc.Trailer(&trailer))
 	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)

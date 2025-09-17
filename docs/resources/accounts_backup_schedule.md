@@ -97,6 +97,7 @@ output "backup_schedule_id" {
 ### Optional
 
 - `account_id` (String) Backup Schedule Schema Account ID field
+- `delete_backups_on_destroy` (Boolean) Whether to delete backups when the schedule is destroyed.
 - `retention_period` (String) Backup Schedule Schema Retention period as a Go duration string (e.g., "72h"). field
 
 ### Read-Only

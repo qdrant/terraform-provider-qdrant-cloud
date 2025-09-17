@@ -19,6 +19,10 @@ Backup Schedule Data Source
 
 - `id` (String) Backup Schedule Schema ID field
 
+### Optional
+
+- `delete_backups_on_destroy` (Boolean) Whether to delete backups when the schedule is destroyed.
+
 ### Read-Only
 
 - `account_id` (String) Backup Schedule Schema Account ID field

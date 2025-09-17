@@ -49,6 +49,7 @@ output "cluster" {
 ### Optional
 
 - `account_id` (String) Cluster Schema Identifier of the account field
+- `delete_backups_on_destroy` (Boolean) Whether to delete backups when the cluster is destroyed.
 
 ### Read-Only
 

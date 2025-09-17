@@ -18,6 +18,7 @@ const (
 	backupScheduleStatusFieldName          = "status"
 	backupScheduleCreatedAtFieldName       = "created_at"
 	backupScheduleDeletedAtFieldName       = "deleted_at"
+	backupScheduleDeleteBackupsOnDestroy   = "delete_backups_on_destroy"
 	backupSchedulesFieldName               = "schedules"
 )
 
@@ -68,6 +69,12 @@ func accountsBackupScheduleResourceSchema(asDataSource bool) map[string]*schema.
 			Description: fmt.Sprintf(backupScheduleFieldTemplate, "Status"),
 			Type:        schema.TypeString,
 			Computed:    true,
+		},
+		backupScheduleDeleteBackupsOnDestroy: {
+			Description: "Whether to delete backups when the schedule is destroyed.",
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
 		},
 	}
 
