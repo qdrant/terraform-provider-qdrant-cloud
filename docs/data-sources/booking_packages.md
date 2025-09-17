@@ -68,13 +68,23 @@ locals {
 
 Read-Only:
 
+- `available_additional_resources` (List of Object) (see [below for nested schema](#nestedobjatt--packages--available_additional_resources))
 - `currency` (String)
 - `id` (String)
 - `name` (String)
 - `resource_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--packages--resource_configuration))
 - `status` (String)
+- `tier` (String)
 - `type` (String)
 - `unit_int_price_per_hour` (Number)
+
+<a id="nestedobjatt--packages--available_additional_resources"></a>
+### Nested Schema for `packages.available_additional_resources`
+
+Read-Only:
+
+- `disk_price_per_hour` (Number)
+
 
 <a id="nestedobjatt--packages--resource_configuration"></a>
 ### Nested Schema for `packages.resource_configuration`

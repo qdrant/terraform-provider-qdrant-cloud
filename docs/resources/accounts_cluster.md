@@ -122,8 +122,24 @@ Required:
 
 Optional:
 
+- `allowed_ip_source_ranges` (List of String) List of allowed IP source ranges for this cluster.
+- `annotations` (Block List) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
 - `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))
+- `gpu_type` (String) The GPU type that should be used for the database.
+- `node_selector` (Block List) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
+- `pod_labels` (Block List) List of labels applied to the pods of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--pod_labels))
+- `rebalance_strategy` (String) The automatic shard rebalancing strategy for the database.
+- `reserved_cpu_percentage` (Number) The percentage of CPU resources reserved for system components.
+- `reserved_memory_percentage` (Number) The percentage of RAM resources reserved for system components.
+- `restart_policy` (String) The restart policy for the database.
+- `service_annotations` (Block List) List of annotations applied to the service of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--service_annotations))
+- `service_type` (String) The type of service to use for this cluster in a hybrid cloud environment.
+- `tolerations` (Block List) List of tolerations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--tolerations))
 - `version` (String) Cluster Schema Version of the Qdrant cluster field
+
+Read-Only:
+
+- `last_modified_at` (String) Cluster Schema Timestamp when the cluster configuration was last updated field
 
 <a id="nestedblock--configuration--node_configuration"></a>
 ### Nested Schema for `configuration.node_configuration`
@@ -145,6 +161,15 @@ Required:
 - `resource_type` (String) The type of the resource
 - `resource_unit` (String) The unit of the resource
 
+
+
+<a id="nestedblock--configuration--annotations"></a>
+### Nested Schema for `configuration.annotations`
+
+Required:
+
+- `key` (String)
+- `value` (String)
 
 
 <a id="nestedblock--configuration--database_configuration"></a>
@@ -257,6 +282,45 @@ Required:
 - `secret_name` (String) The name of the secret.
 
 
+
+
+<a id="nestedblock--configuration--node_selector"></a>
+### Nested Schema for `configuration.node_selector`
+
+Required:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedblock--configuration--pod_labels"></a>
+### Nested Schema for `configuration.pod_labels`
+
+Required:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedblock--configuration--service_annotations"></a>
+### Nested Schema for `configuration.service_annotations`
+
+Required:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedblock--configuration--tolerations"></a>
+### Nested Schema for `configuration.tolerations`
+
+Optional:
+
+- `effect` (String)
+- `key` (String)
+- `operator` (String)
+- `toleration_seconds` (Number)
+- `value` (String)
 
 
 

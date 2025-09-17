@@ -71,10 +71,32 @@ For hybrid this should be the hybrid cloud environment ID. field
 
 Read-Only:
 
+- `allowed_ip_source_ranges` (List of String)
+- `annotations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--annotations))
 - `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration))
+- `gpu_type` (String)
+- `last_modified_at` (String)
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_configuration))
+- `node_selector` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_selector))
 - `number_of_nodes` (Number)
+- `pod_labels` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--pod_labels))
+- `rebalance_strategy` (String)
+- `reserved_cpu_percentage` (Number)
+- `reserved_memory_percentage` (Number)
+- `restart_policy` (String)
+- `service_annotations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--service_annotations))
+- `service_type` (String)
+- `tolerations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--tolerations))
 - `version` (String)
+
+<a id="nestedobjatt--configuration--annotations"></a>
+### Nested Schema for `configuration.annotations`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
 
 <a id="nestedobjatt--configuration--database_configuration"></a>
 ### Nested Schema for `configuration.database_configuration`
@@ -205,6 +227,45 @@ Read-Only:
 - `resource_type` (String)
 - `resource_unit` (String)
 
+
+
+<a id="nestedobjatt--configuration--node_selector"></a>
+### Nested Schema for `configuration.node_selector`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--configuration--pod_labels"></a>
+### Nested Schema for `configuration.pod_labels`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--configuration--service_annotations"></a>
+### Nested Schema for `configuration.service_annotations`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--configuration--tolerations"></a>
+### Nested Schema for `configuration.tolerations`
+
+Read-Only:
+
+- `effect` (String)
+- `key` (String)
+- `operator` (String)
+- `toleration_seconds` (Number)
+- `value` (String)
 
 
 
