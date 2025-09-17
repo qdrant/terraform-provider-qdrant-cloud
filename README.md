@@ -6,68 +6,79 @@ This is a Terraform provider for Qdrant Cloud, which is the DBaaS solution for Q
 
 - [Terraform](https://www.terraform.io/downloads.html) 1.7.x+
 - [Go](https://golang.org/doc/install) 1.24+ (to build the provider plugin)
-- [`swagger-codegen`](https://swagger.io/tools/swagger-codegen/)
-  `brew install swagger-codegen`
 
-## Building The Provider
+## Building & Using the Provider (Local Development)
 
-Clone the repository:
+### 1. Build and install locally
 
-```bash
-git clone git@github.com:<your_org>/terraform-provider-qdrant-cloud.git
-```
-
-Enter the provider directory and build the provider:
+The fastest way to build the provider and make it discoverable by Terraform:
 
 ```bash
-cd terraform-provider-qdrant-cloud
-go build
+# Build with go build and copy into
+# ~/.terraform.d/plugins/local/qdrant-cloud/qdrant-cloud/1.0/<os>_<arch>/terraform-provider-qdrant-cloud
+make local-build
 ```
 
-## Using The Provider
+### 2. Use the local plugin in Terraform
 
-If you're building the provider, follow the instructions to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-plugins). After placing it into your plugins directory, run `terraform init` to initialize the provider.
-
-Here is an example of how to use this provider:
+In your Terraform project, reference the locally installed provider:
 
 ```hcl
-provider "qdrant" {
-  alias = "qdrant_cloud"
-  api_key = "<your_api_key>"
+terraform {
+  required_providers {
+    qdrant-cloud = {
+      source  = "local/qdrant-cloud"
+      version = "1.0"
+    }
+  }
 }
+
+provider "qdrant-cloud" {
+  api_key    = "<your_api_key>"
+  account_id = "<your_account_id>"
+  api_url    = "<grpc_server_url>"
+}
+
 ```
 
-Replace `<your_api_key>` with your actual API key and URL.
-
-## Developing The Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.21+ is required). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
-
-To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+Then initialize:
 
 ```bash
-$ make build
-...
-$ $GOPATH/bin/terraform-provider-qdrant-cloud
-...
+terraform init
+terraform plan
 ```
 
-### Updating the generated Go Client to interact with the Qdrant public API
-This assumes that you cloned the qdrant-cloud-cluster-api to the same base-path as this repo (terraform-provider-qdrant-cloud)
+### 3. Use local plugin with `dev_overrides`
 
-```bash
-make update-go-client
+If you want to run the examples in `./examples` without changing their `source = "qdrant/qdrant-cloud"` blocks,  
+you can override the provider installation via a Terraform CLI config file.
+
+Create `~/.terraformrc` with:
+
+```hcl
+provider_installation {
+  dev_overrides {
+    "qdrant/qdrant-cloud" = "~/.terraform.d/plugins/local/qdrant-cloud/qdrant-cloud/1.0/<os>_<arch>"
+  }
+  direct {}
+}
 ```
 
 ## Testing
 
 In order to test the provider, you can run `make test`.
 
+This will run the unit tests in the provider.
+
 ```bash
-$ make test
+$ QDRANT_CLOUD_API_KEY="<api_key>" QDRANT_CLOUD_ACCOUNT_ID="<account_id>" QDRANT_CLOUD_API_URL="<api_url>" make test
 ```
 
-This will run the unit tests in the provider.
+or run a single test /wo make (not acceptance and not extra env vars are required);
+
+```bash
+go test -v ./... -run '^TestFlattenHCEnv$'
+```
 
 ## Releasing
 
