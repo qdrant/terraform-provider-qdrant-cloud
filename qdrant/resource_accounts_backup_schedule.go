@@ -142,12 +142,14 @@ func resourceBackupScheduleDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Do we need to delete the backups, created with this schedule?
+	deleteBackups := d.Get(backupScheduleDeleteBackupsOnDestroy).(bool)
+	// Delete the cackup schedule
 	var trailer metadata.MD
 	_, err = client.DeleteBackupSchedule(clientCtx, &backupv1.DeleteBackupScheduleRequest{
 		AccountId:        accountUUID.String(),
 		BackupScheduleId: d.Id(),
-		DeleteBackups:    newPointer(true), // TODO: make this configurable?
+		DeleteBackups:    newPointer(deleteBackups),
 	}, grpc.Trailer(&trailer))
 	errorPrefix += getRequestID(trailer)
 	if err != nil {
