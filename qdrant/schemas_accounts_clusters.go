@@ -24,6 +24,7 @@ const (
 	clusterCloudProviderFieldName              = "cloud_provider"
 	clusterCloudRegionFieldName                = "cloud_region"
 	clusterVersionFieldName                    = "version"
+	clusterLastModifiedAtFieldName             = "last_modified_at"
 	clusterPrivateRegionIDFieldName            = "private_region_id"
 	clusterMarkedForDeletionAtFieldName        = "marked_for_deletion_at"
 	clusterURLFieldName                        = "url"
@@ -53,6 +54,18 @@ const (
 	resourceConfigurationAmountFieldName       = "amount"
 	resourceConfigurationResourceTypeFieldName = "resource_type"
 	resourceConfigurationResourceUnitFieldName = "resource_unit"
+	nodeSelectorFieldName                      = "node_selector"
+	tolerationsFieldName                       = "tolerations"
+	tolerationKeyFieldName                     = "key"
+	tolerationOperatorFieldName                = "operator"
+	tolerationValueFieldName                   = "value"
+	tolerationEffectFieldName                  = "effect"
+	tolerationSecondsFieldName                 = "toleration_seconds"
+	annotationsFieldName                       = "annotations"
+	allowedIpSourceRangesFieldName             = "allowed_ip_source_ranges"
+	serviceTypeFieldName                       = "service_type"
+	serviceAnnotationsFieldName                = "service_annotations"
+	podLabelsFieldName                         = "pod_labels"
 	databaseConfigurationFieldName             = "database_configuration"
 	dbConfigCollectionFieldName                = "collection"
 	dbConfigStorageFieldName                   = "storage"
@@ -60,6 +73,11 @@ const (
 	dbConfigLogLevelFieldName                  = "log_level"
 	dbConfigTlsFieldName                       = "tls"
 	dbConfigInferenceFieldName                 = "inference"
+	dbConfigReservedCpuPercentageFieldName     = "reserved_cpu_percentage"
+	dbConfigReservedMemoryPercentageFieldName  = "reserved_memory_percentage"
+	dbConfigGpuTypeFieldName                   = "gpu_type"
+	dbConfigRestartPolicyFieldName             = "restart_policy"
+	dbConfigRebalanceStrategyFieldName         = "rebalance_strategy"
 	dbConfigCollectionReplicationFactor        = "replication_factor"
 	dbConfigCollectionWriteConsistencyFactor   = "write_consistency_factor"
 	dbConfigCollectionVectorsFieldName         = "vectors"
@@ -209,6 +227,11 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Computed:    true,
 			Optional:    !asDataSource,
 		},
+		clusterLastModifiedAtFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "Timestamp when the cluster configuration was last updated"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
 		numberOfNodesFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "The number of nodes in the cluster"),
 			Type:        schema.TypeInt,
@@ -225,6 +248,66 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 				Schema: accountsClusterNodeConfigurationSchema(asDataSource),
 			},
 		},
+		nodeSelectorFieldName: {
+			Description: "The node selector for this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(asDataSource),
+			},
+		},
+		tolerationsFieldName: {
+			Description: "List of tolerations for this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: tolerationSchema(asDataSource),
+			},
+		},
+		annotationsFieldName: {
+			Description: "List of annotations for this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(asDataSource),
+			},
+		},
+		allowedIpSourceRangesFieldName: {
+			Description: "List of allowed IP source ranges for this cluster.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
+		serviceTypeFieldName: {
+			Description: "The type of service to use for this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		serviceAnnotationsFieldName: {
+			Description: "List of annotations applied to the service of this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(asDataSource),
+			},
+		},
+		podLabelsFieldName: {
+			Description: "List of labels applied to the pods of this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(asDataSource),
+			},
+		},
 		databaseConfigurationFieldName: {
 			Description: "Configuration for the Qdrant database engine, primarily for hybrid cloud setups.",
 			Type:        schema.TypeList,
@@ -234,6 +317,36 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationSchema(asDataSource),
 			},
+		},
+		dbConfigReservedCpuPercentageFieldName: {
+			Description: "The percentage of CPU resources reserved for system components.",
+			Type:        schema.TypeInt,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigReservedMemoryPercentageFieldName: {
+			Description: "The percentage of RAM resources reserved for system components.",
+			Type:        schema.TypeInt,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigGpuTypeFieldName: {
+			Description: "The GPU type that should be used for the database.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigRestartPolicyFieldName: {
+			Description: "The restart policy for the database.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigRebalanceStrategyFieldName: {
+			Description: "The automatic shard rebalancing strategy for the database.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
 		},
 	}
 }
@@ -507,6 +620,53 @@ func secretKeyRefSchema(asDataSource bool) *schema.Resource {
 	}
 }
 
+// keyValSchema defines the schema for a key-value pair.
+func keyValSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"key": {
+			Type:     schema.TypeString,
+			Required: !asDataSource,
+			Computed: asDataSource,
+		},
+		"value": {
+			Type:     schema.TypeString,
+			Required: !asDataSource,
+			Computed: asDataSource,
+		},
+	}
+}
+
+// tolerationSchema defines the schema for a toleration.
+func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		tolerationKeyFieldName: {
+			Type:     schema.TypeString,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		tolerationOperatorFieldName: {
+			Type:     schema.TypeString,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		tolerationValueFieldName: {
+			Type:     schema.TypeString,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		tolerationEffectFieldName: {
+			Type:     schema.TypeString,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+		tolerationSecondsFieldName: {
+			Type:     schema.TypeInt,
+			Optional: !asDataSource,
+			Computed: asDataSource,
+		},
+	}
+}
+
 // accountsClusterStatusSchema defines the schema for a cluster status.
 func accountsClusterStatusSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
@@ -682,6 +842,9 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 	config := &qcCluster.ClusterConfiguration{}
 	for _, m := range v {
 		item := m.(map[string]interface{})
+		if v, ok := item[clusterLastModifiedAtFieldName]; ok {
+			config.LastModifiedAt = parseTime(v.(string))
+		}
 		if v, ok := item[numberOfNodesFieldName]; ok {
 			config.NumberOfNodes = uint32(v.(int))
 		}
@@ -698,6 +861,59 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 		}
 		if v, ok := item[databaseConfigurationFieldName]; ok {
 			config.DatabaseConfiguration = expandDatabaseConfiguration(v.([]interface{}))
+		}
+		if v, ok := item[nodeSelectorFieldName]; ok {
+			config.NodeSelector = expandKeyVal(v.([]interface{}))
+		}
+		if v, ok := item[tolerationsFieldName]; ok {
+			config.Tolerations = expandTolerations(v.([]interface{}))
+		}
+		if v, ok := item[annotationsFieldName]; ok {
+			config.Annotations = expandKeyVal(v.([]interface{}))
+		}
+		if v, ok := item[allowedIpSourceRangesFieldName]; ok {
+			if ranges, ok := v.([]interface{}); ok && len(ranges) > 0 {
+				config.AllowedIpSourceRanges = make([]string, len(ranges))
+				for i, r := range ranges {
+					config.AllowedIpSourceRanges[i] = r.(string)
+				}
+			}
+		}
+		if v, ok := item[serviceTypeFieldName]; ok {
+			st, stOK := qcCluster.ClusterServiceType_value[v.(string)]
+			if stOK {
+				config.ServiceType = newPointer(qcCluster.ClusterServiceType(st))
+			}
+		}
+		if v, ok := item[serviceAnnotationsFieldName]; ok {
+			config.ServiceAnnotations = expandKeyVal(v.([]interface{}))
+		}
+		if v, ok := item[podLabelsFieldName]; ok {
+			config.PodLabels = expandKeyVal(v.([]interface{}))
+		}
+		if v, ok := item[dbConfigReservedCpuPercentageFieldName]; ok {
+			config.ReservedCpuPercentage = uint32(v.(int))
+		}
+		if v, ok := item[dbConfigReservedMemoryPercentageFieldName]; ok {
+			config.ReservedMemoryPercentage = uint32(v.(int))
+		}
+		if v, ok := item[dbConfigGpuTypeFieldName]; ok {
+			gt, gtOK := qcCluster.ClusterConfigurationGpuType_value[v.(string)]
+			if gtOK {
+				config.GpuType = newPointer(qcCluster.ClusterConfigurationGpuType(gt))
+			}
+		}
+		if v, ok := item[dbConfigRestartPolicyFieldName]; ok {
+			rp, rpOK := qcCluster.ClusterConfigurationRestartPolicy_value[v.(string)]
+			if rpOK {
+				config.RestartPolicy = newPointer(qcCluster.ClusterConfigurationRestartPolicy(rp))
+			}
+		}
+		if v, ok := item[dbConfigRebalanceStrategyFieldName]; ok {
+			rs, rsOK := qcCluster.ClusterConfigurationRebalanceStrategy_value[v.(string)]
+			if rsOK {
+				config.RebalanceStrategy = newPointer(qcCluster.ClusterConfigurationRebalanceStrategy(rs))
+			}
 		}
 	}
 	return config
@@ -755,6 +971,50 @@ func expandClusterNodeResourceConfigurationsToAdditionalResources(v []interface{
 	return result
 }
 
+// expandKeyVal expands a key-value pair from Terraform data.
+func expandKeyVal(v []interface{}) []*commonv1.KeyValue {
+	var result []*commonv1.KeyValue
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		result = append(result, &commonv1.KeyValue{
+			Key:   item["key"].(string),
+			Value: item["value"].(string),
+		})
+	}
+	return result
+}
+
+// expandTolerations expands tolerations from Terraform data.
+func expandTolerations(v []interface{}) []*qcCluster.Toleration {
+	var result []*qcCluster.Toleration
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		toleration := &qcCluster.Toleration{
+			Key:   item[tolerationKeyFieldName].(string),
+			Value: item[tolerationValueFieldName].(string),
+		}
+		if op, ok := item[tolerationOperatorFieldName]; ok {
+			opVal, opOk := qcCluster.TolerationOperator_value[op.(string)]
+			if opOk {
+				toleration.Operator = newPointer(qcCluster.TolerationOperator(opVal))
+			}
+		}
+		if eff, ok := item[tolerationEffectFieldName]; ok {
+			effVal, effOk := qcCluster.TolerationEffect_value[eff.(string)]
+			if effOk {
+				toleration.Effect = newPointer(qcCluster.TolerationEffect(effVal))
+			}
+		}
+		if sec, ok := item[tolerationSecondsFieldName]; ok {
+			if secInt := sec.(int); secInt > 0 {
+				toleration.TolerationSeconds = newPointer(uint64(secInt))
+			}
+		}
+		result = append(result, toleration)
+	}
+	return result
+}
+
 // flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
 func flattenClusters(clusters []*qcCluster.Cluster) []interface{} {
 	var flattenedClusters []interface{}
@@ -790,10 +1050,23 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
-			clusterVersionFieldName:        clusterConfig.GetVersion(),
-			numberOfNodesFieldName:         int(clusterConfig.GetNumberOfNodes()),
-			nodeConfigurationFieldName:     flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
-			databaseConfigurationFieldName: flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
+			clusterVersionFieldName:                   clusterConfig.GetVersion(),
+			clusterLastModifiedAtFieldName:            formatTime(clusterConfig.GetLastModifiedAt()),
+			numberOfNodesFieldName:                    int(clusterConfig.GetNumberOfNodes()),
+			nodeConfigurationFieldName:                flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
+			databaseConfigurationFieldName:            flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
+			nodeSelectorFieldName:                     flattenKeyVal(clusterConfig.GetNodeSelector()),
+			tolerationsFieldName:                      flattenTolerations(clusterConfig.GetTolerations()),
+			annotationsFieldName:                      flattenKeyVal(clusterConfig.GetAnnotations()),
+			allowedIpSourceRangesFieldName:            clusterConfig.GetAllowedIpSourceRanges(),
+			serviceTypeFieldName:                      clusterConfig.GetServiceType().String(),
+			serviceAnnotationsFieldName:               flattenKeyVal(clusterConfig.GetServiceAnnotations()),
+			podLabelsFieldName:                        flattenKeyVal(clusterConfig.GetPodLabels()),
+			dbConfigReservedCpuPercentageFieldName:    int(clusterConfig.GetReservedCpuPercentage()),
+			dbConfigReservedMemoryPercentageFieldName: int(clusterConfig.GetReservedMemoryPercentage()),
+			dbConfigGpuTypeFieldName:                  clusterConfig.GetGpuType().String(),
+			dbConfigRestartPolicyFieldName:            clusterConfig.GetRestartPolicy().String(),
+			dbConfigRebalanceStrategyFieldName:        clusterConfig.GetRebalanceStrategy().String(),
 		},
 	}
 }
@@ -820,6 +1093,41 @@ func flattenResourceConfigurationsFromAdditionalResources(additionalResources *q
 		})
 	}
 	return flattenedResourceConfigurations
+}
+
+// flattenKeyVal flattens a key-value pair for storage in Terraform.
+func flattenKeyVal(kvs []*commonv1.KeyValue) []interface{} {
+	var result []interface{}
+	for _, kv := range kvs {
+		result = append(result, map[string]interface{}{
+			"key":   kv.GetKey(),
+			"value": kv.GetValue(),
+		})
+	}
+	return result
+}
+
+// flattenTolerations flattens tolerations for storage in Terraform.
+func flattenTolerations(tolerations []*qcCluster.Toleration) []interface{} {
+	var result []interface{}
+	for _, t := range tolerations {
+		tolerationMap := map[string]interface{}{
+			tolerationKeyFieldName:   t.GetKey(),
+			tolerationValueFieldName: t.GetValue(),
+		}
+		if t.Operator != nil {
+			tolerationMap[tolerationOperatorFieldName] = t.GetOperator().String()
+		}
+		if t.Effect != nil {
+			tolerationMap[tolerationEffectFieldName] = t.GetEffect().String()
+		}
+		if t.TolerationSeconds != nil {
+			tolerationMap[tolerationSecondsFieldName] = int(t.GetTolerationSeconds())
+		}
+
+		result = append(result, tolerationMap)
+	}
+	return result
 }
 
 // expandDatabaseConfiguration expands the Terraform resource data into a database configuration object.
@@ -888,8 +1196,7 @@ func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfigurati
 	if val, ok := item[dbConfigLogLevelFieldName]; ok {
 		strVal := val.(string)
 		if strVal != "" {
-			logLevel := qcCluster.DatabaseConfigurationLogLevel(qcCluster.DatabaseConfigurationLogLevel_value[strVal])
-			config.LogLevel = &logLevel
+			config.LogLevel = newPointer(qcCluster.DatabaseConfigurationLogLevel(qcCluster.DatabaseConfigurationLogLevel_value[strVal]))
 		}
 	}
 

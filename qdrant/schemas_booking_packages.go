@@ -18,6 +18,9 @@ const (
 	fieldCurrency              = "currency"
 	fieldUnitIntPricePerHour   = "unit_int_price_per_hour"
 	fieldStatus                = "status"
+	fieldTier                  = "tier"
+	fieldAvailableAddResources = "available_additional_resources"
+	fieldDiskPricePerHour      = "disk_price_per_hour"
 	fieldResourceConfiguration = "resource_configuration"
 	fieldResourceRam           = "ram"
 	fieldResourceCpu           = "cpu"
@@ -31,6 +34,9 @@ const (
 	descriptionCurrency              = "The currency of the package prices"
 	descriptionUnitIntPricePerHour   = "The unit price per hour in integer format"
 	descriptionStatus                = "The status of the package"
+	descriptionTier                  = "The tier of the package"
+	descriptionAvailableAddResources = "Optional additional resources that can be added to the cluster"
+	descriptionDiskPricePerHour      = "The unit price per hour for additional disk in integer format"
 	descriptionResourceConfiguration = "The resource configuration of the package"
 	descriptionResourceRam           = "The amount of RAM (e.g., '1GiB')"
 	descriptionResourceCpu           = "The amount of CPU (e.g., '1000m' (1 vCPU))"
@@ -104,6 +110,30 @@ func packageSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
+		fieldTier: {
+			Description: descriptionTier,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldAvailableAddResources: {
+			Description: descriptionAvailableAddResources,
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: availableAdditionalResourcesSchema(),
+			},
+		},
+	}
+}
+
+// availableAdditionalResourcesSchema defines the schema for available additional resources.
+func availableAdditionalResourcesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		fieldDiskPricePerHour: {
+			Description: descriptionDiskPricePerHour,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
 	}
 }
 
@@ -135,7 +165,7 @@ func resourceConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 func flattenPackages(packages []*qcBooking.Package) []interface{} {
 	var flattenedPackages []interface{}
 	for _, p := range packages {
-		flattenedPackages = append(flattenedPackages, map[string]interface{}{
+		pkgMap := map[string]interface{}{
 			fieldID:                    p.GetId(),
 			fieldName:                  p.GetName(),
 			fieldType:                  p.GetType(),
@@ -143,7 +173,12 @@ func flattenPackages(packages []*qcBooking.Package) []interface{} {
 			fieldUnitIntPricePerHour:   int(p.GetUnitIntPricePerHour()),
 			fieldResourceConfiguration: flattenResourceConfiguration(p.GetResourceConfiguration()),
 			fieldStatus:                p.GetStatus().String(),
-		})
+			fieldTier:                  p.GetTier().String(),
+		}
+		if addRes := p.GetAvailableAdditionalResources(); addRes != nil {
+			pkgMap[fieldAvailableAddResources] = flattenAvailableAdditionalResources(addRes)
+		}
+		flattenedPackages = append(flattenedPackages, pkgMap)
 	}
 	return flattenedPackages
 }
@@ -155,6 +190,18 @@ func flattenResourceConfiguration(rc *qcBooking.ResourceConfiguration) []interfa
 			fieldResourceRam:  rc.GetRam(),
 			fieldResourceCpu:  rc.GetCpu(),
 			fieldResourceDisk: rc.GetDisk(),
+		},
+	}
+}
+
+// flattenAvailableAdditionalResources flattens the available additional resources data into a format that Terraform can understand.
+func flattenAvailableAdditionalResources(addRes *qcBooking.AvailableAdditionalResources) []interface{} {
+	if addRes == nil {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			fieldDiskPricePerHour: int(addRes.GetDiskPricePerHour()),
 		},
 	}
 }

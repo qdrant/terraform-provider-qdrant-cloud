@@ -23,12 +23,10 @@ func TestResourceClusterFlatten(t *testing.T) {
 		CloudProviderRegionId: "Uksouth",
 		DeletedAt:             timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Configuration: &qcCluster.ClusterConfiguration{
-			Version:       newPointer("v1.0"),
-			NumberOfNodes: 5,
-			PackageId:     "00000009-1000-0000-0000-000000000001",
-			AdditionalResources: &qcCluster.AdditionalResources{
-				Disk: 8,
-			},
+			LastModifiedAt: timestamppb.New(time.Date(2023, 3, 1, 0, 0, 0, 0, time.UTC)),
+			Version:        newPointer("v1.0"),
+			NumberOfNodes:  5,
+			PackageId:      "00000009-1000-0000-0000-000000000001",
 			DatabaseConfiguration: &qcCluster.DatabaseConfiguration{
 				Collection: &qcCluster.DatabaseConfigurationCollection{
 					ReplicationFactor:      newPointer(uint32(2)),
@@ -37,6 +35,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:         &commonv1.SecretKeyRef{Name: "api-key-secret", Key: "api-key"},
 					ReadOnlyApiKey: &commonv1.SecretKeyRef{Name: "ro-api-key-secret", Key: "ro-api-key"},
+					JwtRbac:        true,
 				},
 				LogLevel: newPointer(qcCluster.DatabaseConfigurationLogLevel_DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG),
 				Tls: &qcCluster.DatabaseConfigurationTls{
@@ -44,6 +43,36 @@ func TestResourceClusterFlatten(t *testing.T) {
 					Key:  &commonv1.SecretKeyRef{Name: "key-secret", Key: "key.pem"},
 				},
 			},
+			AdditionalResources: &qcCluster.AdditionalResources{
+				Disk: 8,
+			},
+			NodeSelector: []*commonv1.KeyValue{
+				{Key: "key1", Value: "value1"},
+			},
+			Tolerations: []*qcCluster.Toleration{
+				{
+					Key:      "key1",
+					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
+					Value:    "value1",
+					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
+				},
+			},
+			Annotations: []*commonv1.KeyValue{
+				{Key: "anno1", Value: "annoval1"},
+			},
+			AllowedIpSourceRanges: []string{"192.168.1.0/24"},
+			ServiceType:           newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
+			ServiceAnnotations: []*commonv1.KeyValue{
+				{Key: "serviceanno1", Value: "serviceannoval1"},
+			},
+			PodLabels: []*commonv1.KeyValue{
+				{Key: "podlabel1", Value: "podlabelval1"},
+			},
+			ReservedCpuPercentage:    10,
+			ReservedMemoryPercentage: 20,
+			GpuType:                  newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
+			RestartPolicy:            newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
+			RebalanceStrategy:        newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
 		},
 		State: &qcCluster.ClusterState{
 			Version:     "v1.1.1",
@@ -126,8 +155,9 @@ func TestResourceClusterFlatten(t *testing.T) {
 		},
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				clusterVersionFieldName: cluster.GetConfiguration().GetVersion(),
-				numberOfNodesFieldName:  int(cluster.GetConfiguration().GetNumberOfNodes()),
+				clusterVersionFieldName:        cluster.GetConfiguration().GetVersion(),
+				clusterLastModifiedAtFieldName: formatTime(cluster.GetConfiguration().GetLastModifiedAt()),
+				numberOfNodesFieldName:         int(cluster.GetConfiguration().GetNumberOfNodes()),
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
 						packageIDFieldName: cluster.GetConfiguration().GetPackageId(),
@@ -162,7 +192,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "ro-api-key",
 									},
 								},
-								dbConfigServiceJwtRbacFieldName:   false,
+								dbConfigServiceJwtRbacFieldName:   cluster.GetConfiguration().GetDatabaseConfiguration().GetService().GetJwtRbac(),
 								dbConfigServiceEnableTlsFieldName: false,
 							},
 						},
@@ -185,6 +215,33 @@ func TestResourceClusterFlatten(t *testing.T) {
 						},
 					},
 				},
+				nodeSelectorFieldName: []interface{}{
+					map[string]interface{}{"key": "key1", "value": "value1"},
+				},
+				tolerationsFieldName: []interface{}{
+					map[string]interface{}{
+						tolerationKeyFieldName:      "key1",
+						tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL",
+						tolerationValueFieldName:    "value1",
+						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
+					},
+				},
+				annotationsFieldName: []interface{}{
+					map[string]interface{}{"key": "anno1", "value": "annoval1"},
+				},
+				allowedIpSourceRangesFieldName: []string{"192.168.1.0/24"},
+				serviceTypeFieldName:           "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
+				serviceAnnotationsFieldName: []interface{}{
+					map[string]interface{}{"key": "serviceanno1", "value": "serviceannoval1"},
+				},
+				podLabelsFieldName: []interface{}{
+					map[string]interface{}{"key": "podlabel1", "value": "podlabelval1"},
+				},
+				dbConfigReservedCpuPercentageFieldName:    10,
+				dbConfigReservedMemoryPercentageFieldName: 20,
+				dbConfigGpuTypeFieldName:                  "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
+				dbConfigRestartPolicyFieldName:            "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING",
+				dbConfigRebalanceStrategyFieldName:        "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT",
 			},
 		},
 	}
@@ -202,9 +259,10 @@ func TestExpandCluster(t *testing.T) {
 		CloudProviderRegionId: "Uksouth",
 		DeletedAt:             timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
 		Configuration: &qcCluster.ClusterConfiguration{
-			Version:       newPointer("v1.0"),
-			NumberOfNodes: 5,
-			PackageId:     "00000009-1000-0000-0000-000000000001",
+			LastModifiedAt: timestamppb.New(time.Date(2023, 3, 1, 0, 0, 0, 0, time.UTC)),
+			Version:        newPointer("v1.0"),
+			NumberOfNodes:  5,
+			PackageId:      "00000009-1000-0000-0000-000000000001",
 			AdditionalResources: &qcCluster.AdditionalResources{
 				Disk: 10,
 			},
@@ -219,6 +277,19 @@ func TestExpandCluster(t *testing.T) {
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
 				},
 			},
+			NodeSelector: []*commonv1.KeyValue{
+				{Key: "key1", Value: "value1"},
+			},
+			Tolerations: []*qcCluster.Toleration{
+				{
+					Key:      "key1",
+					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
+					Value:    "value1",
+					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
+				},
+			},
+			ServiceType: newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
+			GpuType:     newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
 		},
 		State: &qcCluster.ClusterState{
 			Endpoint: &qcCluster.ClusterEndpoint{
@@ -239,8 +310,9 @@ func TestExpandCluster(t *testing.T) {
 		clusterURLFieldName:                 expected.GetState().GetEndpoint().GetUrl(),
 		configurationFieldName: []interface{}{
 			map[string]interface{}{
-				clusterVersionFieldName: expected.GetConfiguration().GetVersion(),
-				numberOfNodesFieldName:  int(expected.GetConfiguration().GetNumberOfNodes()),
+				clusterVersionFieldName:        expected.GetConfiguration().GetVersion(),
+				clusterLastModifiedAtFieldName: formatTime(expected.GetConfiguration().GetLastModifiedAt()),
+				numberOfNodesFieldName:         int(expected.GetConfiguration().GetNumberOfNodes()),
 				nodeConfigurationFieldName: []interface{}{
 					map[string]interface{}{
 						packageIDFieldName: expected.GetConfiguration().GetPackageId(),
@@ -282,6 +354,19 @@ func TestExpandCluster(t *testing.T) {
 						},
 					},
 				},
+				nodeSelectorFieldName: []interface{}{
+					map[string]interface{}{"key": "key1", "value": "value1"},
+				},
+				tolerationsFieldName: []interface{}{
+					map[string]interface{}{
+						tolerationKeyFieldName:      "key1",
+						tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL",
+						tolerationValueFieldName:    "value1",
+						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
+					},
+				},
+				serviceTypeFieldName:     "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
+				dbConfigGpuTypeFieldName: "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
 			},
 		},
 	})

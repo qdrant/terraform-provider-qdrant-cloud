@@ -22,6 +22,10 @@ func TestFlattenPackages(t *testing.T) {
 				Disk: "disk_1",
 			},
 			Status: qcBooking.PackageStatus_PACKAGE_STATUS_ACTIVE,
+			Tier:   qcBooking.PackageTier_PACKAGE_TIER_STANDARD,
+			AvailableAdditionalResources: &qcBooking.AvailableAdditionalResources{
+				DiskPricePerHour: 5,
+			},
 		},
 		{
 			Id:                  "00000000-0000-0000-0000-000000000002",
@@ -35,6 +39,7 @@ func TestFlattenPackages(t *testing.T) {
 				Disk: "disk_2",
 			},
 			Status: qcBooking.PackageStatus_PACKAGE_STATUS_DEACTIVATED,
+			Tier:   qcBooking.PackageTier_PACKAGE_TIER_PREMIUM,
 		},
 	}
 
@@ -45,12 +50,19 @@ func TestFlattenPackages(t *testing.T) {
 			fieldType:                "packageType1",
 			fieldCurrency:            "USD",
 			fieldUnitIntPricePerHour: 10,
-			fieldResourceConfiguration: map[string]interface{}{
-				fieldResourceRam:  "ram_1",
-				fieldResourceCpu:  "cpu_1",
-				fieldResourceDisk: "disk_1",
+			fieldResourceConfiguration: []interface{}{
+				map[string]interface{}{
+					fieldResourceRam:  "ram_1",
+					fieldResourceCpu:  "cpu_1",
+					fieldResourceDisk: "disk_1",
+				},
 			},
 			fieldStatus: "PACKAGE_STATUS_ACTIVE",
+			fieldTier:   "PACKAGE_TIER_STANDARD",
+			fieldAvailableAddResources: []interface{}{map[string]interface{}{
+				"disk_price_per_hour": 5,
+			},
+			},
 		},
 		map[string]interface{}{
 			fieldID:                  "00000000-0000-0000-0000-000000000002",
@@ -58,12 +70,15 @@ func TestFlattenPackages(t *testing.T) {
 			fieldType:                "packageType2",
 			fieldCurrency:            "EUR",
 			fieldUnitIntPricePerHour: 20,
-			fieldResourceConfiguration: map[string]interface{}{
-				fieldResourceRam:  "ram_2",
-				fieldResourceCpu:  "cpu_2",
-				fieldResourceDisk: "disk_2",
+			fieldResourceConfiguration: []interface{}{
+				map[string]interface{}{
+					fieldResourceRam:  "ram_2",
+					fieldResourceCpu:  "cpu_2",
+					fieldResourceDisk: "disk_2",
+				},
 			},
 			fieldStatus: "PACKAGE_STATUS_DEACTIVATED",
+			fieldTier:   "PACKAGE_TIER_PREMIUM",
 		},
 	}
 
