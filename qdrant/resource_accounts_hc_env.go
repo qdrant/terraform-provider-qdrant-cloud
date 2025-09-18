@@ -30,6 +30,11 @@ func resourceAccountsHybridCloudEnvironment() *schema.Resource {
 	}
 }
 
+// resourceHCEnvCreate performs a create operation to generate a new hybrid cloud environment.
+// ctx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
+// d: Resource data which is used to manage the state of the resource.
+// m: The interface where the configured client is passed.
+// Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating hybrid cloud environment"
 	// Get a client connection and context
@@ -74,7 +79,11 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-// resourceHCEnvRead reads the specific hybrid cloud environment's data from the API.
+// resourceHCEnvRead performs a read operation to fetch a specific hybrid cloud environment.
+// ctx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
+// d: Resource data which is used to manage the state of the resource.
+// m: The interface where the configured client is passed.
+// Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error reading hybrid cloud environment"
 
@@ -108,7 +117,9 @@ func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	env := resp.GetHybridCloudEnvironment()
+	// Set the ID
 	d.SetId(env.GetId())
+	// Flatten hybrid cloud environment and store in Terraform state
 	for k, v := range flattenHCEnv(env) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -134,6 +145,11 @@ func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
+// resourceHCEnvUpdate performs an update operation on a hybrid cloud environment.
+// ctx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
+// d: Resource data which is used to manage the state of the resource.
+// m: The interface where the configured client is passed.
+// Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// If nothing to change, just refresh. Note: configuration is also updatable.
 	if !d.HasChange(hcEnvNameFieldName) && !d.HasChange(hcEnvConfigurationFieldName) {
@@ -169,7 +185,11 @@ func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 	return resourceHCEnvRead(ctx, d, m)
 }
 
-// resourceHCEnvDelete performs a delete operation to remove a hybrid cloud environment associated with an account.
+// resourceHCEnvDelete performs a delete operation to remove a hybrid cloud environment.
+// ctx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
+// d: Resource data which is used to manage the state of the resource.
+// m: The interface where the configured client is passed.
+// Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting hybrid cloud environment"
 	// Get a client connection and context
@@ -209,7 +229,13 @@ func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-// setHCEnvBootstrapCommands calls GetBootstrapCommands and stores Sensitive list in state.
+// setHCEnvBootstrapCommands performs a read operation to fetch the bootstrap commands for a hybrid cloud environment.
+// client: The gRPC client for the hybrid cloud service.
+// clientCtx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
+// d: Resource data which is used to manage the state of the resource.
+// m: The interface where the configured client is passed.
+// errorPrefix: A string to prefix error messages with.
+// Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func setHCEnvBootstrapCommands(
 	client qch.HybridCloudServiceClient,
 	clientCtx context.Context,
@@ -217,11 +243,12 @@ func setHCEnvBootstrapCommands(
 	m interface{},
 	errorPrefix string,
 ) diag.Diagnostics {
+	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Fetch the bootstrap commands
 	var trailer metadata.MD
 	resp, err := client.GetBootstrapCommands(
 		clientCtx,
@@ -231,8 +258,8 @@ func setHCEnvBootstrapCommands(
 		},
 		grpc.Trailer(&trailer),
 	)
+	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
-
 	if err != nil {
 		// Soft-fail on common "not ready yet" or permission issues
 		if st, ok := status.FromError(err); ok && (st.Code() == codes.FailedPrecondition || st.Code() == codes.PermissionDenied) {
@@ -244,7 +271,7 @@ func setHCEnvBootstrapCommands(
 		}
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Flatten bootstrap commands and store in Terraform state
 	cmds := resp.GetCommands()
 	values := make([]interface{}, len(cmds))
 	for i, c := range cmds {
