@@ -14,17 +14,18 @@ import (
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
 )
 
-// resourceAccountsHybridCloudEnvironment defines the TF resource and wires CRUD + import.
+// resourceAccountsHybridCloudEnvironment constructs a Terraform resource for managing a hybrid cloud environment associated with an account.
+// Returns a schema.Resource pointer configured with schema definitions and the CRUD functions.
 func resourceAccountsHybridCloudEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Description: "Hybrid Cloud Environment Resource",
-		Schema:      accountsHybridCloudEnvironmentSchema(),
-
+		Description:   "Hybrid Cloud Environment Resource",
 		CreateContext: resourceHCEnvCreate,
 		ReadContext:   resourceHCEnvRead,
 		UpdateContext: resourceHCEnvUpdate,
 		DeleteContext: resourceHCEnvDelete,
+		Schema:        accountsHybridCloudEnvironmentSchema(),
 
+		// Accept only "<hc_env_id>" (account is taken from provider config or per-resource override)
 		// Accept only "<hc_env_id>" (account is taken from provider config or per-resource override)
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -32,22 +33,21 @@ func resourceAccountsHybridCloudEnvironment() *schema.Resource {
 	}
 }
 
-// resourceHCEnvCreate creates the environment, sets ID/state, then fetches bootstrap commands.
 func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating hybrid cloud environment"
-
-	conn, clientCtx, diags := getClientConnection(ctx, m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
 	if diags.HasError() {
 		return diags
 	}
-	client := qch.NewHybridCloudServiceClient(conn)
-
-	// Build payload from config (account_id override or provider default)
+	// Get a client
+	client := qch.NewHybridCloudServiceClient(apiClientConn)
+	// Expand the hybrid cloud environment
 	env, err := expandHCEnv(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Create the hybrid cloud environment
 	var trailer metadata.MD
 	resp, err := client.CreateHybridCloudEnvironment(
 		clientCtx,
@@ -56,12 +56,13 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 		},
 		grpc.Trailer(&trailer),
 	)
+	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
 	created := resp.GetHybridCloudEnvironment()
+	// Set the ID
 	d.SetId(created.GetId())
 
 	for k, v := range flattenHCEnv(created) {
@@ -69,37 +70,38 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
-
 	// fetch bootstrap commands immediately so users can consume them
 	if ds := setHCEnvBootstrapCommands(client, clientCtx, d, m, "error getting bootstrap commands"); ds.HasError() {
 		return ds
 	}
-
 	return nil
 }
 
-// resourceHCEnvRead refreshes state from API; if missing clears ID; fills bootstrap commands if empty.
+// resourceHCEnvRead reads the specific hybrid cloud environment's data from the API.
 func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error reading hybrid cloud environment"
 
-	conn, clientCtx, diags := getClientConnection(ctx, m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
 	if diags.HasError() {
 		return diags
 	}
-	client := qch.NewHybridCloudServiceClient(conn)
-
+	// Get a client
+	client := qch.NewHybridCloudServiceClient(apiClientConn)
+	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Fetch the hybrid cloud environment
 	var trailer metadata.MD
 	resp, err := client.GetHybridCloudEnvironment(clientCtx, &qch.GetHybridCloudEnvironmentRequest{
 		AccountId:                accountUUID.String(),
 		HybridCloudEnvironmentId: d.Id(),
 	}, grpc.Trailer(&trailer))
+	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
-
+	// Inspect the results
 	if err != nil {
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
 			// Resource gone in the backend, clear state
@@ -108,13 +110,8 @@ func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{
 		}
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
 	env := resp.GetHybridCloudEnvironment()
-
-	// Canonical ID
 	d.SetId(env.GetId())
-
-	// Flatten into state (no 'status' block intentionally)
 	for k, v := range flattenHCEnv(env) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -140,26 +137,25 @@ func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{
 	return nil
 }
 
-// resourceHCEnvUpdate updates mutable fields (e.g., name) and then re-reads for canonical state.
 func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// If nothing to change, just refresh. Note: configuration is also updatable.
 	if !d.HasChange(hcEnvNameFieldName) && !d.HasChange(hcEnvConfigurationFieldName) {
 		return resourceHCEnvRead(ctx, d, m)
 	}
-
 	errorPrefix := "error updating hybrid cloud environment"
-
-	conn, clientCtx, diags := getClientConnection(ctx, m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
 	if diags.HasError() {
 		return diags
 	}
-	client := qch.NewHybridCloudServiceClient(conn)
-
+	// Get a client
+	client := qch.NewHybridCloudServiceClient(apiClientConn)
+	// Expand the hybrid cloud environment
 	env, err := expandHCEnv(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Update the hybrid cloud environment
 	var trailer metadata.MD
 	_, err = client.UpdateHybridCloudEnvironment(
 		clientCtx,
@@ -168,29 +164,30 @@ func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 		},
 		grpc.Trailer(&trailer),
 	)
+	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
 	return resourceHCEnvRead(ctx, d, m)
 }
 
-// resourceHCEnvDelete deletes the environment; treats NotFound as success and clears ID.
+// resourceHCEnvDelete performs a delete operation to remove a hybrid cloud environment associated with an account.
 func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting hybrid cloud environment"
-
-	conn, clientCtx, diags := getClientConnection(ctx, m)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
 	if diags.HasError() {
 		return diags
 	}
-	client := qch.NewHybridCloudServiceClient(conn)
-
+	// Get a client
+	client := qch.NewHybridCloudServiceClient(apiClientConn)
+	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Delete the hybrid cloud environment
 	var trailer metadata.MD
 	_, err = client.DeleteHybridCloudEnvironment(
 		clientCtx,
@@ -200,8 +197,9 @@ func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interfac
 		},
 		grpc.Trailer(&trailer),
 	)
+	// enrich prefix with request ID
 	errorPrefix += getRequestID(trailer)
-
+	// Inspect the results
 	if err != nil {
 		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
 			d.SetId("")
@@ -209,7 +207,7 @@ func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
-
+	// Resource gone in the backend, clear state
 	d.SetId("")
 	return nil
 }
