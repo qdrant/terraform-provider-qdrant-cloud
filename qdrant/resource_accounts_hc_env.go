@@ -24,9 +24,6 @@ func resourceAccountsHybridCloudEnvironment() *schema.Resource {
 		UpdateContext: resourceHCEnvUpdate,
 		DeleteContext: resourceHCEnvDelete,
 		Schema:        accountsHybridCloudEnvironmentSchema(),
-
-		// Accept only "<hc_env_id>" (account is taken from provider config or per-resource override)
-		// Accept only "<hc_env_id>" (account is taken from provider config or per-resource override)
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
