@@ -143,7 +143,7 @@ func TestExpandHCEnvForUpdate_NoChanges(t *testing.T) {
 	env, err := expandHCEnv(d, "default-account")
 	require.NoError(t, err)
 
-	assert.Equal(t, "", env.GetName(), "name should be empty in payload if not set")
+	assert.Empty(t, env.GetName(), "name should be empty in payload if not set")
 	assert.NotNil(t, env.GetConfiguration(), "configuration should be an empty object if not set")
-	assert.Equal(t, "", env.GetConfiguration().GetNamespace())
+	assert.Empty(t, env.GetConfiguration().GetNamespace())
 }
