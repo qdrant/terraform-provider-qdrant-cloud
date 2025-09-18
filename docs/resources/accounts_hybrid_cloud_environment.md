@@ -65,26 +65,40 @@ output "hc_environment_last_modified_at" {
 
 ### Required
 
-- `configuration` (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--configuration))
-- `name` (String)
+- `configuration` (Block List, Min: 1, Max: 1) Hybrid cloud environment Schema Configuration field (see [below for nested schema](#nestedblock--configuration))
+- `name` (String) Hybrid cloud environment Schema Name field
 
 ### Optional
 
-- `account_id` (String)
+- `account_id` (String) Hybrid cloud environment Schema Account ID field
 
 ### Read-Only
 
-- `bootstrap_commands` (List of String, Sensitive)
-- `created_at` (String)
-- `id` (String) The ID of this resource.
-- `last_modified_at` (String)
+- `bootstrap_commands` (List of String, Sensitive) Hybrid cloud environment Schema Commands to bootstrap a Kubernetes cluster into this environment field
+- `created_at` (String) Hybrid cloud environment Schema Creation timestamp field
+- `id` (String) Hybrid cloud environment Schema ID field
+- `last_modified_at` (String) Hybrid cloud environment Schema Last modification timestamp field
 
 <a id="nestedblock--configuration"></a>
 ### Nested Schema for `configuration`
 
 Required:
 
-- `namespace` (String)
+- `namespace` (String) The Kubernetes namespace where the Qdrant hybrid cloud components will be deployed.
+
+Optional:
+
+- `ca_certificates` (String) CA certificates for custom certificate authorities.
+- `chart_repository_url` (String) Chart registry URL.
+- `container_registry_url` (String) Container registry URL.
+- `database_storage_class` (String) Default database storage class.
+- `http_proxy_url` (String) Optional HTTP proxy URL.
+- `https_proxy_url` (String) Optional HTTPS proxy URL.
+- `log_level` (String) Log level for deployed components.
+- `no_proxy_configs` (List of String) List of hosts that should not be proxied.
+- `registry_secret_name` (String) Kubernetes secret name containing registry credentials.
+- `snapshot_storage_class` (String) Default snapshot storage class.
+- `volume_snapshot_storage_class` (String) Default volume snapshot storage class.
 
 
 

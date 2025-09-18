@@ -43,7 +43,7 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	client := qch.NewHybridCloudServiceClient(conn)
 
 	// Build payload from config (account_id override or provider default)
-	env, err := expandHCEnvForCreate(d, getDefaultAccountID(m))
+	env, err := expandHCEnv(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -142,8 +142,8 @@ func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{
 
 // resourceHCEnvUpdate updates mutable fields (e.g., name) and then re-reads for canonical state.
 func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	// If nothing to change, just refresh
-	if !d.HasChange(hcEnvNameFieldName) {
+	// If nothing to change, just refresh. Note: configuration is also updatable.
+	if !d.HasChange(hcEnvNameFieldName) && !d.HasChange(hcEnvConfigurationFieldName) {
 		return resourceHCEnvRead(ctx, d, m)
 	}
 
@@ -155,7 +155,7 @@ func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 	client := qch.NewHybridCloudServiceClient(conn)
 
-	env, err := expandHCEnvForUpdate(d, getDefaultAccountID(m))
+	env, err := expandHCEnv(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
