@@ -250,9 +250,9 @@ func setHCEnvBootstrapCommands(
 	}
 	// Fetch the bootstrap commands
 	var trailer metadata.MD
-	resp, err := client.GetBootstrapCommands(
+	resp, err := client.GenerateBootstrapCommands(
 		clientCtx,
-		&qch.GetBootstrapCommandsRequest{
+		&qch.GenerateBootstrapCommandsRequest{
 			AccountId:                accountUUID.String(),
 			HybridCloudEnvironmentId: d.Id(),
 		},
