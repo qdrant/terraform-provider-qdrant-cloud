@@ -10,6 +10,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+// test helper: ensure a list attribute has at least one element
+func testAccCheckListNonEmpty(name, attr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("resource not found in state: %s", name)
+		}
+		// Terraform stores list length at "<attr>.#"
+		if n := rs.Primary.Attributes[attr+".#"]; n == "" || n == "0" {
+			return fmt.Errorf("expected %s to be non-empty, got length=%q", attr, n)
+		}
+		return nil
+	}
+}
+
 func TestAccResourceAccountsHybridCloudEnvironment_Basic(t *testing.T) {
 	provider := fmt.Sprintf(`
 provider "qdrant-cloud" {
@@ -28,6 +43,8 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 }
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
+	resourceName := "qdrant-cloud_accounts_hybrid_cloud_environment.test"
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
 			//nolint:unparam
@@ -39,20 +56,24 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("qdrant-cloud_accounts_hybrid_cloud_environment.test", "name", "tf-acc-test-hc-env"),
-					resource.TestCheckResourceAttr("qdrant-cloud_accounts_hybrid_cloud_environment.test", "configuration.0.namespace", "qdrant-hc-tf-acc"),
-					resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_hybrid_cloud_environment.test", "id"),
-					resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_hybrid_cloud_environment.test", "account_id"),
-					resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_hybrid_cloud_environment.test", "created_at"),
-					resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_hybrid_cloud_environment.test", "last_modified_at"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-hc-env"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.namespace", "qdrant-hc-tf-acc"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_at"),
+					// knob should be bumped to 1 on create (unless user explicitly set -1, which we don't here)
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_commands_version", "1"),
+					// commands should be generated when version > 0
+					testAccCheckListNonEmpty(resourceName, "bootstrap_commands"),
 				),
 			},
 			{
 				Config:  config,
 				Destroy: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("qdrant-cloud_accounts_hybrid_cloud_environment.test", "name", "tf-acc-test-hc-env"),
-					resource.TestCheckResourceAttr("qdrant-cloud_accounts_hybrid_cloud_environment.test", "configuration.0.namespace", "qdrant-hc-tf-acc"),
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-hc-env"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.namespace", "qdrant-hc-tf-acc"),
 				),
 			},
 		},
@@ -93,7 +114,9 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"bootstrap_commands", // ephemerally regenerated; ignore entire list
+					// Ephemeral / local-only:
+					"bootstrap_commands",
+					"bootstrap_commands_version",
 				},
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					rs, ok := s.RootModule().Resources[resourceName]
@@ -103,7 +126,7 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 					return rs.Primary.ID, nil
 				},
 			},
-			// Ensures we can still read it with the same config, then destroy
+			// Ensure read works with same config, then destroy
 			{Config: config, Destroy: true},
 		},
 	})
