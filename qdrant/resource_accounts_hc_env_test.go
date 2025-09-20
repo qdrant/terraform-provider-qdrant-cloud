@@ -150,9 +150,10 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 }
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
-	resourceName := "qdrant-cloud_accounts_hybrid_cloud_environment.test"
+	const resourceName = "qdrant-cloud_accounts_hybrid_cloud_environment.test"
 
 	resource.Test(t, resource.TestCase{
+		//nolint:unparam
 		ProviderFactories: map[string]func() (*schema.Provider, error){
 			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
 		},
