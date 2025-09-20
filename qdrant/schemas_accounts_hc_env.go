@@ -18,6 +18,7 @@ const (
 	hcEnvCreatedAtFieldName                     = "created_at"
 	hcEnvLastModifiedAtFieldName                = "last_modified_at"
 	hcEnvBootstrapCommandsFieldName             = "bootstrap_commands"
+	hcEnvCfgLastModifiedAtFieldName             = "last_modified_at"
 	hcEnvCfgHttpProxyUrlFieldName               = "http_proxy_url"
 	hcEnvCfgHttpsProxyUrlFieldName              = "https_proxy_url"
 	hcEnvCfgNoProxyConfigsFieldName             = "no_proxy_configs"
@@ -87,6 +88,11 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
+		},
+		hcEnvCfgLastModifiedAtFieldName: {
+			Description: "Last modification timestamp of the configuration.",
+			Type:        schema.TypeString,
+			Computed:    true,
 		},
 		hcEnvCfgHttpProxyUrlFieldName: {
 			Description: "Optional HTTP proxy URL.",
@@ -180,6 +186,11 @@ func flattenHCEnvConfiguration(cfg *qch.HybridCloudEnvironmentConfiguration) []i
 		hcEnvCfgSnapshotStorageClassFieldName:       cfg.GetSnapshotStorageClass(),
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: cfg.GetVolumeSnapshotStorageClass(),
 	}
+
+	if ts := cfg.GetLastModifiedAt(); ts != nil {
+		configMap[hcEnvCfgLastModifiedAtFieldName] = formatTime(ts)
+	}
+
 	// Handle enum to avoid panic on nil
 	if logLevel := cfg.GetLogLevel(); logLevel != qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_UNSPECIFIED {
 		configMap[hcEnvCfgLogLevelFieldName] = logLevel.String()

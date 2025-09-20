@@ -128,6 +128,10 @@ Optional:
 - `snapshot_storage_class` (String) Default snapshot storage class.
 - `volume_snapshot_storage_class` (String) Default volume snapshot storage class.
 
+Read-Only:
+
+- `last_modified_at` (String) Last modification timestamp of the configuration.
+
 
 
 
