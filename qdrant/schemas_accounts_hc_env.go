@@ -9,15 +9,17 @@ import (
 )
 
 const (
-	hcEnvFieldTemplate                          = "Hybrid cloud environment Schema %s field"
-	hcEnvIdFieldName                            = "id"
-	hcEnvAccountIdFieldName                     = "account_id"
-	hcEnvNameFieldName                          = "name"
-	hcEnvConfigurationFieldName                 = "configuration"
-	hcEnvCfgNamespaceFieldName                  = "namespace"
-	hcEnvCreatedAtFieldName                     = "created_at"
-	hcEnvLastModifiedAtFieldName                = "last_modified_at"
-	hcEnvBootstrapCommandsFieldName             = "bootstrap_commands"
+	hcEnvFieldTemplate              = "Hybrid cloud environment Schema %s field"
+	hcEnvIdFieldName                = "id"
+	hcEnvAccountIdFieldName         = "account_id"
+	hcEnvNameFieldName              = "name"
+	hcEnvConfigurationFieldName     = "configuration"
+	hcEnvCfgNamespaceFieldName      = "namespace"
+	hcEnvCreatedAtFieldName         = "created_at"
+	hcEnvLastModifiedAtFieldName    = "last_modified_at"
+	hcEnvBootstrapCommandsFieldName = "bootstrap_commands"
+	hcEnvStatusFieldName            = "status"
+
 	hcEnvCfgLastModifiedAtFieldName             = "last_modified_at"
 	hcEnvCfgHttpProxyUrlFieldName               = "http_proxy_url"
 	hcEnvCfgHttpsProxyUrlFieldName              = "https_proxy_url"
@@ -30,6 +32,33 @@ const (
 	hcEnvCfgSnapshotStorageClassFieldName       = "snapshot_storage_class"
 	hcEnvCfgVolumeSnapshotStorageClassFieldName = "volume_snapshot_storage_class"
 	hcEnvCfgLogLevelFieldName                   = "log_level"
+
+	hcEnvStatusLastModifiedAtFieldName           = "last_modified_at"
+	hcEnvStatusPhaseFieldName                    = "phase"
+	hcEnvStatusKubernetesVersionFieldName        = "kubernetes_version"
+	hcEnvStatusNumberOfNodesFieldName            = "number_of_nodes"
+	hcEnvStatusClusterCreationReadinessFieldName = "cluster_creation_readiness"
+	hcEnvStatusKubernetesDistributionFieldName   = "kubernetes_distribution"
+	hcEnvStatusMessageFieldName                  = "message"
+	hcEnvStatusCapabilitiesFieldName             = "capabilities"
+	hcEnvStatusCapabilitiesVolumeSnapshotField   = "volume_snapshot"
+	hcEnvStatusCapabilitiesVolumeExpansionField  = "volume_expansion"
+	hcEnvStatusComponentStatusesFieldName        = "component_statuses"
+	hcEnvStatusComponentNameField                = "name"
+	hcEnvStatusComponentVersionField             = "version"
+	hcEnvStatusComponentPhaseField               = "phase"
+	hcEnvStatusComponentMessageField             = "message"
+	hcEnvStatusComponentNamespaceField           = "namespace"
+	hcEnvStatusStorageClassesFieldName           = "storage_classes"
+	hcEnvStatusStorageClassNameField             = "name"
+	hcEnvStatusStorageClassDefaultField          = "default"
+	hcEnvStatusStorageClassProvisionerField      = "provisioner"
+	hcEnvStatusStorageClassAllowExpansionField   = "allow_volume_expansion"
+	hcEnvStatusStorageClassReclaimPolicyField    = "reclaim_policy"
+	hcEnvStatusStorageClassParametersField       = "parameters"
+	hcEnvStatusVolumeSnapshotClassesFieldName    = "volume_snapshot_classes"
+	hcEnvStatusVSCNameField                      = "name"
+	hcEnvStatusVSCDriverField                    = "driver"
 )
 
 func accountsHybridCloudEnvironmentSchema() map[string]*schema.Schema {
@@ -68,7 +97,12 @@ func accountsHybridCloudEnvironmentSchema() map[string]*schema.Schema {
 			Computed:    true,
 		},
 
-		// Intentionally no `status` in schema.
+		hcEnvStatusFieldName: {
+			Description: "Current status of the hybrid cloud environment (read-only).",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Resource{Schema: accountsHybridCloudEnvironmentStatusSchema()},
+		},
 
 		hcEnvBootstrapCommandsFieldName: {
 			Description: fmt.Sprintf(hcEnvFieldTemplate, "Commands to bootstrap a Kubernetes cluster into this environment"),
@@ -153,6 +187,151 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 	}
 }
 
+func accountsHybridCloudEnvironmentStatusSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		hcEnvStatusLastModifiedAtFieldName: {
+			Description: "Timestamp when the status was last updated.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusPhaseFieldName: {
+			Description: "Environment status phase.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusKubernetesVersionFieldName: {
+			Description: "Kubernetes version.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusNumberOfNodesFieldName: {
+			Description: "Number of Kubernetes nodes.",
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		hcEnvStatusClusterCreationReadinessFieldName: {
+			Description: "Cluster creation readiness.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusKubernetesDistributionFieldName: {
+			Description: "Kubernetes distribution.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusMessageFieldName: {
+			Description: "Status message.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+
+		// capabilities (single block)
+		hcEnvStatusCapabilitiesFieldName: {
+			Description: "Environment capabilities.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					hcEnvStatusCapabilitiesVolumeSnapshotField: {
+						Type:     schema.TypeBool,
+						Computed: true,
+					},
+					hcEnvStatusCapabilitiesVolumeExpansionField: {
+						Type:     schema.TypeBool,
+						Computed: true,
+					},
+				},
+			},
+		},
+
+		// component_statuses (list) — deduped (no namespace)
+		hcEnvStatusComponentStatusesFieldName: {
+			Description: "Status of deployed components.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					hcEnvStatusComponentNameField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusComponentVersionField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusComponentPhaseField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusComponentMessageField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusComponentNamespaceField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+				},
+			},
+		},
+
+		// storage_classes (list)
+		hcEnvStatusStorageClassesFieldName: {
+			Description: "Available storage classes.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					hcEnvStatusStorageClassNameField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusStorageClassDefaultField: {
+						Type:     schema.TypeBool,
+						Computed: true,
+					},
+					hcEnvStatusStorageClassProvisionerField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusStorageClassAllowExpansionField: {
+						Type:     schema.TypeBool,
+						Computed: true,
+					},
+					hcEnvStatusStorageClassReclaimPolicyField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusStorageClassParametersField: {
+						Type:     schema.TypeMap,
+						Computed: true,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+					},
+				},
+			},
+		},
+
+		// volume_snapshot_classes (list)
+		hcEnvStatusVolumeSnapshotClassesFieldName: {
+			Description: "Available volume snapshot classes.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					hcEnvStatusVSCNameField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					hcEnvStatusVSCDriverField: {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+				},
+			},
+		},
+	}
+}
+
 // flattenHCEnv maps API object -> Terraform state fields (excluding status).
 func flattenHCEnv(env *qch.HybridCloudEnvironment) map[string]interface{} {
 	out := map[string]interface{}{
@@ -164,6 +343,7 @@ func flattenHCEnv(env *qch.HybridCloudEnvironment) map[string]interface{} {
 	}
 
 	out[hcEnvConfigurationFieldName] = flattenHCEnvConfiguration(env.GetConfiguration())
+	out[hcEnvStatusFieldName] = flattenHCEnvStatus(env.GetStatus())
 
 	return out
 }
@@ -282,4 +462,94 @@ func interfaceSliceToStringSlice(s []interface{}) []string {
 		res[i] = v.(string)
 	}
 	return res
+}
+
+func flattenHCEnvStatus(st *qch.HybridCloudEnvironmentStatus) []interface{} {
+	if st == nil {
+		return []interface{}{}
+	}
+	m := map[string]interface{}{
+		hcEnvStatusPhaseFieldName:                    st.GetPhase().String(),
+		hcEnvStatusKubernetesVersionFieldName:        st.GetKubernetesVersion(),
+		hcEnvStatusNumberOfNodesFieldName:            int(st.GetNumberOfNodes()),
+		hcEnvStatusClusterCreationReadinessFieldName: st.GetClusterCreationReadiness().String(),
+		hcEnvStatusKubernetesDistributionFieldName:   st.GetKubernetesDistribution().String(),
+		hcEnvStatusMessageFieldName:                  st.GetMessage(),
+		hcEnvStatusCapabilitiesFieldName:             flattenHCEnvCapabilities(st.GetCapabilities()),
+		hcEnvStatusComponentStatusesFieldName:        flattenHCEnvComponentStatuses(st.GetComponentStatuses()),
+		hcEnvStatusStorageClassesFieldName:           flattenHCEnvStorageClasses(st.GetStorageClasses()),
+		hcEnvStatusVolumeSnapshotClassesFieldName:    flattenHCEnvVSCs(st.GetVolumeSnapshotClasses()),
+	}
+	if ts := st.GetLastModifiedAt(); ts != nil {
+		m[hcEnvStatusLastModifiedAtFieldName] = formatTime(ts)
+	}
+	return []interface{}{m}
+}
+
+func flattenHCEnvCapabilities(c *qch.HybridCloudEnvironmentCapabilities) []interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			hcEnvStatusCapabilitiesVolumeSnapshotField:  c.GetVolumeSnapshot(),
+			hcEnvStatusCapabilitiesVolumeExpansionField: c.GetVolumeExpansion(),
+		},
+	}
+}
+
+func flattenHCEnvComponentStatuses(cs []*qch.HybridCloudEnvironmentComponentStatus) []interface{} {
+	if len(cs) == 0 {
+		return []interface{}{}
+	}
+	out := make([]interface{}, 0, len(cs))
+	for _, x := range cs {
+		out = append(out, map[string]interface{}{
+			hcEnvStatusComponentNameField:    x.GetName(),
+			hcEnvStatusComponentVersionField: x.GetVersion(),
+			hcEnvStatusComponentPhaseField:   x.GetPhase().String(),
+			hcEnvStatusComponentMessageField: x.GetMessage(),
+			// (namespace intentionally omitted to avoid duplication)
+		})
+	}
+	return out
+}
+
+func flattenHCEnvStorageClasses(sc []*qch.HybridCloudEnvironmentStorageClass) []interface{} {
+	if len(sc) == 0 {
+		return []interface{}{}
+	}
+	out := make([]interface{}, 0, len(sc))
+	for _, x := range sc {
+		m := map[string]interface{}{
+			hcEnvStatusStorageClassNameField:           x.GetName(),
+			hcEnvStatusStorageClassDefaultField:        x.GetDefault(),
+			hcEnvStatusStorageClassProvisionerField:    x.GetProvisioner(),
+			hcEnvStatusStorageClassAllowExpansionField: x.GetAllowVolumeExpansion(),
+			hcEnvStatusStorageClassReclaimPolicyField:  x.GetReclaimPolicy(),
+		}
+		if len(x.GetParameters()) > 0 {
+			pm := map[string]string{}
+			for _, kv := range x.GetParameters() {
+				pm[kv.GetKey()] = kv.GetValue()
+			}
+			m[hcEnvStatusStorageClassParametersField] = pm
+		}
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenHCEnvVSCs(vsc []*qch.HybridCloudEnvironmentVolumeSnapshotClass) []interface{} {
+	if len(vsc) == 0 {
+		return []interface{}{}
+	}
+	out := make([]interface{}, 0, len(vsc))
+	for _, x := range vsc {
+		out = append(out, map[string]interface{}{
+			hcEnvStatusVSCNameField:   x.GetName(),
+			hcEnvStatusVSCDriverField: x.GetDriver(),
+		})
+	}
+	return out
 }

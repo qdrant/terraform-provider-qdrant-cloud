@@ -106,6 +106,7 @@ output "hc_environment_last_modified_at" {
 - `created_at` (String) Hybrid cloud environment Schema Creation timestamp field
 - `id` (String) Hybrid cloud environment Schema ID field
 - `last_modified_at` (String) Hybrid cloud environment Schema Last modification timestamp field
+- `status` (List of Object) Current status of the hybrid cloud environment (read-only). (see [below for nested schema](#nestedatt--status))
 
 <a id="nestedblock--configuration"></a>
 ### Nested Schema for `configuration`
@@ -131,6 +132,67 @@ Optional:
 Read-Only:
 
 - `last_modified_at` (String) Last modification timestamp of the configuration.
+
+
+<a id="nestedatt--status"></a>
+### Nested Schema for `status`
+
+Read-Only:
+
+- `capabilities` (List of Object) (see [below for nested schema](#nestedobjatt--status--capabilities))
+- `cluster_creation_readiness` (String)
+- `component_statuses` (List of Object) (see [below for nested schema](#nestedobjatt--status--component_statuses))
+- `kubernetes_distribution` (String)
+- `kubernetes_version` (String)
+- `last_modified_at` (String)
+- `message` (String)
+- `number_of_nodes` (Number)
+- `phase` (String)
+- `storage_classes` (List of Object) (see [below for nested schema](#nestedobjatt--status--storage_classes))
+- `volume_snapshot_classes` (List of Object) (see [below for nested schema](#nestedobjatt--status--volume_snapshot_classes))
+
+<a id="nestedobjatt--status--capabilities"></a>
+### Nested Schema for `status.capabilities`
+
+Read-Only:
+
+- `volume_expansion` (Boolean)
+- `volume_snapshot` (Boolean)
+
+
+<a id="nestedobjatt--status--component_statuses"></a>
+### Nested Schema for `status.component_statuses`
+
+Read-Only:
+
+- `message` (String)
+- `name` (String)
+- `namespace` (String)
+- `phase` (String)
+- `version` (String)
+
+
+<a id="nestedobjatt--status--storage_classes"></a>
+### Nested Schema for `status.storage_classes`
+
+Read-Only:
+
+- `allow_volume_expansion` (Boolean)
+- `default` (Boolean)
+- `name` (String)
+- `parameters` (Map of String)
+- `provisioner` (String)
+- `reclaim_policy` (String)
+
+
+<a id="nestedobjatt--status--volume_snapshot_classes"></a>
+### Nested Schema for `status.volume_snapshot_classes`
+
+Read-Only:
+
+- `driver` (String)
+- `name` (String)
+
 
 
 
