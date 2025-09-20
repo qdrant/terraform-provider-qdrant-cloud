@@ -95,23 +95,22 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 	}
 
-	// If the user did NOT set version to -1, handle default bump/generation.
 	v := d.Get(hcEnvBootstrapCommandsVersionFieldName).(int)
 
-	switch {
-	case v == -1:
+	switch v {
+	case -1:
 		// Explicit opt-out: do NOT generate. Leave -1 in state.
-		// nothing else to do
-	case v == 0:
-		// Default 0 on create -> bump to 1 and generate
+	case 0:
+		// Default 0 on create -> bump to 1
 		_ = d.Set(hcEnvBootstrapCommandsVersionFieldName, 1)
-		fallthrough
 	default:
-		// Generate only when version > 0 (respect explicit -1 and 0)
-		if ver, _ := d.Get(hcEnvBootstrapCommandsVersionFieldName).(int); ver > 0 {
-			if ds := setHCEnvBootstrapCommands(client, clientCtx, d, m, "error getting bootstrap commands"); ds.HasError() {
-				return ds
-			}
+		// v > 0: keep as-is
+	}
+
+	// Generate only when version > 0 (respect explicit -1 and 0)
+	if ver, _ := d.Get(hcEnvBootstrapCommandsVersionFieldName).(int); ver > 0 {
+		if ds := setHCEnvBootstrapCommands(client, clientCtx, d, m, "error getting bootstrap commands"); ds.HasError() {
+			return ds
 		}
 	}
 
