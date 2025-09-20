@@ -24,38 +24,48 @@ description: |-
 $ terraform import qdrant-cloud_accounts_hybrid_cloud_environment.example 00000000-0000-0000-0000-000000000000
 ```
 
-### Next steps (bootstrap)
+## Next steps (bootstrap)
 
-After creation or import, this resource exposes **Sensitive** `bootstrap_commands` (a list of shell commands) you must run on your Kubernetes cluster to install the agent.
+This resource exposes two related attributes:
 
-**Recommended:** write them to a file with the `local` provider, then run it:
+- **`bootstrap_commands`** *(Sensitive, Computed list of strings)* — the exact shell commands you must run on your Kubernetes cluster to register/install the Qdrant hybrid-cloud agent for this environment.
+- **`bootstrap_commands_version`** *(Optional int)* — the **rotation knob** that controls generation of the commands:
+  - **`-1`** → never generate (opt-out).
+  - **`0`** → idle (default on import/refresh; no generation).
+  - **`> 0`** → generate on create, and **re-generate** whenever this value changes.
+
+### Provider behavior
+
+- **Create**: if the knob is `0` or unset → it’s bumped to `1` and commands are generated. If `-1` → no generation.  
+- **Update**: changing the knob **re-generates** when `>0`; clears commands when `0` or `-1`.  
+- **Read/Import**: never generates; seeds `bootstrap_commands_version = 0` and an empty `bootstrap_commands` list.  
+- **Plan**: diffs on `bootstrap_commands` are suppressed unless the knob changes.
+
+**Recommended:** write bootstrap commands to a file with the `local` provider, then run it:
 
 ```terraform
-terraform {
-  required_providers {
-    local = { source = "hashicorp/local" }
-  }
-}
-
 # Turn the list into a runnable script
 locals {
-  script = length(qdrant-cloud_accounts_hybrid_cloud_environment.example.bootstrap_commands) == 0 ? "" : join("\n", concat(
+  bootstrap_lines   = try(qdrant-cloud_accounts_hybrid_cloud_environment.example.bootstrap_commands, [])
+  bootstrap_version = try(qdrant-cloud_accounts_hybrid_cloud_environment.example.bootstrap_commands_version, 0)
+
+  bootstrap_script = length(local.bootstrap_lines) == 0 ? "" : join("\n", concat(
     ["#!/usr/bin/env bash", "set -euo pipefail", ""],
-    qdrant-cloud_accounts_hybrid_cloud_environment.example.bootstrap_commands,
-    [""]
+    local.bootstrap_lines,
+    [""],
   ))
 }
 
 resource "local_sensitive_file" "bootstrap" {
-  count           = local.script == "" ? 0 : 1
-  content         = local.script
+  count           = local.bootstrap_version > 0 && length(local.bootstrap_lines) > 0 ? 1 : 0
+  content         = local.bootstrap_script
   filename        = "${path.module}/bootstrap-${qdrant-cloud_accounts_hybrid_cloud_environment.example.id}.sh"
   file_permission = "0700"
 }
 
 # Optional: print the path without exposing sensitive contents
 output "bootstrap_script_path" {
-  value = length(local_sensitive_file.bootstrap) > 0 ? nonsensitive(local_sensitive_file.bootstrap[0].filename) : ""
+  value = length(local_sensitive_file.bootstrap) > 0 ? nonsensitive(local_sensitive_file.bootstrap[0].filename) : null
 }
 ```
 

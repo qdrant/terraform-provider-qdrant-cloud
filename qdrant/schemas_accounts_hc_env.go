@@ -9,16 +9,17 @@ import (
 )
 
 const (
-	hcEnvFieldTemplate              = "Hybrid cloud environment Schema %s field"
-	hcEnvIdFieldName                = "id"
-	hcEnvAccountIdFieldName         = "account_id"
-	hcEnvNameFieldName              = "name"
-	hcEnvConfigurationFieldName     = "configuration"
-	hcEnvCfgNamespaceFieldName      = "namespace"
-	hcEnvCreatedAtFieldName         = "created_at"
-	hcEnvLastModifiedAtFieldName    = "last_modified_at"
-	hcEnvBootstrapCommandsFieldName = "bootstrap_commands"
-	hcEnvStatusFieldName            = "status"
+	hcEnvFieldTemplate                     = "Hybrid cloud environment Schema %s field"
+	hcEnvIdFieldName                       = "id"
+	hcEnvAccountIdFieldName                = "account_id"
+	hcEnvNameFieldName                     = "name"
+	hcEnvConfigurationFieldName            = "configuration"
+	hcEnvCfgNamespaceFieldName             = "namespace"
+	hcEnvCreatedAtFieldName                = "created_at"
+	hcEnvLastModifiedAtFieldName           = "last_modified_at"
+	hcEnvBootstrapCommandsFieldName        = "bootstrap_commands"
+	hcEnvBootstrapCommandsVersionFieldName = "bootstrap_commands_version"
+	hcEnvStatusFieldName                   = "status"
 
 	hcEnvCfgLastModifiedAtFieldName             = "last_modified_at"
 	hcEnvCfgHttpProxyUrlFieldName               = "http_proxy_url"
@@ -110,6 +111,13 @@ func accountsHybridCloudEnvironmentSchema() map[string]*schema.Schema {
 			Elem:        &schema.Schema{Type: schema.TypeString},
 			Computed:    true,
 			Sensitive:   true,
+		},
+
+		hcEnvBootstrapCommandsVersionFieldName: {
+			Description: "Version knob to (re)generate bootstrap commands. -1 = never generate, 0 = idle/do not (re)generate, >0 = generate/rotate.",
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Computed:    true,
 		},
 	}
 }
