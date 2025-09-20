@@ -57,9 +57,16 @@ func TestFlattenHCEnv(t *testing.T) {
 				hcEnvCfgLogLevelFieldName:                   env.GetConfiguration().GetLogLevel().String(),
 			},
 		},
+		hcEnvStatusFieldName: []interface{}{},
 	}
 
 	assert.Equal(t, want, got)
+
+	// sanity: bootstrap fields are NOT set by flattenHCEnv
+	_, hasCmds := got[hcEnvBootstrapCommandsFieldName]
+	_, hasVer := got[hcEnvBootstrapCommandsVersionFieldName]
+	assert.False(t, hasCmds)
+	assert.False(t, hasVer)
 }
 
 func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
@@ -146,4 +153,21 @@ func TestExpandHCEnvForUpdate_NoChanges(t *testing.T) {
 	assert.Empty(t, env.GetName(), "name should be empty in payload if not set")
 	assert.NotNil(t, env.GetConfiguration(), "configuration should be an empty object if not set")
 	assert.Empty(t, env.GetConfiguration().GetNamespace())
+}
+
+func TestSchema_BootstrapVersionFlags(t *testing.T) {
+	s := accountsHybridCloudEnvironmentSchema()
+	field := s[hcEnvBootstrapCommandsVersionFieldName]
+	require.NotNil(t, field)
+
+	assert.True(t, field.Optional, "bootstrap_commands_version should be Optional")
+	assert.True(t, field.Computed, "bootstrap_commands_version should be Computed")
+	assert.Nil(t, field.Default, "bootstrap_commands_version must NOT set a Default")
+}
+
+func TestSchema_ConfigurationNamespaceForceNew(t *testing.T) {
+	cfg := accountsHybridCloudEnvironmentConfigurationSchema()
+	ns := cfg[hcEnvCfgNamespaceFieldName]
+	require.NotNil(t, ns)
+	assert.True(t, ns.ForceNew, "configuration.namespace must be ForceNew")
 }
