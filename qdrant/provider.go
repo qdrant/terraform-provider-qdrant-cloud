@@ -49,10 +49,11 @@ func Provider() *schema.Provider {
 		},
 		// ResourcesMap defines all the resources that this provider offers.
 		ResourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_key":            resourceAccountsAuthKey(),        // Resource for Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_database_api_key_v2": resourceAccountsAuthKeyV2(),      // Resource for Qdrant Cloud accounts' authorization keys v2.
-			"qdrant-cloud_accounts_cluster":             resourceAccountsCluster(),        // Resource for managing Qdrant Cloud account clusters.
-			"qdrant-cloud_accounts_backup_schedule":     resourceAccountsBackupSchedule(), // Resource for managing Qdrant Cloud account backup schedules (for a cluster).
+			"qdrant-cloud_accounts_auth_key":                 resourceAccountsAuthKey(),                // Resource for Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_database_api_key_v2":      resourceAccountsAuthKeyV2(),              // Resource for Qdrant Cloud accounts' authorization keys v2.
+			"qdrant-cloud_accounts_cluster":                  resourceAccountsCluster(),                // Resource for managing Qdrant Cloud account clusters.
+			"qdrant-cloud_accounts_backup_schedule":          resourceAccountsBackupSchedule(),         // Resource for managing Qdrant Cloud account backup schedules (for a cluster).
+			"qdrant-cloud_accounts_hybrid_cloud_environment": resourceAccountsHybridCloudEnvironment(), // Resource for managing Qdrant Cloud account hybrid cloud environments.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
