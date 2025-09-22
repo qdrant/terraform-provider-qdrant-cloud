@@ -195,6 +195,7 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 	}
 }
 
+// accountsHybridCloudEnvironmentStatusSchema defines the read-only status shape for a hybrid cloud environment.
 func accountsHybridCloudEnvironmentStatusSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		hcEnvStatusLastModifiedAtFieldName: {
@@ -238,49 +239,15 @@ func accountsHybridCloudEnvironmentStatusSchema() map[string]*schema.Schema {
 			Description: "Environment capabilities.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					hcEnvStatusCapabilitiesVolumeSnapshotField: {
-						Type:     schema.TypeBool,
-						Computed: true,
-					},
-					hcEnvStatusCapabilitiesVolumeExpansionField: {
-						Type:     schema.TypeBool,
-						Computed: true,
-					},
-				},
-			},
+			Elem:        &schema.Resource{Schema: accountsHybridCloudEnvironmentStatusCapabilitiesSchema()},
 		},
 
-		// component_statuses (list) — deduped (no namespace)
+		// component_statuses (list)
 		hcEnvStatusComponentStatusesFieldName: {
 			Description: "Status of deployed components.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					hcEnvStatusComponentNameField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusComponentVersionField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusComponentPhaseField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusComponentMessageField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusComponentNamespaceField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
+			Elem:        &schema.Resource{Schema: accountsHybridCloudEnvironmentStatusComponentStatusesSchema()},
 		},
 
 		// storage_classes (list)
@@ -288,35 +255,7 @@ func accountsHybridCloudEnvironmentStatusSchema() map[string]*schema.Schema {
 			Description: "Available storage classes.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					hcEnvStatusStorageClassNameField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusStorageClassDefaultField: {
-						Type:     schema.TypeBool,
-						Computed: true,
-					},
-					hcEnvStatusStorageClassProvisionerField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusStorageClassAllowExpansionField: {
-						Type:     schema.TypeBool,
-						Computed: true,
-					},
-					hcEnvStatusStorageClassReclaimPolicyField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusStorageClassParametersField: {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
+			Elem:        &schema.Resource{Schema: accountsHybridCloudEnvironmentStatusStorageClassesSchema()},
 		},
 
 		// volume_snapshot_classes (list)
@@ -324,18 +263,103 @@ func accountsHybridCloudEnvironmentStatusSchema() map[string]*schema.Schema {
 			Description: "Available volume snapshot classes.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					hcEnvStatusVSCNameField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					hcEnvStatusVSCDriverField: {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
+			Elem:        &schema.Resource{Schema: accountsHybridCloudEnvironmentStatusVSCsSchema()},
+		},
+	}
+}
+
+func accountsHybridCloudEnvironmentStatusCapabilitiesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		hcEnvStatusCapabilitiesVolumeSnapshotField: {
+			Description: "Whether the cluster supports Kubernetes VolumeSnapshot functionality.",
+			Type:        schema.TypeBool,
+			Computed:    true,
+		},
+		hcEnvStatusCapabilitiesVolumeExpansionField: {
+			Description: "Whether PersistentVolumeClaims can be expanded on this cluster.",
+			Type:        schema.TypeBool,
+			Computed:    true,
+		},
+	}
+}
+
+func accountsHybridCloudEnvironmentStatusComponentStatusesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		hcEnvStatusComponentNameField: {
+			Description: "Component name (e.g., Helm release/controller).",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusComponentVersionField: {
+			Description: "Reported component version (chart/app).",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusComponentPhaseField: {
+			Description: "Component phase (e.g., PENDING, READY, ERROR).",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusComponentMessageField: {
+			Description: "Human-readable message for the component state.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusComponentNamespaceField: {
+			Description: "Kubernetes namespace where the component runs.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+	}
+}
+
+func accountsHybridCloudEnvironmentStatusStorageClassesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		hcEnvStatusStorageClassNameField: {
+			Description: "StorageClass name.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusStorageClassDefaultField: {
+			Description: "Whether this StorageClass is the default.",
+			Type:        schema.TypeBool,
+			Computed:    true,
+		},
+		hcEnvStatusStorageClassProvisionerField: {
+			Description: "CSI provisioner for this StorageClass.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusStorageClassAllowExpansionField: {
+			Description: "Whether PVCs using this StorageClass can be expanded.",
+			Type:        schema.TypeBool,
+			Computed:    true,
+		},
+		hcEnvStatusStorageClassReclaimPolicyField: {
+			Description: "Reclaim policy (e.g., Delete, Retain).",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusStorageClassParametersField: {
+			Description: "Key-value parameters for the provisioner.",
+			Type:        schema.TypeMap,
+			Computed:    true,
+			Elem:        &schema.Schema{Type: schema.TypeString},
+		},
+	}
+}
+
+func accountsHybridCloudEnvironmentStatusVSCsSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		hcEnvStatusVSCNameField: {
+			Description: "VolumeSnapshotClass name.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvStatusVSCDriverField: {
+			Description: "CSI snapshot driver for this class.",
+			Type:        schema.TypeString,
+			Computed:    true,
 		},
 	}
 }

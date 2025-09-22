@@ -293,7 +293,7 @@ func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interfac
 	return nil
 }
 
-// setHCEnvBootstrapCommands performs a read operation to fetch the bootstrap commands for a hybrid cloud environment.
+// setHCEnvBootstrapCommands performs operation to fetch the bootstrap commands for a hybrid cloud environment.
 // client: The gRPC client for the hybrid cloud service.
 // clientCtx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
 // d: Resource data which is used to manage the state of the resource.
