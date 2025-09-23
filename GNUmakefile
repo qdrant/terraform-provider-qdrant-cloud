@@ -55,7 +55,7 @@ checksum:
 local-build:
 	mkdir -p ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}
 	go build
-	cp ${BINARY} ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
+	mv ${BINARY} ~/.terraform.d/plugins/${NAMESPACE}/${NAME}/${NAME}/${VERSION}/${OS_ARCH}/${BINARY}
 
 .PHONY: lint
 lint: bootstrap ## Run project linters
