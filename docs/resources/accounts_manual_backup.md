@@ -121,21 +121,62 @@ Read-Only:
 
 Read-Only:
 
+- `allowed_ip_source_ranges` (List of String)
+- `annotations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--annotations))
 - `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration))
+- `gpu_type` (String)
 - `last_modified_at` (String)
+- `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--node_configuration))
+- `node_selector` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--node_selector))
 - `number_of_nodes` (Number)
-- `package_id` (String)
+- `pod_labels` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--pod_labels))
 - `rebalance_strategy` (String)
+- `reserved_cpu_percentage` (Number)
+- `reserved_memory_percentage` (Number)
+- `restart_policy` (String)
+- `service_annotations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--service_annotations))
 - `service_type` (String)
+- `tolerations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--tolerations))
 - `version` (String)
+
+<a id="nestedobjatt--cluster_info--configuration--annotations"></a>
+### Nested Schema for `cluster_info.configuration.annotations`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
 
 <a id="nestedobjatt--cluster_info--configuration--database_configuration"></a>
 ### Nested Schema for `cluster_info.configuration.database_configuration`
 
 Read-Only:
 
+- `collection` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--collection))
 - `inference` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--inference))
+- `log_level` (String)
 - `service` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--service))
+- `storage` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--storage))
+- `tls` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--tls))
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--collection"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.collection`
+
+Read-Only:
+
+- `replication_factor` (Number)
+- `vectors` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--collection--vectors))
+- `write_consistency_factor` (Number)
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--collection--vectors"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.collection.vectors`
+
+Read-Only:
+
+- `on_disk` (Boolean)
+
+
 
 <a id="nestedobjatt--cluster_info--configuration--database_configuration--inference"></a>
 ### Nested Schema for `cluster_info.configuration.database_configuration.inference`
@@ -151,17 +192,130 @@ Read-Only:
 Read-Only:
 
 - `api_key` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--service--api_key))
+- `enable_tls` (Boolean)
 - `jwt_rbac` (Boolean)
+- `read_only_api_key` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--service--read_only_api_key))
 
 <a id="nestedobjatt--cluster_info--configuration--database_configuration--service--api_key"></a>
 ### Nested Schema for `cluster_info.configuration.database_configuration.service.api_key`
 
 Read-Only:
 
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--service--read_only_api_key"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.service.read_only_api_key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--storage"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.storage`
+
+Read-Only:
+
+- `performance` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--storage--performance))
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--storage--performance"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.storage.performance`
+
+Read-Only:
+
+- `async_scorer` (Boolean)
+- `optimizer_cpu_budget` (Number)
+
+
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--tls"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.tls`
+
+Read-Only:
+
+- `cert` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--tls--cert))
+- `key` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration--tls--key))
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--tls--cert"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.tls.cert`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+<a id="nestedobjatt--cluster_info--configuration--database_configuration--tls--key"></a>
+### Nested Schema for `cluster_info.configuration.database_configuration.tls.key`
+
+Read-Only:
+
+- `secret_key` (String)
+- `secret_name` (String)
+
+
+
+
+<a id="nestedobjatt--cluster_info--configuration--node_configuration"></a>
+### Nested Schema for `cluster_info.configuration.node_configuration`
+
+Read-Only:
+
+- `package_id` (String)
+- `resource_configurations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--node_configuration--resource_configurations))
+
+<a id="nestedobjatt--cluster_info--configuration--node_configuration--resource_configurations"></a>
+### Nested Schema for `cluster_info.configuration.node_configuration.resource_configurations`
+
+Read-Only:
+
+- `amount` (Number)
+- `resource_type` (String)
+- `resource_unit` (String)
+
+
+
+<a id="nestedobjatt--cluster_info--configuration--node_selector"></a>
+### Nested Schema for `cluster_info.configuration.node_selector`
+
+Read-Only:
+
 - `key` (String)
-- `name` (String)
+- `value` (String)
 
 
+<a id="nestedobjatt--cluster_info--configuration--pod_labels"></a>
+### Nested Schema for `cluster_info.configuration.pod_labels`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--cluster_info--configuration--service_annotations"></a>
+### Nested Schema for `cluster_info.configuration.service_annotations`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedobjatt--cluster_info--configuration--tolerations"></a>
+### Nested Schema for `cluster_info.configuration.tolerations`
+
+Read-Only:
+
+- `effect` (String)
+- `key` (String)
+- `operator` (String)
+- `toleration_seconds` (Number)
+- `value` (String)
 
 
 

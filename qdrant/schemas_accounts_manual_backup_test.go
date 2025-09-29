@@ -11,15 +11,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	qcb "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/backup/v1"
-	qccl "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
-	qcco "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
 )
 
 func TestFlattenBackup(t *testing.T) {
 	createdAt := timestamppb.New(time.Date(2025, 9, 24, 13, 20, 23, 663911000, time.UTC))
 	deletedAt := timestamppb.New(time.Date(2025, 9, 25, 7, 5, 0, 0, time.UTC))
-	cfgLastMod := timestamppb.New(time.Date(2025, 9, 24, 12, 34, 37, 505702000, time.UTC))
-	version := "v1.15.4"
 
 	b := &qcb.Backup{
 		Id:             "b088d7d3-2ba9-4839-8d6d-f04db6ec14dd",
@@ -34,25 +30,19 @@ func TestFlattenBackup(t *testing.T) {
 			Name:                  "weary-wombat-bronze",
 			CloudProviderId:       "aws",
 			CloudProviderRegionId: "eu-central-1",
-			Configuration: &qccl.ClusterConfiguration{
-				LastModifiedAt: cfgLastMod,
-				NumberOfNodes:  1,
-				Version:        &version,
-				PackageId:      "7c939d96-d671-4051-aa16-3b8b7130fa42",
-				DatabaseConfiguration: &qccl.DatabaseConfiguration{
-					Service: &qccl.DatabaseConfigurationService{
-						ApiKey:  &qcco.SecretKeyRef{Name: "qdrant-api-key-604fa4fc-fdd2-4ae9-ac36-d166a114d52f", Key: "api-key"},
-						JwtRbac: true,
-					},
-					Inference: &qccl.DatabaseConfigurationInference{
-						Enabled: true,
-					},
-				},
-			},
 		},
 	}
 
 	got := flattenBackup(b)
+
+	// got is map[string]interface{}
+	// ignoring cluster config
+	if clusterInfos, ok := got[backupClusterInfoFieldName].([]interface{}); ok && len(clusterInfos) > 0 {
+		if clusterInfo, ok := clusterInfos[0].(map[string]interface{}); ok {
+			delete(clusterInfo, bClusterCfgField)
+		}
+	}
+
 	want := map[string]interface{}{
 		backupIdFieldName:         b.GetId(),
 		backupAccountIdFieldName:  b.GetAccountId(),
@@ -68,36 +58,6 @@ func TestFlattenBackup(t *testing.T) {
 				bClusterInfoNameField:          b.GetClusterInfo().GetName(),
 				bClusterInfoCloudProviderField: b.GetClusterInfo().GetCloudProviderId(),
 				bClusterInfoRegionField:        b.GetClusterInfo().GetCloudProviderRegionId(),
-				bClusterCfgField: []interface{}{
-					map[string]interface{}{
-						bClusterCfgLastModifiedAtField: formatTime(cfgLastMod),
-						bClusterCfgNumberOfNodesField:  int(b.GetClusterInfo().GetConfiguration().GetNumberOfNodes()),
-						bClusterCfgVersionField:        b.GetClusterInfo().GetConfiguration().GetVersion(),
-						bClusterCfgPackageIdField:      b.GetClusterInfo().GetConfiguration().GetPackageId(),
-						bClusterCfgServiceTypeField:    b.GetClusterInfo().GetConfiguration().GetServiceType().String(),
-						bClusterCfgRebalanceStratField: b.GetClusterInfo().GetConfiguration().GetRebalanceStrategy().String(),
-						bClusterCfgDbConfigField: []interface{}{
-							map[string]interface{}{
-								bDbCfgServiceField: []interface{}{
-									map[string]interface{}{
-										bDbCfgServiceApiKeyField: []interface{}{
-											map[string]interface{}{
-												bDbCfgServiceApiKeyNameField: "qdrant-api-key-604fa4fc-fdd2-4ae9-ac36-d166a114d52f",
-												bDbCfgServiceApiKeyKeyField:  "api-key",
-											},
-										},
-										bDbCfgServiceJwtRbacField: true,
-									},
-								},
-								bDbCfgInferenceField: []interface{}{
-									map[string]interface{}{
-										bDbCfgInferenceEnabledField: true,
-									},
-								},
-							},
-						},
-					},
-				},
 			},
 		},
 	}

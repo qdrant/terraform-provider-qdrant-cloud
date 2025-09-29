@@ -6,8 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	qcb "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/backup/v1"
-	qccl "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
-	qcco "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
 )
 
 const (
@@ -132,102 +130,7 @@ func accountsBackupClusterInfoSchema() map[string]*schema.Schema {
 			Description: "Cluster configuration details (read-only).",
 			Type:        schema.TypeList,
 			Computed:    true,
-			Elem:        &schema.Resource{Schema: accountsBackupClusterConfigurationSchema()},
-		},
-	}
-}
-
-func accountsBackupClusterConfigurationSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		bClusterCfgLastModifiedAtField: {
-			Description: "Configuration last modified timestamp.",
-			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		bClusterCfgNumberOfNodesField: {
-			Description: "Number of nodes.",
-			Type:        schema.TypeInt,
-			Computed:    true,
-		},
-		bClusterCfgVersionField: {
-			Description: "Qdrant version.",
-			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		bClusterCfgPackageIdField: {
-			Description: "Package ID.",
-			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		bClusterCfgServiceTypeField: {
-			Description: "Service type (enum as string).",
-			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		bClusterCfgRebalanceStratField: {
-			Description: "Rebalance strategy (enum as string).",
-			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		bClusterCfgDbConfigField: {
-			Description: "Database configuration at backup time.",
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem:        &schema.Resource{Schema: accountsBackupDatabaseConfigurationSchema()},
-		},
-	}
-}
-
-func accountsBackupDatabaseConfigurationSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		bDbCfgServiceField: {
-			Description: "Service settings.",
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem:        &schema.Resource{Schema: accountsBackupDatabaseServiceSchema()},
-		},
-		bDbCfgInferenceField: {
-			Description: "Inference settings.",
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem:        &schema.Resource{Schema: accountsBackupInferenceSchema()},
-		},
-	}
-}
-
-func accountsBackupDatabaseServiceSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		bDbCfgServiceApiKeyField: {
-			Description: "Service API key (name/key).",
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem: &schema.Resource{Schema: map[string]*schema.Schema{
-				bDbCfgServiceApiKeyNameField: {
-					Description: "API key name.",
-					Type:        schema.TypeString,
-					Computed:    true,
-				},
-				bDbCfgServiceApiKeyKeyField: {
-					Description: "API key identifier.",
-					Type:        schema.TypeString,
-					Computed:    true,
-				},
-			}},
-		},
-		bDbCfgServiceJwtRbacField: {
-			Description: "JWT RBAC enabled.",
-			Type:        schema.TypeBool,
-			Computed:    true,
-		},
-	}
-}
-
-func accountsBackupInferenceSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		bDbCfgInferenceEnabledField: {
-			Description: "Inference enabled.",
-			Type:        schema.TypeBool,
-			Computed:    true,
+			Elem:        &schema.Resource{Schema: accountsClusterConfigurationSchema(false)},
 		},
 	}
 }
@@ -266,74 +169,9 @@ func flattenBackupClusterInfo(ci *qcb.ClusterInfo) []interface{} {
 		bClusterInfoNameField:          ci.GetName(),
 		bClusterInfoCloudProviderField: ci.GetCloudProviderId(),
 		bClusterInfoRegionField:        ci.GetCloudProviderRegionId(),
-		bClusterCfgField:               flattenBackupClusterConfiguration(ci.GetConfiguration()),
+		bClusterCfgField:               flattenClusterConfiguration(ci.GetConfiguration()),
 	}
 	return []interface{}{m}
-}
-
-func flattenBackupClusterConfiguration(cfg *qccl.ClusterConfiguration) []interface{} {
-	if cfg == nil {
-		return []interface{}{}
-	}
-	m := map[string]interface{}{
-		bClusterCfgNumberOfNodesField:  int(cfg.GetNumberOfNodes()),
-		bClusterCfgVersionField:        cfg.GetVersion(),
-		bClusterCfgPackageIdField:      cfg.GetPackageId(),
-		bClusterCfgServiceTypeField:    cfg.GetServiceType().String(),
-		bClusterCfgRebalanceStratField: cfg.GetRebalanceStrategy().String(),
-		bClusterCfgDbConfigField:       flattenBackupDatabaseConfiguration(cfg.GetDatabaseConfiguration()),
-	}
-	if ts := cfg.GetLastModifiedAt(); ts != nil {
-		m[bClusterCfgLastModifiedAtField] = formatTime(ts)
-	}
-	return []interface{}{m}
-}
-
-func flattenBackupDatabaseConfiguration(db *qccl.DatabaseConfiguration) []interface{} {
-	if db == nil {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			bDbCfgServiceField:   flattenBackupDatabaseService(db.GetService()),
-			bDbCfgInferenceField: flattenBackupInference(db.GetInference()),
-		},
-	}
-}
-
-func flattenBackupDatabaseService(svc *qccl.DatabaseConfigurationService) []interface{} {
-	if svc == nil {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			bDbCfgServiceApiKeyField:  flattenBackupAPIKey(svc.GetApiKey()),
-			bDbCfgServiceJwtRbacField: svc.GetJwtRbac(),
-		},
-	}
-}
-
-func flattenBackupAPIKey(k *qcco.SecretKeyRef) []interface{} {
-	if k == nil {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			bDbCfgServiceApiKeyNameField: k.GetName(),
-			bDbCfgServiceApiKeyKeyField:  k.GetKey(),
-		},
-	}
-}
-
-func flattenBackupInference(inf *qccl.DatabaseConfigurationInference) []interface{} {
-	if inf == nil {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			bDbCfgInferenceEnabledField: inf.GetEnabled(),
-		},
-	}
 }
 
 // expandBackup builds the API object from TF config for Create.

@@ -87,7 +87,7 @@ provider "qdrant-cloud" {
 			// Step 3: Wait then verify terminal fields
 			// Backups can only be deleted once they are ready
 			{
-				PreConfig: func() { time.Sleep(120 * time.Second) },
+				PreConfig: func() { time.Sleep(240 * time.Second) },
 				Config:    configClusterAndBackup,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(backupRes, "status", "BACKUP_STATUS_SUCCEEDED"),
@@ -156,7 +156,7 @@ provider "qdrant-cloud" {
 
 			// 3) Wait for backup to finish, then assert terminal fields
 			{
-				PreConfig: func() { time.Sleep(120 * time.Second) },
+				PreConfig: func() { time.Sleep(240 * time.Second) },
 				Config:    config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(backupRes, "status", "BACKUP_STATUS_SUCCEEDED"),
