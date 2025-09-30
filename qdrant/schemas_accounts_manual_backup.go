@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -12,8 +13,9 @@ const (
 	backupFieldTemplate = "Backup Schema %s field"
 
 	// Writable fields.
-	backupAccountIdFieldName = "account_id"
-	backupClusterIdFieldName = "cluster_id"
+	backupAccountIdFieldName       = "account_id"
+	backupClusterIdFieldName       = "cluster_id"
+	backupRetentionPeriodFieldName = "retention_period"
 
 	// Read-only fields (per proto).
 	backupIdFieldName              = "id"
@@ -60,6 +62,13 @@ func accountsBackupSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
+		},
+		backupRetentionPeriodFieldName: {
+			Description:      fmt.Sprintf(backupFieldTemplate, "Retention period (Go duration, e.g. \"24h\" or \"86400s\")."),
+			Type:             schema.TypeString,
+			Optional:         true,
+			ForceNew:         true,
+			DiffSuppressFunc: suppressDurationDiff,
 		},
 
 		// Read-only
@@ -152,6 +161,11 @@ func flattenBackup(b *qcb.Backup) map[string]interface{} {
 			b.GetClusterInfo(),
 		),
 	}
+
+	if rp := b.GetRetentionPeriod(); rp != nil {
+		out[backupRetentionPeriodFieldName] = formatDuration(rp)
+	}
+
 	if ts := b.GetCreatedAt(); ts != nil {
 		out[backupCreatedAtFieldName] = formatTime(ts)
 	}
@@ -188,10 +202,21 @@ func expandBackup(d *schema.ResourceData, defaultAccountID string) (*qcb.Backup,
 		return nil, fmt.Errorf("cluster ID must be set")
 	}
 
-	return &qcb.Backup{
+	bk := &qcb.Backup{
 		AccountId: accountID,
 		ClusterId: clusterID,
-		// read-only fields: (id, created_at, name, status, deleted_at,
-		// backup_duration, backup_schedule_id, cluster_info)
-	}, nil
+	}
+
+	if v, ok := d.GetOk(backupRetentionPeriodFieldName); ok {
+		s := strings.TrimSpace(v.(string))
+		if s != "" {
+			rp := parseDuration(s)
+			if rp == nil {
+				return nil, fmt.Errorf("invalid %s: %q", backupRetentionPeriodFieldName, s)
+			}
+			bk.RetentionPeriod = rp
+		}
+	}
+
+	return bk, nil
 }

@@ -94,6 +94,7 @@ output "manual_backup_id" {
 ### Optional
 
 - `account_id` (String) Backup Schema Account ID field
+- `retention_period` (String) Backup Schema Retention period (Go duration, e.g. "24h" or "86400s"). field
 
 ### Read-Only
 

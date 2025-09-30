@@ -109,6 +109,84 @@ provider "qdrant-cloud" {
 	})
 }
 
+func TestAccResourceAccountsManualBackup_RetentionPeriod(t *testing.T) {
+	precheckAccManualBackup(t)
+
+	apiKey := os.Getenv("QDRANT_CLOUD_API_KEY")
+	accountID := os.Getenv("QDRANT_CLOUD_ACCOUNT_ID")
+	cloudProvider := getEnvDefault("QDRANT_CLOUD_CLOUD_PROVIDER", "aws")
+	cloudRegion := getEnvDefault("QDRANT_CLOUD_REGION", "eu-central-1")
+	packageID := os.Getenv("QDRANT_CLOUD_PACKAGE_ID")
+
+	provider := fmt.Sprintf(`
+provider "qdrant-cloud" {
+  api_key    = "%s"
+  account_id = "%s"
+}
+`, apiKey, accountID)
+
+	const clusterRes = "qdrant-cloud_accounts_cluster.test"
+	const backupRes = "qdrant-cloud_accounts_manual_backup.test"
+
+	// Step A: Create cluster only
+	configClusterOnly := provider + buildAccManualBackupClusterConfig(cloudProvider, cloudRegion, packageID, "tf-acc-test-cluster-retention")
+
+	// Step B: Create cluster + backup with retention
+	configWithRetention := provider + buildAccManualBackupClusterAndBackupWithRetentionConfig(
+		cloudProvider, cloudRegion, packageID, "tf-acc-test-cluster-retention", "24h",
+	)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam
+			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create cluster only
+			{
+				Config: configClusterOnly,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(clusterRes, "name", "tf-acc-test-cluster-retention"),
+					resource.TestCheckResourceAttrSet(clusterRes, "id"),
+				),
+			},
+
+			// Step 2: Create manual backup with retention period
+			{
+				Config: configWithRetention,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(backupRes, "id"),
+					resource.TestCheckResourceAttrSet(backupRes, "account_id"),
+					resource.TestCheckResourceAttrSet(backupRes, "cluster_id"),
+					resource.TestCheckResourceAttrSet(backupRes, "created_at"),
+					resource.TestCheckResourceAttrSet(backupRes, "name"),
+					resource.TestCheckResourceAttrSet(backupRes, "status"),
+					resource.TestCheckResourceAttr(backupRes, "retention_period", "24h0m0s"),
+					testAccCheckAttrEqual(backupRes, "cluster_id", clusterRes, "id"),
+				),
+			},
+
+			// Step 3: Wait then verify terminal fields
+			// Backups can only be deleted once they are ready
+			{
+				PreConfig: func() { time.Sleep(240 * time.Second) },
+				Config:    configWithRetention,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(backupRes, "status", "BACKUP_STATUS_SUCCEEDED"),
+					resource.TestCheckResourceAttrSet(backupRes, "backup_duration"),
+					resource.TestCheckResourceAttr(backupRes, "retention_period", "24h0m0s"),
+				),
+			},
+
+			// Step 4: Destroy both (backup and cluster)
+			{
+				Config:  configWithRetention,
+				Destroy: true,
+			},
+		},
+	})
+}
+
 func TestAccResourceAccountsManualBackup_Import(t *testing.T) {
 	precheckAccManualBackup(t)
 
@@ -277,4 +355,14 @@ resource "qdrant-cloud_accounts_manual_backup" "test" {
   cluster_id = qdrant-cloud_accounts_cluster.test.id
 }
 `
+}
+
+// Build config that creates a cluster and a manual backup with a retention period.
+func buildAccManualBackupClusterAndBackupWithRetentionConfig(cloudProvider, cloudRegion, packageID, name, retention string) string {
+	return buildAccManualBackupClusterConfig(cloudProvider, cloudRegion, packageID, name) + fmt.Sprintf(`
+resource "qdrant-cloud_accounts_manual_backup" "test" {
+  cluster_id       = qdrant-cloud_accounts_cluster.test.id
+  retention_period = "%s"
+}
+`, retention)
 }
