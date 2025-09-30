@@ -183,31 +183,3 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 		},
 	})
 }
-
-// testCheckHasListAttr verifies a list attribute has at least one element.
-func testCheckHasListAttr(resourceName, attr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-		if n, ok := rs.Primary.Attributes[attr+".#"]; !ok || n == "0" {
-			return fmt.Errorf("expected %s to have at least one element, got %q", attr, n)
-		}
-		return nil
-	}
-}
-
-func testAccCheckListNonEmpty(name, attr string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("resource not found in state: %s", name)
-		}
-		// Terraform stores list length at "<attr>.#"
-		if n := rs.Primary.Attributes[attr+".#"]; n == "" || n == "0" {
-			return fmt.Errorf("expected %s to be non-empty, got length=%q", attr, n)
-		}
-		return nil
-	}
-}
