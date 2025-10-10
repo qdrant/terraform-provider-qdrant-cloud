@@ -55,6 +55,7 @@ func Provider() *schema.Provider {
 			"qdrant-cloud_accounts_backup_schedule":          resourceAccountsBackupSchedule(),         // Resource for managing Qdrant Cloud account backup schedules (for a cluster).
 			"qdrant-cloud_accounts_manual_backup":            resourceAccountsManualBackup(),           // Resource for managing Qdrant Cloud account manual backup (for a cluster).
 			"qdrant-cloud_accounts_hybrid_cloud_environment": resourceAccountsHybridCloudEnvironment(), // Resource for managing Qdrant Cloud account hybrid cloud environments.
+			"qdrant-cloud_accounts_role":                     resourceAccountsRole(),                   // Resource for managing Qdrant Cloud account roles.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
