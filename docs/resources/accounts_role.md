@@ -3,7 +3,7 @@
 page_title: "qdrant-cloud_accounts_role Resource - terraform-provider-qdrant-cloud"
 subcategory: ""
 description: |-
-  IAM Role resource for Qdrant Cloud (custom roles).
+  Role resource for Qdrant Cloud (custom roles).
 ---
 
 # qdrant-cloud_accounts_role (Resource)
@@ -16,7 +16,7 @@ terraform {
   required_providers {
     qdrant-cloud = {
       source  = "qdrant/qdrant-cloud"
-      version = ">=1.1.0"
+      version = ">=1.13.0"
     }
   }
 }
@@ -27,7 +27,7 @@ provider "qdrant-cloud" {
   account_id = "" // Default account ID (can be overridden per resource)
 }
 
-// Create a custom IAM Role
+// Create a custom Role
 resource "qdrant-cloud_accounts_role" "backup_operator" {
   name        = "backup-operator"
   description = "Can create and restore cluster backups."
@@ -104,7 +104,7 @@ $ terraform import qdrant-cloud_accounts_role.example 00000000-0000-0000-0000-00
 
 ## Notes
 
-This resource manages **custom IAM Roles** within your Qdrant Cloud account.
+This resource manages **custom Roles** within your Qdrant Cloud account.
 
 ### Role Behavior
 

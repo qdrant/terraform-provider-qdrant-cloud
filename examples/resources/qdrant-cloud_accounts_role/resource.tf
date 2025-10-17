@@ -3,7 +3,7 @@ terraform {
   required_providers {
     qdrant-cloud = {
       source  = "qdrant/qdrant-cloud"
-      version = ">=1.1.0"
+      version = ">=1.13.0"
     }
   }
 }
@@ -14,7 +14,7 @@ provider "qdrant-cloud" {
   account_id = "" // Default account ID (can be overridden per resource)
 }
 
-// Create a custom IAM Role
+// Create a custom Role
 resource "qdrant-cloud_accounts_role" "backup_operator" {
   name        = "backup-operator"
   description = "Can create and restore cluster backups."

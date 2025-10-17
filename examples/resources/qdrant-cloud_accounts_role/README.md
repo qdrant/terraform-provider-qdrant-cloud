@@ -1,6 +1,6 @@
-# Example: IAM Role
+# Example: Role
 
-This example shows how to use the Terraform Qdrant Cloud provider to manage **custom IAM Role** resources in Qdrant Cloud.
+This example shows how to use the Terraform Qdrant Cloud provider to manage **custom Role** resources in Qdrant Cloud.
 
 ## Prerequisites
 
@@ -26,6 +26,5 @@ terraform destroy
 
 ## Notes
 
-- Only roles of type `ROLE_TYPE_CUSTOM` can be created by this resource.  
 - Each role requires at least one `permissions` block (e.g., `read:backups`, `write:backups` in the `Cluster` category).  
 - Permissions are stored as a set; order does not affect plans.

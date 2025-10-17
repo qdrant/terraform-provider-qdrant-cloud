@@ -41,7 +41,7 @@ func permissionsNestedSchema() map[string]*schema.Schema {
 	}
 }
 
-// accountsRoleSchema defines the Terraform schema for an IAM Role resource.
+// accountsRoleSchema defines the Terraform schema for an Role resource.
 func accountsRoleSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		// Writable

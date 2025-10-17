@@ -14,10 +14,10 @@ import (
 	qci "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/iam/v1"
 )
 
-// resourceAccountsRole constructs a Terraform resource for managing IAM roles.
+// resourceAccountsRole constructs a Terraform resource for managing roles.
 func resourceAccountsRole() *schema.Resource {
 	return &schema.Resource{
-		Description:   "IAM Role resource for Qdrant Cloud (custom roles).",
+		Description:   "Role resource for Qdrant Cloud (custom roles).",
 		CreateContext: resourceRoleCreate,
 		ReadContext:   resourceRoleRead,
 		UpdateContext: resourceRoleUpdate,
@@ -29,7 +29,7 @@ func resourceAccountsRole() *schema.Resource {
 	}
 }
 
-// resourceRoleCreate creates an IAM role and writes the returned fields into state.
+// resourceRoleCreate creates an role and writes the returned fields into state.
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error creating role"
 
@@ -66,7 +66,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return nil
 }
 
-// resourceRoleRead reads an IAM role by ID and refreshes Terraform state.
+// resourceRoleRead reads an role by ID and refreshes Terraform state.
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error reading role"
 
@@ -110,7 +110,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	return nil
 }
 
-// resourceRoleUpdate updates an IAM role and refreshes Terraform state.
+// resourceRoleUpdate updates an role and refreshes Terraform state.
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error updating role"
 
@@ -156,7 +156,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	return nil
 }
 
-// resourceRoleDelete deletes an IAM role and clears its Terraform state.
+// resourceRoleDelete deletes an role and clears its Terraform state.
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error deleting role"
 
