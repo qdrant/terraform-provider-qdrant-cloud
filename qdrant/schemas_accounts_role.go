@@ -101,12 +101,9 @@ func accountsRoleSchema() map[string]*schema.Schema {
 	}
 }
 
-// expandRoleForCreate builds a qci.Role from Terraform configuration for CreateRole.
-func expandRoleForCreate(d *schema.ResourceData, defaultAccountID string) (*qci.Role, error) {
-	accountID := defaultAccountID
-	if v, ok := d.GetOk(roleAccountIdFieldName); ok && v.(string) != "" {
-		accountID = v.(string)
-	}
+// expandRole builds a qci.Role from Terraform resource data.
+// The includeID flag controls whether to populate the ID field (required for updates).
+func expandRole(d *schema.ResourceData, accountID string, includeID bool) (*qci.Role, error) {
 	if accountID == "" {
 		return nil, fmt.Errorf("account ID not specified")
 	}
@@ -118,7 +115,7 @@ func expandRoleForCreate(d *schema.ResourceData, defaultAccountID string) (*qci.
 		}
 	}
 	if roleType != qci.RoleType_ROLE_TYPE_CUSTOM {
-		return nil, fmt.Errorf("role_type must be %s on create", qci.RoleType_ROLE_TYPE_CUSTOM.String())
+		return nil, fmt.Errorf("role_type must be %s", qci.RoleType_ROLE_TYPE_CUSTOM.String())
 	}
 
 	role := &qci.Role{
@@ -128,6 +125,11 @@ func expandRoleForCreate(d *schema.ResourceData, defaultAccountID string) (*qci.
 		RoleType:    roleType,
 		Permissions: expandPermissions(d.Get(rolePermissionsFieldName)),
 	}
+
+	if includeID {
+		role.Id = d.Id()
+	}
+
 	return role, nil
 }
 

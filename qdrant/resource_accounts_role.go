@@ -39,7 +39,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	client := qci.NewIAMServiceClient(apiClientConn)
 
-	role, err := expandRoleForCreate(d, getDefaultAccountID(m))
+	role, err := expandRole(d, getDefaultAccountID(m), false)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", op, err))
 	}
@@ -125,13 +125,9 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.FromErr(fmt.Errorf("%s: %w", op, err))
 	}
 
-	role := &qci.Role{
-		Id:          d.Id(),
-		AccountId:   accountUUID.String(),
-		Name:        d.Get(roleNameFieldName).(string),
-		Description: d.Get(roleDescriptionFieldName).(string),
-		RoleType:    qci.RoleType_ROLE_TYPE_CUSTOM,
-		Permissions: expandPermissions(d.Get(rolePermissionsFieldName)),
+	role, err := expandRole(d, accountUUID.String(), true)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", op, err))
 	}
 
 	var trailer metadata.MD
