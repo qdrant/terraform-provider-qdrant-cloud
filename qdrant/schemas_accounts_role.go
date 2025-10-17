@@ -62,10 +62,9 @@ func accountsRoleSchema() map[string]*schema.Schema {
 			Optional:    true,
 		},
 		roleRoleTypeFieldName: {
-			Description: fmt.Sprintf(roleFieldTemplate, "Role type; must be ROLE_TYPE_CUSTOM on create"),
+			Description: fmt.Sprintf(roleFieldTemplate, "Role type"),
 			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     qci.RoleType_ROLE_TYPE_CUSTOM.String(),
+			Computed:    true,
 		},
 		rolePermissionsFieldName: {
 			Description: "Permissions assigned to this role (unordered).",
@@ -108,21 +107,11 @@ func expandRole(d *schema.ResourceData, accountID string, includeID bool) (*qci.
 		return nil, fmt.Errorf("account ID not specified")
 	}
 
-	roleType := qci.RoleType_ROLE_TYPE_CUSTOM
-	if s := d.Get(roleRoleTypeFieldName).(string); s != "" {
-		if v, ok := qci.RoleType_value[s]; ok {
-			roleType = qci.RoleType(v)
-		}
-	}
-	if roleType != qci.RoleType_ROLE_TYPE_CUSTOM {
-		return nil, fmt.Errorf("role_type must be %s", qci.RoleType_ROLE_TYPE_CUSTOM.String())
-	}
-
 	role := &qci.Role{
 		AccountId:   accountID,
 		Name:        d.Get(roleNameFieldName).(string),
 		Description: d.Get(roleDescriptionFieldName).(string),
-		RoleType:    roleType,
+		RoleType:    qci.RoleType_ROLE_TYPE_CUSTOM,
 		Permissions: expandPermissions(d.Get(rolePermissionsFieldName)),
 	}
 

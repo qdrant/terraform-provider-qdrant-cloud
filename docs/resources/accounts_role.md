@@ -74,13 +74,13 @@ output "role_last_modified_at" {
 
 - `account_id` (String) Role Schema Account ID field
 - `description` (String) Role Schema Human-readable description (<=256 chars) field
-- `role_type` (String) Role Schema Role type; must be ROLE_TYPE_CUSTOM on create field
 
 ### Read-Only
 
 - `created_at` (String) Role Schema Creation timestamp field
 - `id` (String) Role Schema Role ID field
 - `last_modified_at` (String) Role Schema Last modification timestamp field
+- `role_type` (String) Role Schema Role type field
 - `sub_type` (String) Role Schema System role sub-type (if any) field
 
 <a id="nestedblock--permissions"></a>
