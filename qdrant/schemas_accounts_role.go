@@ -36,7 +36,7 @@ func permissionsNestedSchema() map[string]*schema.Schema {
 		"category": {
 			Description: "Permission category (e.g., \"Cluster\", \"Account\").",
 			Type:        schema.TypeString,
-			Required:    true,
+			Computed:    true,
 		},
 	}
 }

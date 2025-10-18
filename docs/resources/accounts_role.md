@@ -88,8 +88,11 @@ output "role_last_modified_at" {
 
 Required:
 
-- `category` (String) Permission category (e.g., "Cluster", "Account").
 - `value` (String) Permission value (e.g., "read:backups").
+
+Read-Only:
+
+- `category` (String) Permission category (e.g., "Cluster", "Account").
 
 
 
