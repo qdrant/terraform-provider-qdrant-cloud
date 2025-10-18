@@ -42,6 +42,7 @@ resource "qdrant-cloud_accounts_role" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam
 			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
 		},
 		Steps: []resource.TestStep{
@@ -120,6 +121,7 @@ resource "qdrant-cloud_accounts_role" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam
 			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
 		},
 		Steps: []resource.TestStep{
@@ -176,6 +178,7 @@ resource "qdrant-cloud_accounts_role" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam
 			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
 		},
 		Steps: []resource.TestStep{

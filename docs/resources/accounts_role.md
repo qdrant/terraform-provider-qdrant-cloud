@@ -34,13 +34,11 @@ resource "qdrant-cloud_accounts_role" "backup_operator" {
 
   // Assign permissions for this role
   permissions {
-    value    = "read:backups"
-    category = "Cluster"
+    value = "read:backups"
   }
 
   permissions {
-    value    = "write:backups"
-    category = "Cluster"
+    value = "write:backups"
   }
 }
 
