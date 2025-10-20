@@ -132,3 +132,68 @@ func suppressDurationDiff(k, old, new string, d *schema.ResourceData) bool {
 	}
 	return oldDuration == newDuration
 }
+
+// diffStringSets computes additions and deletions between desired and current.
+func diffStringSets(desired, current []string) (toAdd, toDel []string) {
+	have := make(map[string]struct{}, len(current))
+	want := make(map[string]struct{}, len(desired))
+	for _, id := range current {
+		have[id] = struct{}{}
+	}
+	for _, id := range desired {
+		want[id] = struct{}{}
+	}
+	for id := range want {
+		if _, ok := have[id]; !ok {
+			toAdd = append(toAdd, id)
+		}
+	}
+	for id := range have {
+		if _, ok := want[id]; !ok {
+			toDel = append(toDel, id)
+		}
+	}
+	return
+}
+
+// setToStringSlice converts a Terraform Set/List interface{} to a []string.
+func setToStringSlice(v interface{}) []string {
+	switch t := v.(type) {
+	case *schema.Set:
+		raw := t.List()
+		out := make([]string, 0, len(raw))
+		for _, x := range raw {
+			if x == nil {
+				continue
+			}
+			out = append(out, x.(string))
+		}
+		return out
+	case []interface{}:
+		out := make([]string, 0, len(t))
+		for _, x := range t {
+			if x == nil {
+				continue
+			}
+			out = append(out, x.(string))
+		}
+		return out
+	default:
+		return nil
+	}
+}
+
+// intersectStrings returns the intersection of two string slices (order of b preserved).
+func intersectStrings(a, b []string) []string {
+	set := make(map[string]struct{}, len(a))
+	for _, x := range a {
+		set[x] = struct{}{}
+	}
+	var out []string
+	for _, y := range b {
+		if _, ok := set[y]; ok {
+			out = append(out, y)
+		}
+	}
+	return out
+}
