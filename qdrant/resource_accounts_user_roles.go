@@ -56,6 +56,8 @@ func resourceUserRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 	if accountID == "" {
 		return diag.FromErr(fmt.Errorf("%s: account ID not specified", op))
 	}
+	// persist computed account_id
+	_ = d.Set(userRolesAccountIdFieldName, accountID)
 
 	// Resolve user ID
 	email := d.Get(userRolesUserEmailFieldName).(string)
@@ -108,6 +110,8 @@ func resourceUserRolesRead(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %w", op, err))
 	}
 	accountID := accountUUID.String()
+	// persist computed account_id
+	_ = d.Set(userRolesAccountIdFieldName, accountID)
 
 	// Resolve user ID (prefer state; fallback to email)
 	userID := d.Get(userRolesUserIdFieldName).(string)
@@ -158,6 +162,8 @@ func resourceUserRolesUpdate(ctx context.Context, d *schema.ResourceData, m inte
 		return diag.FromErr(fmt.Errorf("%s: %w", op, err))
 	}
 	accountID := accountUUID.String()
+	// persist computed account_id
+	_ = d.Set(userRolesAccountIdFieldName, accountID)
 
 	// Re-resolve if email changed or missing user_id
 	email := d.Get(userRolesUserEmailFieldName).(string)
