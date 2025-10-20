@@ -182,3 +182,82 @@ func TestSuppressDurationDiff(t *testing.T) {
 		assert.False(t, suppressDurationDiff("key", "72h", "invalid", nil))
 	})
 }
+
+func TestDiffStringSets_AddAndDel(t *testing.T) {
+	desired := []string{"a", "b", "c"}
+	current := []string{"b", "d"}
+
+	toAdd, toDel := diffStringSets(desired, current)
+
+	// Order is not guaranteed; compare as sets.
+	assert.ElementsMatch(t, []string{"a", "c"}, toAdd)
+	assert.ElementsMatch(t, []string{"d"}, toDel)
+}
+
+func TestDiffStringSets_Identical(t *testing.T) {
+	desired := []string{"a", "b"}
+	current := []string{"b", "a"} // different order, same set
+
+	toAdd, toDel := diffStringSets(desired, current)
+	assert.Empty(t, toAdd)
+	assert.Empty(t, toDel)
+}
+
+func TestDiffStringSets_EmptyDesired(t *testing.T) {
+	desired := []string{}
+	current := []string{"x", "y"}
+
+	toAdd, toDel := diffStringSets(desired, current)
+	assert.Empty(t, toAdd)
+	assert.ElementsMatch(t, []string{"x", "y"}, toDel)
+}
+
+func TestDiffStringSets_EmptyCurrent(t *testing.T) {
+	desired := []string{"x", "y"}
+	current := []string{}
+
+	toAdd, toDel := diffStringSets(desired, current)
+	assert.ElementsMatch(t, []string{"x", "y"}, toAdd)
+	assert.Empty(t, toDel)
+}
+
+func TestSetToStringSlice_WithSchemaSet(t *testing.T) {
+	// A schema.Set cannot contain nil values; HashString would panic.
+	// Use duplicates to ensure we still get unique string handling from schema.Set.
+	s := schema.NewSet(schema.HashString, []interface{}{"a", "b", "a"})
+
+	out := setToStringSlice(s)
+
+	// Order from Set.List() is not guaranteed; compare as a set.
+	require.ElementsMatch(t, []string{"a", "b"}, out)
+}
+
+func TestSetToStringSlice_WithInterfaceSlice(t *testing.T) {
+	in := []interface{}{"x", nil, "y"}
+
+	got := setToStringSlice(in)
+	require.Len(t, got, 2)
+	assert.ElementsMatch(t, []string{"x", "y"}, got)
+}
+
+func TestSetToStringSlice_UnsupportedType(t *testing.T) {
+	got := setToStringSlice(123) // not a *schema.Set or []interface{}
+	assert.Nil(t, got)
+}
+
+func TestIntersectStrings_Basic(t *testing.T) {
+	// Intersection should preserve the order of 'b'
+	a := []string{"a", "b", "c"}
+	b := []string{"c", "a", "d"}
+
+	got := intersectStrings(a, b)
+	assert.Equal(t, []string{"c", "a"}, got)
+}
+
+func TestIntersectStrings_NoOverlap(t *testing.T) {
+	a := []string{"a", "b"}
+	b := []string{"c", "d"}
+
+	got := intersectStrings(a, b)
+	assert.Empty(t, got)
+}
