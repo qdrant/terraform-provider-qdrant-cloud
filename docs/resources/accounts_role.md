@@ -121,7 +121,6 @@ Each role must include at least one permission block:
 ```hcl
 permissions {
   value    = "read:backups"
-  category = "Cluster"
 }
 ```
 
