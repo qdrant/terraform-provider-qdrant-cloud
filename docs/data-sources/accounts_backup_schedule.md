@@ -17,6 +17,7 @@ Backup Schedule Data Source
 
 ### Required
 
+- `cluster_id` (String) Backup Schedule Schema Cluster ID field
 - `id` (String) Backup Schedule Schema ID field
 
 ### Optional
@@ -26,7 +27,6 @@ Backup Schedule Data Source
 ### Read-Only
 
 - `account_id` (String) Backup Schedule Schema Account ID field
-- `cluster_id` (String) Backup Schedule Schema Cluster ID field
 - `created_at` (String) Backup Schedule Schema Creation time field
 - `cron_expression` (String) Backup Schedule Schema Cron expression for the schedule field
 - `deleted_at` (String) Backup Schedule Schema Deletion time field

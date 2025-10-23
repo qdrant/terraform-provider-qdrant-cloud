@@ -50,7 +50,7 @@ provider "qdrant-cloud" {
 			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
 		},
 		Steps: []resource.TestStep{
-			// Step 1: Create cluster only
+			// Step 1: Create cluster only (no status assertion yet)
 			{
 				Config: configClusterOnly,
 				Check: resource.ComposeTestCheckFunc(
@@ -59,6 +59,14 @@ provider "qdrant-cloud" {
 					resource.TestCheckResourceAttrSet(clusterRes, "account_id"),
 					resource.TestCheckResourceAttrSet(clusterRes, "created_at"),
 					resource.TestCheckResourceAttrSet(clusterRes, "configuration.0.number_of_nodes"),
+				),
+			},
+
+			// Step 1b: Wait a bit, then refresh by re-applying the same config and assert status
+			{
+				PreConfig: func() { time.Sleep(60 * time.Second) },
+				Config:    configClusterOnly,
+				Check: resource.ComposeTestCheckFunc(
 					testCheckHasListAttr(clusterRes, "status"),
 				),
 			},
@@ -203,7 +211,10 @@ provider "qdrant-cloud" {
 }
 `, apiKey, accountID)
 
-	config := provider + buildAccManualBackupClusterAndBackupConfig(
+	configClusterOnly := provider + buildAccManualBackupClusterConfig(
+		cloudProvider, cloudRegion, packageID, "tf-acc-test-cluster-import",
+	)
+	configClusterAndBackup := provider + buildAccManualBackupClusterAndBackupConfig(
 		cloudProvider, cloudRegion, packageID, "tf-acc-test-cluster-import",
 	)
 
@@ -215,10 +226,31 @@ provider "qdrant-cloud" {
 			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
 		},
 		Steps: []resource.TestStep{
-			// 1) Create cluster + backup
-			{Config: config},
+			// 1) Create cluster only
+			{Config: configClusterOnly},
 
-			// 2) Import the backup
+			// 2) Wait a bit for cluster to stabilize
+			{
+				PreConfig: func() {
+					t.Log("Waiting 60s for cluster to stabilize before creating backup…")
+					time.Sleep(60 * time.Second)
+				},
+				Config: configClusterOnly,
+			},
+
+			// 3) Create manual backup referencing the existing cluster
+			{Config: configClusterAndBackup},
+
+			// 4) Wait for backup to finish (ensure status = SUCCEEDED before import)
+			{
+				PreConfig: func() {
+					t.Log("Waiting 240s for backup to reach terminal state before import…")
+					time.Sleep(240 * time.Second)
+				},
+				Config: configClusterAndBackup,
+			},
+
+			// 5) Import the backup and verify state
 			{
 				ResourceName:      backupRes,
 				ImportState:       true,
@@ -230,20 +262,14 @@ provider "qdrant-cloud" {
 					}
 					return rs.Primary.ID, nil
 				},
-			},
-
-			// 3) Wait for backup to finish, then assert terminal fields
-			{
-				PreConfig: func() { time.Sleep(240 * time.Second) },
-				Config:    config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(backupRes, "status", "BACKUP_STATUS_SUCCEEDED"),
 					resource.TestCheckResourceAttrSet(backupRes, "backup_duration"),
 				),
 			},
 
-			// 4) Destroy (backup then cluster)
-			{Config: config, Destroy: true},
+			// 6) Destroy (backup then cluster)
+			{Config: configClusterAndBackup, Destroy: true},
 		},
 	})
 }
@@ -314,7 +340,20 @@ data "qdrant-cloud_booking_packages" "all" {
 }
 
 locals {
-  selected = data.qdrant-cloud_booking_packages.all.packages[0]
+  pkgs = data.qdrant-cloud_booking_packages.all.packages
+
+  # Filter only paid packages
+  paid = [for p in local.pkgs : p if try(p.type, "") == "paid"]
+
+  # Assign very high sentinel price if missing, so it won't be picked
+  prices = [for p in local.paid : try(p.unit_int_price_per_hour, 999999999)]
+
+  # Find index of cheapest package
+  min_price = try(min(local.prices...), null)
+  min_idx   = can(local.min_price) ? index(local.prices, local.min_price) : 0
+
+  # Final selection: cheapest paid, or first package if no paid ones exist
+  selected = length(local.paid) > 0 ? local.paid[local.min_idx] : local.pkgs[0]
 }
 
 resource "qdrant-cloud_accounts_cluster" "test" {

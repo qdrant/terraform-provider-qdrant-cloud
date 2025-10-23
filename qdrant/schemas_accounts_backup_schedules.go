@@ -39,8 +39,8 @@ func accountsBackupScheduleResourceSchema(asDataSource bool) map[string]*schema.
 		backupScheduleClusterIDFieldName: {
 			Description: fmt.Sprintf(backupScheduleFieldTemplate, "Cluster ID"),
 			Type:        schema.TypeString,
-			Required:    !asDataSource,
-			Computed:    asDataSource,
+			Required:    true,
+			Computed:    false,
 			ForceNew:    !asDataSource,
 		},
 		backupScheduleCronExpressionFieldName: {

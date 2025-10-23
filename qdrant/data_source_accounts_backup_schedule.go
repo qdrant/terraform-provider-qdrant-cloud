@@ -37,12 +37,14 @@ func dataAccountsBackupScheduleRead(ctx context.Context, d *schema.ResourceData,
 	resp, err := client.GetBackupSchedule(clientCtx, &backupv1.GetBackupScheduleRequest{
 		AccountId:        accountUUID.String(),
 		ClusterId:        d.Get(backupScheduleClusterIDFieldName).(string),
-		BackupScheduleId: d.Id(),
+		BackupScheduleId: d.Get(backupScheduleIDFieldName).(string),
 	}, grpc.Trailer(&trailer))
 	errorPrefix += getRequestID(trailer)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
+
+	d.SetId(resp.GetBackupSchedule().GetId())
 
 	flattened := flattenBackupSchedule(resp.GetBackupSchedule())
 	for k, v := range flattened {
