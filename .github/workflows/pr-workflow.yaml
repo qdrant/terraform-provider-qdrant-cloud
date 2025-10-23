@@ -43,3 +43,38 @@ jobs:
         uses: CatChen/check-git-status-action@v1
         with:
           fail-if-not-clean: true
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '^1.24'
+          cache: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "^1.13.2"
+          terraform_wrapper: false
+
+      - name: Run Unit Tests
+        run: |
+          make test.unit
+
+      - name: Run Acceptance Tests
+        env:
+          QDRANT_CLOUD_API_KEY: ${{ secrets.QDRANT_CLOUD_API_KEY }}
+          QDRANT_CLOUD_ACCOUNT_ID: ${{ secrets.QDRANT_CLOUD_ACCOUNT_ID }}
+          QDRANT_CLOUD_API_URL: ${{ vars.QDRANT_CLOUD_API_URL }}
+          SKIPPED_TESTS: ${{ vars.SKIPPED_TESTS }}
+        run: |
+          make test.acceptance

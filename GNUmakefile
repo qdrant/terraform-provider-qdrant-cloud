@@ -1,3 +1,5 @@
+SHELL := /bin/sh
+
 default: test
 
 NAME=qdrant-cloud
@@ -19,14 +21,76 @@ print-latest-tag:
 
 .PHONY: test
 # Run acceptance tests
-test:
-ifndef QDRANT_CLOUD_API_KEY
-	$(error QDRANT_CLOUD_API_KEY is not set)
-endif
-ifndef QDRANT_CLOUD_ACCOUNT_ID
-	$(error QDRANT_CLOUD_ACCOUNT_ID is not set)
-endif
-	TF_ACC=1 go test ./qdrant/... -v $(TESTARGS) -timeout 120m
+test: test.validate_env_vars test.acceptance
+
+.PHONY: test.validate_env_vars
+# Validate environment variables required for acceptance tests
+test.validate_env_vars:
+	@echo "🔍 Validating test environment..."; \
+	missing=""; \
+	[ -z "$$QDRANT_CLOUD_API_KEY" ] && missing="$$missing QDRANT_CLOUD_API_KEY"; \
+	[ -z "$$QDRANT_CLOUD_ACCOUNT_ID" ] && missing="$$missing QDRANT_CLOUD_ACCOUNT_ID"; \
+	[ -z "$$QDRANT_CLOUD_API_URL" ] && missing="$$missing QDRANT_CLOUD_API_URL"; \
+	if [ -n "$$missing" ]; then \
+		echo "❌ Missing required environment variables:$$missing"; \
+		exit 1; \
+	else \
+		echo "✅ All required environment variables are set."; \
+	fi
+
+
+.PHONY: test.unit
+test.unit:
+	@set -e; \
+	echo "🧪 Running unit tests..."; \
+	tests_unit="$$(grep -Rho '^func Test[A-Za-z0-9_]*' ./qdrant | awk '{print $$2}' | grep -v '^TestAcc')"; \
+	skips="$(SKIPPED_UNIT_TESTS)"; \
+	if [ -z "$$tests_unit" ]; then \
+		echo "No non-acceptance tests found."; \
+		exit 0; \
+	fi; \
+	for t in $$tests_unit; do \
+		if [ -n "$$skips" ] && echo "$$skips" | tr ' ' '\n' | grep -qx "$$t"; then \
+			echo "\n⏭  Skipping $$t"; \
+			continue; \
+		fi; \
+		echo ""; echo "==== ▶ $$t ===="; \
+		if [ "$(DRYRUN)" = "1" ]; then \
+			echo "go test -count=1 -v ./qdrant -run '^$$t$$'"; \
+		else \
+			go test -count=1 -v ./qdrant -run "^$$t$$" || { echo "✖ $$t FAILED"; exit 1; }; \
+			echo "✓ $$t passed"; \
+		fi; \
+	done; \
+	echo ""; echo "✅ Unit tests completed."
+
+
+.PHONY: test.acceptance
+test.acceptance:
+	@set -e; \
+	echo "🚀 Running acceptance tests..."; \
+	tests="$$(grep -Rho '^func TestAcc[A-Za-z0-9_]*' . | awk '{print $$2}')"; \
+	skips="$(SKIPPED_TESTS)"; \
+	for testname in $$tests; do \
+		if [ -n "$$skips" ] && echo "$$skips" | tr ' ' '\n' | grep -qx "$$testname"; then \
+			echo "\n⏭  Skipping $$testname"; \
+			continue; \
+		fi; \
+		echo ""; \
+		echo "==== ▶ $$testname ===="; \
+		if [ "$(DRYRUN)" = "1" ]; then \
+			echo "TF_ACC=1 QDRANT_CLOUD_API_KEY=\"$(QDRANT_CLOUD_API_KEY)\" QDRANT_CLOUD_ACCOUNT_ID=\"$(QDRANT_CLOUD_ACCOUNT_ID)\" QDRANT_CLOUD_API_URL=\"$(QDRANT_CLOUD_API_URL)\" go test -count=1 -v ./... -run '^$$testname$$'"; \
+		else \
+			TF_ACC=1 \
+			QDRANT_CLOUD_API_KEY="$(QDRANT_CLOUD_API_KEY)" \
+			QDRANT_CLOUD_ACCOUNT_ID="$(QDRANT_CLOUD_ACCOUNT_ID)" \
+			QDRANT_CLOUD_API_URL="$(QDRANT_CLOUD_API_URL)" \
+			go test -count=1 -v ./... -run "^$$testname$$" || { echo "✖ $$testname FAILED"; exit 1; }; \
+			echo "✓ $$testname passed"; \
+		fi; \
+	done; \
+	echo ""; \
+	echo "✅ All acceptance tests completed."
 
 requirements:
 	go install github.com/goreleaser/goreleaser/v2@latest
