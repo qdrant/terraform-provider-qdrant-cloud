@@ -68,10 +68,32 @@ provider_installation {
 
 In order to test the provider, you can run `make test`.
 
-This will run the unit tests in the provider.
+This will run the unit & acceptance tests in the provider.
 
 ```bash
-$ QDRANT_CLOUD_API_KEY="<api_key>" QDRANT_CLOUD_ACCOUNT_ID="<account_id>" QDRANT_CLOUD_API_URL="<api_url>" make test
+make test \
+  QDRANT_CLOUD_API_KEY="<API_KEY>" \
+  QDRANT_CLOUD_ACCOUNT_ID="<ACCOUNT_ID>" \
+  QDRANT_CLOUD_API_URL="grpc.development-cloud.qdrant.io" \
+  SKIPPED_TESTS="TestAccDataAccountsBackupSchedule TestAccResourceClusterCreate"
+```
+
+run only unit tests
+
+```bash
+
+make test.unit
+```
+
+run only acceptance tests
+
+```bash
+
+make test.acceptance \
+  QDRANT_CLOUD_API_KEY="<API_KEY>" \
+  QDRANT_CLOUD_ACCOUNT_ID="<ACCOUNT_ID>" \
+  QDRANT_CLOUD_API_URL="grpc.development-cloud.qdrant.io" \
+  SKIPPED_TESTS="TestAccDataAccountsBackupSchedule TestAccResourceClusterCreate"
 ```
 
 or run a single test /wo make (not acceptance and not extra env vars are required);
