@@ -145,10 +145,8 @@ func expandPermissions(v interface{}) []*qci.Permission {
 			continue
 		}
 		m := it.(map[string]interface{})
-		category := m["category"].(string)
 		out = append(out, &qci.Permission{
-			Value:    m["value"].(string),
-			Category: &category,
+			Value: m["value"].(string),
 		})
 	}
 	return out
