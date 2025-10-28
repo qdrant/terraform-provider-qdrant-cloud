@@ -123,6 +123,7 @@ func TestExpandRole_Update_IncludesID(t *testing.T) {
 func TestFlattenRole_Minimal(t *testing.T) {
 	created := timestamppb.New(time.Date(2025, 10, 8, 9, 28, 52, 0, time.UTC))
 	modified := timestamppb.New(time.Date(2025, 10, 8, 9, 28, 52, 0, time.UTC))
+	category := "Cluster"
 
 	r := &qci.Role{
 		Id:             "059a0aab-5010-43f1-a139-539bb25a5886",
@@ -133,8 +134,8 @@ func TestFlattenRole_Minimal(t *testing.T) {
 		CreatedAt:      created,
 		LastModifiedAt: modified,
 		Permissions: []*qci.Permission{
-			{Value: "read:backups", Category: "Cluster"},
-			{Value: "write:backups", Category: "Cluster"},
+			{Value: "read:backups", Category: &category},
+			{Value: "write:backups", Category: &category},
 		},
 	}
 

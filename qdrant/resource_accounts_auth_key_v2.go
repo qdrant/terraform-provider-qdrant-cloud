@@ -61,7 +61,7 @@ func resourceAPIKeyV2Read(ctx context.Context, d *schema.ResourceData, m interfa
 	var trailer metadata.MD
 	resp, err := client.ListDatabaseApiKeys(clientCtx, &authv2.ListDatabaseApiKeysRequest{
 		AccountId: accountUUID.String(),
-		ClusterId: clusterID,
+		ClusterId: &clusterID,
 	}, grpc.Trailer(&trailer))
 	errorPrefix += getRequestID(trailer)
 	if err != nil {
