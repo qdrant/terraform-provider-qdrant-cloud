@@ -37,7 +37,7 @@ func dataAccountsAuthKeysRead(ctx context.Context, d *schema.ResourceData, m int
 		return diagnostics
 	}
 	// Get a client
-	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn)
+	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn) //nolint: staticcheck //SA1019: deprecated: Do not use.
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
