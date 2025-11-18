@@ -104,7 +104,9 @@ output "hc_environment_last_modified_at" {
 ### Read-Only
 
 - `bootstrap_commands` (List of String, Sensitive) Hybrid cloud environment Schema Commands to bootstrap a Kubernetes cluster into this environment field
+- `bootstrap_commands_generated` (Boolean) Hybrid cloud environment Schema Set if the generate bootstrap commands has been called at least once field
 - `created_at` (String) Hybrid cloud environment Schema Creation timestamp field
+- `created_by_email` (String) Hybrid cloud environment Schema The email of the user who created the hybrid cloud environment field
 - `id` (String) Hybrid cloud environment Schema ID field
 - `last_modified_at` (String) Hybrid cloud environment Schema Last modification timestamp field
 - `status` (List of Object) Current status of the hybrid cloud environment (read-only). (see [below for nested schema](#nestedatt--status))

@@ -9,17 +9,19 @@ import (
 )
 
 const (
-	hcEnvFieldTemplate                     = "Hybrid cloud environment Schema %s field"
-	hcEnvIdFieldName                       = "id"
-	hcEnvAccountIdFieldName                = "account_id"
-	hcEnvNameFieldName                     = "name"
-	hcEnvConfigurationFieldName            = "configuration"
-	hcEnvCfgNamespaceFieldName             = "namespace"
-	hcEnvCreatedAtFieldName                = "created_at"
-	hcEnvLastModifiedAtFieldName           = "last_modified_at"
-	hcEnvBootstrapCommandsFieldName        = "bootstrap_commands"
-	hcEnvBootstrapCommandsVersionFieldName = "bootstrap_commands_version"
-	hcEnvStatusFieldName                   = "status"
+	hcEnvFieldTemplate                       = "Hybrid cloud environment Schema %s field"
+	hcEnvIdFieldName                         = "id"
+	hcEnvAccountIdFieldName                  = "account_id"
+	hcEnvNameFieldName                       = "name"
+	hcEnvConfigurationFieldName              = "configuration"
+	hcEnvCfgNamespaceFieldName               = "namespace"
+	hcEnvCreatedAtFieldName                  = "created_at"
+	hcEnvLastModifiedAtFieldName             = "last_modified_at"
+	hcEnvCreatedByEmailFieldName             = "created_by_email"
+	hcEnvBootstrapCommandsGeneratedFieldName = "bootstrap_commands_generated"
+	hcEnvBootstrapCommandsFieldName          = "bootstrap_commands"
+	hcEnvBootstrapCommandsVersionFieldName   = "bootstrap_commands_version"
+	hcEnvStatusFieldName                     = "status"
 
 	hcEnvCfgLastModifiedAtFieldName             = "last_modified_at"
 	hcEnvCfgHttpProxyUrlFieldName               = "http_proxy_url"
@@ -95,6 +97,16 @@ func accountsHybridCloudEnvironmentSchema() map[string]*schema.Schema {
 		hcEnvLastModifiedAtFieldName: {
 			Description: fmt.Sprintf(hcEnvFieldTemplate, "Last modification timestamp"),
 			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvCreatedByEmailFieldName: {
+			Description: fmt.Sprintf(hcEnvFieldTemplate, "The email of the user who created the hybrid cloud environment"),
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		hcEnvBootstrapCommandsGeneratedFieldName: {
+			Description: fmt.Sprintf(hcEnvFieldTemplate, "Set if the generate bootstrap commands has been called at least once"),
+			Type:        schema.TypeBool,
 			Computed:    true,
 		},
 
@@ -367,11 +379,13 @@ func accountsHybridCloudEnvironmentStatusVSCsSchema() map[string]*schema.Schema 
 // flattenHCEnv maps API object -> Terraform state fields (excluding status).
 func flattenHCEnv(env *qch.HybridCloudEnvironment) map[string]interface{} {
 	out := map[string]interface{}{
-		hcEnvIdFieldName:             env.GetId(),
-		hcEnvAccountIdFieldName:      env.GetAccountId(),
-		hcEnvNameFieldName:           env.GetName(),
-		hcEnvCreatedAtFieldName:      formatTime(env.GetCreatedAt()),
-		hcEnvLastModifiedAtFieldName: formatTime(env.GetLastModifiedAt()),
+		hcEnvIdFieldName:                         env.GetId(),
+		hcEnvAccountIdFieldName:                  env.GetAccountId(),
+		hcEnvNameFieldName:                       env.GetName(),
+		hcEnvCreatedAtFieldName:                  formatTime(env.GetCreatedAt()),
+		hcEnvLastModifiedAtFieldName:             formatTime(env.GetLastModifiedAt()),
+		hcEnvCreatedByEmailFieldName:             env.GetCreatedByEmail(),
+		hcEnvBootstrapCommandsGeneratedFieldName: env.GetBootstrapCommandsGenerated(),
 	}
 
 	out[hcEnvConfigurationFieldName] = flattenHCEnvConfiguration(env.GetConfiguration())

@@ -14,11 +14,13 @@ import (
 
 func TestFlattenHCEnv(t *testing.T) {
 	env := &qch.HybridCloudEnvironment{
-		AccountId:      "00000000-1000-0000-0000-000000000001",
-		Id:             "00000000-0000-0000-0000-000000000001",
-		CreatedAt:      timestamppb.New(time.Date(2025, 9, 16, 9, 41, 5, 0, time.UTC)),
-		LastModifiedAt: timestamppb.New(time.Date(2025, 9, 16, 9, 41, 8, 0, time.UTC)),
-		Name:           "local-test-2",
+		AccountId:                  "00000000-1000-0000-0000-000000000001",
+		Id:                         "00000000-0000-0000-0000-000000000001",
+		CreatedAt:                  timestamppb.New(time.Date(2025, 9, 16, 9, 41, 5, 0, time.UTC)),
+		LastModifiedAt:             timestamppb.New(time.Date(2025, 9, 16, 9, 41, 8, 0, time.UTC)),
+		Name:                       "local-test-2",
+		CreatedByEmail:             "creator@example.com",
+		BootstrapCommandsGenerated: true,
 		Configuration: &qch.HybridCloudEnvironmentConfiguration{
 			Namespace:                  "qdrant-hc",
 			HttpProxyUrl:               newPointer("http://proxy.example.com"),
@@ -36,11 +38,13 @@ func TestFlattenHCEnv(t *testing.T) {
 	}
 	got := flattenHCEnv(env)
 	want := map[string]interface{}{
-		hcEnvIdFieldName:             env.GetId(),
-		hcEnvAccountIdFieldName:      env.GetAccountId(),
-		hcEnvNameFieldName:           env.GetName(),
-		hcEnvCreatedAtFieldName:      formatTime(env.GetCreatedAt()),
-		hcEnvLastModifiedAtFieldName: formatTime(env.GetLastModifiedAt()),
+		hcEnvIdFieldName:                         env.GetId(),
+		hcEnvAccountIdFieldName:                  env.GetAccountId(),
+		hcEnvNameFieldName:                       env.GetName(),
+		hcEnvCreatedAtFieldName:                  formatTime(env.GetCreatedAt()),
+		hcEnvLastModifiedAtFieldName:             formatTime(env.GetLastModifiedAt()),
+		hcEnvCreatedByEmailFieldName:             env.GetCreatedByEmail(),
+		hcEnvBootstrapCommandsGeneratedFieldName: env.GetBootstrapCommandsGenerated(),
 		hcEnvConfigurationFieldName: []interface{}{
 			map[string]interface{}{
 				hcEnvCfgNamespaceFieldName:                  env.GetConfiguration().GetNamespace(),
