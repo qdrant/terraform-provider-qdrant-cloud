@@ -47,6 +47,10 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_at"),
+					// The user creating the resource via API key should have an email.
+					resource.TestCheckResourceAttrSet(resourceName, "created_by_email"),
+					// Bootstrap commands are generated on create, so this should be true.
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_commands_generated", "true"),
 					// knob should be bumped to 1 on create (unless user explicitly set -1, which we don't here)
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_commands_version", "1"),
 					// commands should be generated when version > 0
