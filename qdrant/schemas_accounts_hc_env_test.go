@@ -4,9 +4,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-yaml/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
@@ -34,6 +36,11 @@ func TestFlattenHCEnv(t *testing.T) {
 			SnapshotStorageClass:       newPointer("snap-storage"),
 			VolumeSnapshotStorageClass: newPointer("vol-snap-storage"),
 			LogLevel:                   newPointer(qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_DEBUG),
+			AdvancedOperatorSettings: func() *structpb.Struct {
+				s, err := structpb.NewStruct(map[string]interface{}{"key": "value", "nested": map[string]interface{}{"num": 1}})
+				require.NoError(t, err)
+				return s
+			}(),
 		},
 	}
 	got := flattenHCEnv(env)
@@ -59,6 +66,11 @@ func TestFlattenHCEnv(t *testing.T) {
 				hcEnvCfgSnapshotStorageClassFieldName:       env.GetConfiguration().GetSnapshotStorageClass(),
 				hcEnvCfgVolumeSnapshotStorageClassFieldName: env.GetConfiguration().GetVolumeSnapshotStorageClass(),
 				hcEnvCfgLogLevelFieldName:                   env.GetConfiguration().GetLogLevel().String(),
+				hcEnvCfgAdvancedOperatorSettingsFieldName: func() string {
+					b, err := yaml.Marshal(env.GetConfiguration().GetAdvancedOperatorSettings().AsMap())
+					require.NoError(t, err)
+					return string(b)
+				}(),
 			},
 		},
 		hcEnvStatusFieldName: []interface{}{},
@@ -88,6 +100,7 @@ func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
 		hcEnvCfgSnapshotStorageClassFieldName:       "snap-storage",
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: "vol-snap-storage",
 		hcEnvCfgLogLevelFieldName:                   "HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO",
+		hcEnvCfgAdvancedOperatorSettingsFieldName:   "key: value\nnested:\n  num: 1\n",
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsHybridCloudEnvironmentSchema(), map[string]interface{}{
@@ -112,6 +125,13 @@ func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
 	assert.Equal(t, configMap[hcEnvCfgSnapshotStorageClassFieldName], env.GetConfiguration().GetSnapshotStorageClass())
 	assert.Equal(t, configMap[hcEnvCfgVolumeSnapshotStorageClassFieldName], env.GetConfiguration().GetVolumeSnapshotStorageClass())
 	assert.Equal(t, qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO, env.GetConfiguration().GetLogLevel())
+
+	require.NotNil(t, env.GetConfiguration().GetAdvancedOperatorSettings())
+	advMap := env.GetConfiguration().GetAdvancedOperatorSettings().AsMap()
+	assert.Equal(t, "value", advMap["key"])
+	nested, ok := advMap["nested"].(map[string]interface{})
+	require.True(t, ok)
+	assert.EqualValues(t, 1, nested["num"])
 }
 
 func TestExpandHCEnvForCreate_MissingNamespaceErrors(t *testing.T) {

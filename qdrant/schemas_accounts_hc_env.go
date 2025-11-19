@@ -3,7 +3,9 @@ package qdrant
 import (
 	"fmt"
 
+	"github.com/go-yaml/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
 )
@@ -35,6 +37,7 @@ const (
 	hcEnvCfgSnapshotStorageClassFieldName       = "snapshot_storage_class"
 	hcEnvCfgVolumeSnapshotStorageClassFieldName = "volume_snapshot_storage_class"
 	hcEnvCfgLogLevelFieldName                   = "log_level"
+	hcEnvCfgAdvancedOperatorSettingsFieldName   = "advanced_operator_settings"
 
 	hcEnvStatusLastModifiedAtFieldName           = "last_modified_at"
 	hcEnvStatusPhaseFieldName                    = "phase"
@@ -203,6 +206,17 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Description: "Log level for deployed components.",
 			Type:        schema.TypeString,
 			Optional:    true,
+		},
+		hcEnvCfgAdvancedOperatorSettingsFieldName: {
+			Description: "Advanced operator settings as a YAML string.",
+			Type:        schema.TypeString,
+			Optional:    true,
+			ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+				if err := yaml.Unmarshal([]byte(v.(string)), new(interface{})); err != nil {
+					es = append(es, fmt.Errorf("%q contains invalid YAML: %w", k, err))
+				}
+				return
+			},
 		},
 	}
 }
@@ -412,6 +426,14 @@ func flattenHCEnvConfiguration(cfg *qch.HybridCloudEnvironmentConfiguration) []i
 		hcEnvCfgSnapshotStorageClassFieldName:       cfg.GetSnapshotStorageClass(),
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: cfg.GetVolumeSnapshotStorageClass(),
 	}
+	if adv := cfg.GetAdvancedOperatorSettings(); adv != nil {
+		advMap := adv.AsMap()
+		if len(advMap) > 0 {
+			if yamlBytes, err := yaml.Marshal(advMap); err == nil {
+				configMap[hcEnvCfgAdvancedOperatorSettingsFieldName] = string(yamlBytes)
+			}
+		}
+	}
 
 	if ts := cfg.GetLastModifiedAt(); ts != nil {
 		configMap[hcEnvCfgLastModifiedAtFieldName] = formatTime(ts)
@@ -471,6 +493,18 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 		if llOK {
 			config.LogLevel = newPointer(qch.HybridCloudEnvironmentConfigurationLogLevel(logLevel))
 		}
+	}
+	if val, ok := m[hcEnvCfgAdvancedOperatorSettingsFieldName]; ok && val.(string) != "" {
+		var settingsMap map[string]interface{}
+		if err := yaml.Unmarshal([]byte(val.(string)), &settingsMap); err == nil && len(settingsMap) > 0 {
+			if len(settingsMap) > 0 {
+				if s, err := structpb.NewStruct(settingsMap); err == nil {
+					config.AdvancedOperatorSettings = s
+				}
+			}
+		}
+		// We ignore errors here, as ValidateFunc should have caught them.
+		// If an invalid value slips through, the API will reject it.
 	}
 
 	return config

@@ -120,6 +120,7 @@ Required:
 
 Optional:
 
+- `advanced_operator_settings` (String) Advanced operator settings as a YAML string.
 - `ca_certificates` (String) CA certificates for custom certificate authorities.
 - `chart_repository_url` (String) Chart registry URL.
 - `container_registry_url` (String) Container registry URL.
