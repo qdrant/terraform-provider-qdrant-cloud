@@ -114,7 +114,7 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 		}
 	}
 
-	return nil
+	return resourceHCEnvRead(ctx, d, m)
 }
 
 // resourceHCEnvRead performs a read operation to fetch a specific hybrid cloud environment.
