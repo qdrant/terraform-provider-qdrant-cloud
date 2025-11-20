@@ -92,7 +92,7 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 }
 `, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
 
-	// Updated config changes the advanced settings
+	// Updated config changes the advanced settings, note my-test-annotation with quotes (will be normalized in the comparisson)
 	configUpdate := provider + fmt.Sprintf(`
 resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
   name       = "tf-acc-test-hc-env-adv"
@@ -127,7 +127,7 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.advanced_operator_settings", "clusterManager:\n  enabled: false\n"),
 				),
 			},
-			// Step 2: Update advanced settings
+			// Step 2: Update advanced settings, and my-test-annotation without quotes
 			{
 				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
