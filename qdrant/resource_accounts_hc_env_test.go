@@ -69,6 +69,75 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
 	})
 }
 
+func TestAccResourceAccountsHybridCloudEnvironment_AdvancedSettings(t *testing.T) {
+	provider := fmt.Sprintf(`
+provider "qdrant-cloud" {
+  api_key = "%s"
+}
+`, os.Getenv("QDRANT_CLOUD_API_KEY"))
+
+	// Initial config with advanced settings
+	configCreate := provider + fmt.Sprintf(`
+resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
+  name       = "tf-acc-test-hc-env-adv"
+  account_id = "%s"
+
+  configuration {
+    namespace = "qdrant-hc-tf-acc-adv"
+    advanced_operator_settings = <<-EOT
+      clusterManager:
+        enabled: false
+    EOT
+  }
+}
+`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+
+	// Updated config changes the advanced settings, note my-test-annotation with quotes (will be normalized in the comparisson)
+	configUpdate := provider + fmt.Sprintf(`
+resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
+  name       = "tf-acc-test-hc-env-adv"
+  account_id = "%s"
+
+  configuration {
+    namespace = "qdrant-hc-tf-acc-adv"
+    advanced_operator_settings = <<-EOT
+      clusterManager:
+        enabled: false
+      qdrant:
+        annotations:
+          "my-test-annotation": "my-test-value"
+    EOT
+  }
+}
+`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+
+	const resourceName = "qdrant-cloud_accounts_hybrid_cloud_environment.test"
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam
+			"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
+		},
+		Steps: []resource.TestStep{
+			// Step 1: Create with advanced settings
+			{
+				Config: configCreate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-hc-env-adv"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.advanced_operator_settings", "clusterManager:\n  enabled: false\n"),
+				),
+			},
+			// Step 2: Update advanced settings, and my-test-annotation without quotes
+			{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.advanced_operator_settings", "clusterManager:\n  enabled: false\nqdrant:\n  annotations:\n    my-test-annotation: my-test-value\n"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccResourceAccountsHybridCloudEnvironment_Import(t *testing.T) {
 	provider := fmt.Sprintf(`
 provider "qdrant-cloud" {

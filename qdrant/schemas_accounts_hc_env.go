@@ -2,8 +2,11 @@ package qdrant
 
 import (
 	"fmt"
+	"reflect"
 
+	"github.com/go-yaml/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
 )
@@ -35,6 +38,7 @@ const (
 	hcEnvCfgSnapshotStorageClassFieldName       = "snapshot_storage_class"
 	hcEnvCfgVolumeSnapshotStorageClassFieldName = "volume_snapshot_storage_class"
 	hcEnvCfgLogLevelFieldName                   = "log_level"
+	hcEnvCfgAdvancedOperatorSettingsFieldName   = "advanced_operator_settings"
 
 	hcEnvStatusLastModifiedAtFieldName           = "last_modified_at"
 	hcEnvStatusPhaseFieldName                    = "phase"
@@ -203,6 +207,37 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Description: "Log level for deployed components.",
 			Type:        schema.TypeString,
 			Optional:    true,
+		},
+		hcEnvCfgAdvancedOperatorSettingsFieldName: {
+			Description: "Advanced operator settings as a YAML string.",
+			Type:        schema.TypeString,
+			Optional:    true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				var oldData, newData interface{}
+				if err := yaml.Unmarshal([]byte(old), &oldData); err != nil {
+					return false
+				}
+				if err := yaml.Unmarshal([]byte(new), &newData); err != nil {
+					return false
+				}
+				return reflect.DeepEqual(oldData, newData)
+			},
+			ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+				if err := yaml.Unmarshal([]byte(v.(string)), new(interface{})); err != nil {
+					es = append(es, fmt.Errorf("%q contains invalid YAML: %w", k, err))
+				}
+				return
+			},
+			// StateFunc normalizes the YAML on save, which is good practice with DiffSuppressFunc.
+			// This ensures the state file has a consistent format, even if user input varies.
+			StateFunc: func(v interface{}) string {
+				var data interface{}
+				if err := yaml.Unmarshal([]byte(v.(string)), &data); err != nil {
+					return v.(string) // On error, keep original
+				}
+				out, _ := yaml.Marshal(data)
+				return string(out)
+			},
 		},
 	}
 }
@@ -412,6 +447,14 @@ func flattenHCEnvConfiguration(cfg *qch.HybridCloudEnvironmentConfiguration) []i
 		hcEnvCfgSnapshotStorageClassFieldName:       cfg.GetSnapshotStorageClass(),
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: cfg.GetVolumeSnapshotStorageClass(),
 	}
+	if adv := cfg.GetAdvancedOperatorSettings(); adv != nil {
+		advMap := adv.AsMap()
+		if len(advMap) > 0 {
+			if yamlBytes, err := yaml.Marshal(advMap); err == nil {
+				configMap[hcEnvCfgAdvancedOperatorSettingsFieldName] = string(yamlBytes)
+			}
+		}
+	}
 
 	if ts := cfg.GetLastModifiedAt(); ts != nil {
 		configMap[hcEnvCfgLastModifiedAtFieldName] = formatTime(ts)
@@ -472,6 +515,18 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 			config.LogLevel = newPointer(qch.HybridCloudEnvironmentConfigurationLogLevel(logLevel))
 		}
 	}
+	if val, ok := m[hcEnvCfgAdvancedOperatorSettingsFieldName]; ok && val.(string) != "" {
+		var settingsMap map[string]interface{}
+		if err := yaml.Unmarshal([]byte(val.(string)), &settingsMap); err == nil && len(settingsMap) > 0 {
+			// Make sure the keys are strings, even for the nested ones (as NewStruct expects that)
+			convertedMap := convertMapKeysToStrings(settingsMap)
+			if m, ok := convertedMap.(map[string]interface{}); ok {
+				if s, err := structpb.NewStruct(m); err == nil {
+					config.AdvancedOperatorSettings = s
+				}
+			}
+		}
+	}
 
 	return config
 }
@@ -508,6 +563,30 @@ func interfaceSliceToStringSlice(s []interface{}) []string {
 		res[i] = v.(string)
 	}
 	return res
+}
+
+// convertMapKeysToStrings recursively converts map keys from interface{} to string.
+// This is necessary because yaml.Unmarshal can create map[interface{}]interface{}.
+func convertMapKeysToStrings(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			if ks, ok := k.(string); ok {
+				m2[ks] = convertMapKeysToStrings(v)
+			}
+		}
+		return m2
+	case map[string]interface{}:
+		for k, v := range x {
+			x[k] = convertMapKeysToStrings(v)
+		}
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convertMapKeysToStrings(v)
+		}
+	}
+	return i
 }
 
 func flattenHCEnvStatus(st *qch.HybridCloudEnvironmentStatus) []interface{} {
