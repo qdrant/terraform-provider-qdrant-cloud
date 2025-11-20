@@ -107,6 +107,7 @@ func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
 		hcEnvNameFieldName:          "local-test-new",
 		hcEnvConfigurationFieldName: []interface{}{configMap},
 	})
+	d.MarkNewResource()
 	env, err := expandHCEnv(d, defaultAcct)
 	require.NoError(t, err)
 

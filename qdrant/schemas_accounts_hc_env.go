@@ -497,14 +497,13 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 	if val, ok := m[hcEnvCfgAdvancedOperatorSettingsFieldName]; ok && val.(string) != "" {
 		var settingsMap map[string]interface{}
 		if err := yaml.Unmarshal([]byte(val.(string)), &settingsMap); err == nil && len(settingsMap) > 0 {
-			if len(settingsMap) > 0 {
-				if s, err := structpb.NewStruct(settingsMap); err == nil {
+			convertedMap := convertMapKeysToStrings(settingsMap)
+			if m, ok := convertedMap.(map[string]interface{}); ok {
+				if s, err := structpb.NewStruct(m); err == nil {
 					config.AdvancedOperatorSettings = s
 				}
 			}
 		}
-		// We ignore errors here, as ValidateFunc should have caught them.
-		// If an invalid value slips through, the API will reject it.
 	}
 
 	return config
@@ -542,6 +541,30 @@ func interfaceSliceToStringSlice(s []interface{}) []string {
 		res[i] = v.(string)
 	}
 	return res
+}
+
+// convertMapKeysToStrings recursively converts map keys from interface{} to string.
+// This is necessary because yaml.Unmarshal can create map[interface{}]interface{}.
+func convertMapKeysToStrings(i interface{}) interface{} {
+	switch x := i.(type) {
+	case map[interface{}]interface{}:
+		m2 := map[string]interface{}{}
+		for k, v := range x {
+			if ks, ok := k.(string); ok {
+				m2[ks] = convertMapKeysToStrings(v)
+			}
+		}
+		return m2
+	case map[string]interface{}:
+		for k, v := range x {
+			x[k] = convertMapKeysToStrings(v)
+		}
+	case []interface{}:
+		for i, v := range x {
+			x[i] = convertMapKeysToStrings(v)
+		}
+	}
+	return i
 }
 
 func flattenHCEnvStatus(st *qch.HybridCloudEnvironmentStatus) []interface{} {
