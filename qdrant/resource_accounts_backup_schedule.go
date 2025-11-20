@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	backupv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/backup/v1"
 )
@@ -153,6 +155,11 @@ func resourceBackupScheduleDelete(ctx context.Context, d *schema.ResourceData, m
 	}, grpc.Trailer(&trailer))
 	errorPrefix += getRequestID(trailer)
 	if err != nil {
+		// Ignore NotFound, the object has been deleted from the system already.
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			d.SetId("")
+			return nil
+		}
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 
