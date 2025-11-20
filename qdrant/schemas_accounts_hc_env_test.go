@@ -196,3 +196,87 @@ func TestSchema_ConfigurationNamespaceForceNew(t *testing.T) {
 	require.NotNil(t, ns)
 	assert.True(t, ns.ForceNew, "configuration.namespace must be ForceNew")
 }
+
+func TestConvertMapKeysToStrings(t *testing.T) {
+	testCases := []struct {
+		name  string
+		input interface{}
+		want  interface{}
+	}{
+		{
+			name:  "nil input",
+			input: nil,
+			want:  nil,
+		},
+		{
+			name:  "simple map[interface{}]interface{}",
+			input: map[interface{}]interface{}{"key": "value", "num": 1},
+			want:  map[string]interface{}{"key": "value", "num": 1},
+		},
+		{
+			name: "nested map[interface{}]interface{}",
+			input: map[interface{}]interface{}{
+				"level1": map[interface{}]interface{}{
+					"level2": "value",
+				},
+			},
+			want: map[string]interface{}{
+				"level1": map[string]interface{}{
+					"level2": "value",
+				},
+			},
+		},
+		{
+			name: "map[string]interface{} with nested map[interface{}]interface{}",
+			input: map[string]interface{}{
+				"level1_str": map[interface{}]interface{}{
+					"level2": "value",
+				},
+			},
+			want: map[string]interface{}{
+				"level1_str": map[string]interface{}{
+					"level2": "value",
+				},
+			},
+		},
+		{
+			name: "slice with nested map[interface{}]interface{}",
+			input: []interface{}{
+				"item1",
+				map[interface{}]interface{}{"key": "value"},
+				"item2",
+			},
+			want: []interface{}{
+				"item1",
+				map[string]interface{}{"key": "value"},
+				"item2",
+			},
+		},
+		{
+			name: "complex nested structure",
+			input: map[string]interface{}{
+				"config": map[interface{}]interface{}{
+					"params": []interface{}{
+						map[interface{}]interface{}{"id": 1, "enabled": true},
+						map[interface{}]interface{}{"id": 2, "enabled": false},
+					},
+				},
+			},
+			want: map[string]interface{}{
+				"config": map[string]interface{}{
+					"params": []interface{}{
+						map[string]interface{}{"id": 1, "enabled": true},
+						map[string]interface{}{"id": 2, "enabled": false},
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := convertMapKeysToStrings(tc.input)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}
