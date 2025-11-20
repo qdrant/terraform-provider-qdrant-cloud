@@ -105,7 +105,7 @@ resource "qdrant-cloud_accounts_hybrid_cloud_environment" "test" {
         enabled: false
       qdrant:
         annotations:
-          "my-test-annotation": "my-test-value"
+          my-test-annotation: my-test-value
     EOT
   }
 }

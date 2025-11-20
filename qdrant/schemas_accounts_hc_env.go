@@ -497,11 +497,6 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 	if val, ok := m[hcEnvCfgAdvancedOperatorSettingsFieldName]; ok && val.(string) != "" {
 		var settingsMap map[string]interface{}
 		if err := yaml.Unmarshal([]byte(val.(string)), &settingsMap); err == nil && len(settingsMap) > 0 {
-			// Normalize the YAML by marshalling it back. This prevents perpetual diffs
-			// caused by formatting differences (e.g., quoting).
-			if normalizedYAML, err := yaml.Marshal(settingsMap); err == nil {
-				m[hcEnvCfgAdvancedOperatorSettingsFieldName] = string(normalizedYAML)
-			}
 			// Make sure the keys are strings, even for the nested ones (as NewStruct expects that)
 			convertedMap := convertMapKeysToStrings(settingsMap)
 			if m, ok := convertedMap.(map[string]interface{}); ok {
