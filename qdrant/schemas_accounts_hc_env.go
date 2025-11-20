@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/go-yaml/yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -211,11 +212,31 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Description: "Advanced operator settings as a YAML string.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				var oldData, newData interface{}
+				if err := yaml.Unmarshal([]byte(old), &oldData); err != nil {
+					return false
+				}
+				if err := yaml.Unmarshal([]byte(new), &newData); err != nil {
+					return false
+				}
+				return reflect.DeepEqual(oldData, newData)
+			},
 			ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
 				if err := yaml.Unmarshal([]byte(v.(string)), new(interface{})); err != nil {
 					es = append(es, fmt.Errorf("%q contains invalid YAML: %w", k, err))
 				}
 				return
+			},
+			// StateFunc normalizes the YAML on save, which is good practice with DiffSuppressFunc.
+			// This ensures the state file has a consistent format, even if user input varies.
+			StateFunc: func(v interface{}) string {
+				var data interface{}
+				if err := yaml.Unmarshal([]byte(v.(string)), &data); err != nil {
+					return v.(string) // On error, keep original
+				}
+				out, _ := yaml.Marshal(data)
+				return string(out)
 			},
 		},
 	}
