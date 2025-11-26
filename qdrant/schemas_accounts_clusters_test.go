@@ -271,7 +271,8 @@ func TestExpandCluster(t *testing.T) {
 					ReplicationFactor: newPointer(uint32(3)),
 				},
 				Service: &qcCluster.DatabaseConfigurationService{
-					ApiKey: &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
+					ApiKey:  &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
+					JwtRbac: newPointer(false),
 				},
 				Tls: &qcCluster.DatabaseConfigurationTls{
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
