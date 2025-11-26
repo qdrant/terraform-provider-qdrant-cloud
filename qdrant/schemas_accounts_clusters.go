@@ -1192,7 +1192,7 @@ func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfigurati
 			serviceConfig.ReadOnlyApiKey = expandSecretKeyRef(v.([]interface{}))
 		}
 		if v, ok := serviceItem[dbConfigServiceJwtRbacFieldName]; ok {
-			serviceConfig.JwtRbac = v.(bool)
+			serviceConfig.JwtRbac = newPointer(v.(bool))
 		}
 		if v, ok := serviceItem[dbConfigServiceEnableTlsFieldName]; ok {
 			serviceConfig.EnableTls = v.(bool)
