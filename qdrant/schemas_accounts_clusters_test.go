@@ -35,7 +35,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:         &commonv1.SecretKeyRef{Name: "api-key-secret", Key: "api-key"},
 					ReadOnlyApiKey: &commonv1.SecretKeyRef{Name: "ro-api-key-secret", Key: "ro-api-key"},
-					JwtRbac:        true,
+					JwtRbac:        newPointer(true),
 				},
 				LogLevel: newPointer(qcCluster.DatabaseConfigurationLogLevel_DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG),
 				Tls: &qcCluster.DatabaseConfigurationTls{
@@ -271,7 +271,8 @@ func TestExpandCluster(t *testing.T) {
 					ReplicationFactor: newPointer(uint32(3)),
 				},
 				Service: &qcCluster.DatabaseConfigurationService{
-					ApiKey: &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
+					ApiKey:  &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
+					JwtRbac: newPointer(false),
 				},
 				Tls: &qcCluster.DatabaseConfigurationTls{
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
