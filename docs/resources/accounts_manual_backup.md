@@ -116,6 +116,8 @@ Read-Only:
 - `cloud_provider_region_id` (String)
 - `configuration` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration))
 - `name` (String)
+- `resources_summary` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--resources_summary))
+- `restore_package_id` (String)
 
 <a id="nestedobjatt--cluster_info--configuration"></a>
 ### Nested Schema for `cluster_info.configuration`
@@ -317,6 +319,43 @@ Read-Only:
 - `operator` (String)
 - `toleration_seconds` (Number)
 - `value` (String)
+
+
+
+<a id="nestedobjatt--cluster_info--resources_summary"></a>
+### Nested Schema for `cluster_info.resources_summary`
+
+Read-Only:
+
+- `cpu` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--resources_summary--cpu))
+- `disk` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--resources_summary--disk))
+- `ram` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--resources_summary--ram))
+
+<a id="nestedobjatt--cluster_info--resources_summary--cpu"></a>
+### Nested Schema for `cluster_info.resources_summary.cpu`
+
+Read-Only:
+
+- `amount` (Number)
+- `unit` (String)
+
+
+<a id="nestedobjatt--cluster_info--resources_summary--disk"></a>
+### Nested Schema for `cluster_info.resources_summary.disk`
+
+Read-Only:
+
+- `amount` (Number)
+- `unit` (String)
+
+
+<a id="nestedobjatt--cluster_info--resources_summary--ram"></a>
+### Nested Schema for `cluster_info.resources_summary.ram`
+
+Read-Only:
+
+- `amount` (Number)
+- `unit` (String)
 
 
 
