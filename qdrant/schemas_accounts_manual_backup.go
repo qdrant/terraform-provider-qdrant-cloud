@@ -29,6 +29,8 @@ const (
 	bClusterInfoNameField          = "name"
 	bClusterInfoCloudProviderField = "cloud_provider_id"
 	bClusterInfoRegionField        = "cloud_provider_region_id"
+	bClusterInfoResourcesSummary   = "resources_summary"
+	bClusterInfoRestorePackageID   = "restore_package_id"
 	bClusterCfgField               = "configuration"
 	bClusterCfgLastModifiedAtField = "last_modified_at"
 	bClusterCfgNumberOfNodesField  = "number_of_nodes"
@@ -44,6 +46,11 @@ const (
 	bDbCfgServiceJwtRbacField      = "jwt_rbac"
 	bDbCfgInferenceField           = "inference"
 	bDbCfgInferenceEnabledField    = "enabled"
+	bClusterResourceSummaryCPU     = "cpu"
+	bClusterResourceSummaryRAM     = "ram"
+	bClusterResourceSummaryDisk    = "disk"
+	bResourceQuantityAmountField   = "amount"
+	bResourceQuantityUnitField     = "unit"
 )
 
 // accountsBackupSchema defines the Terraform schema for a Backup resource.
@@ -135,11 +142,60 @@ func accountsBackupClusterInfoSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
+		bClusterInfoResourcesSummary: {
+			Description: "Summary of the resources that were provisioned when the backup was captured.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Resource{Schema: accountsBackupClusterResourcesSummarySchema()},
+		},
+		bClusterInfoRestorePackageID: {
+			Description: "Identifier of the package that best matches the recorded resources for restoration.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
 		bClusterCfgField: {
 			Description: "Cluster configuration details (read-only).",
 			Type:        schema.TypeList,
 			Computed:    true,
 			Elem:        &schema.Resource{Schema: accountsClusterConfigurationSchema(false)},
+		},
+	}
+}
+
+func accountsBackupClusterResourcesSummarySchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		bClusterResourceSummaryCPU: {
+			Description: "CPU resources expressed in millicores.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Resource{Schema: accountsBackupResourceQuantitySchema()},
+		},
+		bClusterResourceSummaryRAM: {
+			Description: "RAM resources expressed in binary units (e.g. Gi).",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Resource{Schema: accountsBackupResourceQuantitySchema()},
+		},
+		bClusterResourceSummaryDisk: {
+			Description: "Disk resources expressed in binary units (e.g. Gi).",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem:        &schema.Resource{Schema: accountsBackupResourceQuantitySchema()},
+		},
+	}
+}
+
+func accountsBackupResourceQuantitySchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		bResourceQuantityAmountField: {
+			Description: "Numeric value of the resource (e.g. 500 for 500m CPU).",
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		bResourceQuantityUnitField: {
+			Description: "Unit describing the resource amount (e.g. m, Gi).",
+			Type:        schema.TypeString,
+			Computed:    true,
 		},
 	}
 }
@@ -183,9 +239,40 @@ func flattenBackupClusterInfo(ci *qcb.ClusterInfo) []interface{} {
 		bClusterInfoNameField:          ci.GetName(),
 		bClusterInfoCloudProviderField: ci.GetCloudProviderId(),
 		bClusterInfoRegionField:        ci.GetCloudProviderRegionId(),
-		bClusterCfgField:               flattenClusterConfiguration(ci.GetConfiguration()),
 	}
+	if summary := ci.GetResourcesSummary(); summary != nil {
+		m[bClusterInfoResourcesSummary] = flattenClusterResourcesSummary(summary)
+	}
+	if pkg := ci.GetRestorePackageId(); pkg != "" {
+		m[bClusterInfoRestorePackageID] = pkg
+	}
+	m[bClusterCfgField] = flattenClusterConfiguration(ci.GetConfiguration())
 	return []interface{}{m}
+}
+
+func flattenClusterResourcesSummary(summary *qcb.ClusterResourcesSummary) []interface{} {
+	if summary == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			bClusterResourceSummaryCPU:  flattenBackupResourceQuantity(summary.GetCpu()),
+			bClusterResourceSummaryRAM:  flattenBackupResourceQuantity(summary.GetRam()),
+			bClusterResourceSummaryDisk: flattenBackupResourceQuantity(summary.GetDisk()),
+		},
+	}
+}
+
+func flattenBackupResourceQuantity(quantity *qcb.ResourceQuantity) []interface{} {
+	if quantity == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			bResourceQuantityAmountField: quantity.GetAmount(),
+			bResourceQuantityUnitField:   quantity.GetUnit(),
+		},
+	}
 }
 
 // expandBackup builds the API object from TF config for Create.

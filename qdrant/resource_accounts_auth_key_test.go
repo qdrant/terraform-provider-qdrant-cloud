@@ -71,6 +71,12 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 		node_configuration {
 			package_id = local.cheapest_paid_tariff.id
 		}
+
+		database_configuration {
+			service {
+				jwt_rbac = false
+			}
+		}
 	}
 }
 

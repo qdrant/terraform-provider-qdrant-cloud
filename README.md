@@ -96,10 +96,20 @@ make test.acceptance \
   SKIPPED_TESTS="TestAccDataAccountsBackupSchedule TestAccResourceClusterCreate"
 ```
 
-or run a single test /wo make (not acceptance and not extra env vars are required);
+or run a single **unit** test without `make` (acceptance tests still require the env vars from above);
 
 ```bash
 go test -v ./... -run '^TestFlattenHCEnv$'
+```
+
+to run a single **acceptance** test, export `TF_ACC=1` plus the required Qdrant credentials and target the specific `TestAcc*`:
+
+```bash
+TF_ACC=1 \
+  QDRANT_CLOUD_API_KEY="<API_KEY>" \
+  QDRANT_CLOUD_ACCOUNT_ID="<ACCOUNT_ID>" \
+  QDRANT_CLOUD_API_URL="grpc.development-cloud.qdrant.io" \
+  go test -count=1 -v ./qdrant -run '^TestAccResourceAccountsUserRoles_Update$'
 ```
 
 ## Releasing

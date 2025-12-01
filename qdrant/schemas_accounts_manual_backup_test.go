@@ -65,6 +65,58 @@ func TestFlattenBackup(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestFlattenBackup_IncludesResourceSummary(t *testing.T) {
+	restorePkg := "pkg-rest-123"
+	b := &qcb.Backup{
+		ClusterInfo: &qcb.ClusterInfo{
+			Name:                  "resourceful-raven",
+			CloudProviderId:       "aws",
+			CloudProviderRegionId: "eu-central-1",
+			ResourcesSummary: &qcb.ClusterResourcesSummary{
+				Cpu:  &qcb.ResourceQuantity{Amount: 500, Unit: "m"},
+				Ram:  &qcb.ResourceQuantity{Amount: 32, Unit: "Gi"},
+				Disk: &qcb.ResourceQuantity{Amount: 512, Unit: "Gi"},
+			},
+			RestorePackageId: &restorePkg,
+		},
+	}
+
+	got := flattenBackup(b)
+	clusterInfos, ok := got[backupClusterInfoFieldName].([]interface{})
+	require.True(t, ok)
+	require.Len(t, clusterInfos, 1)
+	clusterInfo, ok := clusterInfos[0].(map[string]interface{})
+	require.True(t, ok)
+
+	assert.Equal(t, restorePkg, clusterInfo[bClusterInfoRestorePackageID])
+	resourcesSummary, ok := clusterInfo[bClusterInfoResourcesSummary].([]interface{})
+	require.True(t, ok)
+	require.Len(t, resourcesSummary, 1)
+	summary, ok := resourcesSummary[0].(map[string]interface{})
+	require.True(t, ok)
+
+	cpu, ok := summary[bClusterResourceSummaryCPU].([]interface{})
+	require.True(t, ok)
+	require.Len(t, cpu, 1)
+	cpuQuantity := cpu[0].(map[string]interface{})
+	assert.Equal(t, int32(500), cpuQuantity[bResourceQuantityAmountField])
+	assert.Equal(t, "m", cpuQuantity[bResourceQuantityUnitField])
+
+	ram, ok := summary[bClusterResourceSummaryRAM].([]interface{})
+	require.True(t, ok)
+	require.Len(t, ram, 1)
+	ramQuantity := ram[0].(map[string]interface{})
+	assert.Equal(t, int32(32), ramQuantity[bResourceQuantityAmountField])
+	assert.Equal(t, "Gi", ramQuantity[bResourceQuantityUnitField])
+
+	disk, ok := summary[bClusterResourceSummaryDisk].([]interface{})
+	require.True(t, ok)
+	require.Len(t, disk, 1)
+	diskQuantity := disk[0].(map[string]interface{})
+	assert.Equal(t, int32(512), diskQuantity[bResourceQuantityAmountField])
+	assert.Equal(t, "Gi", diskQuantity[bResourceQuantityUnitField])
+}
+
 func TestExpandBackupForCreate_UsesDefaultAccountID(t *testing.T) {
 	const defaultAcct = "00000000-1000-0000-0000-000000000001"
 	d := schema.TestResourceDataRaw(t, accountsBackupSchema(), map[string]interface{}{

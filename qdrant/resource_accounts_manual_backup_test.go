@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
+	qcb "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/backup/v1"
 )
 
 // Env vars used by these tests:
@@ -92,11 +94,17 @@ provider "qdrant-cloud" {
 				),
 			},
 
-			// Step 3: Wait then verify terminal fields
-			// Backups can only be deleted once they are ready
+			// Step 3: Wait for backup to succeed (so Terraform refresh in the next step sees the terminal status)
 			{
-				PreConfig: func() { time.Sleep(240 * time.Second) },
-				Config:    configClusterAndBackup,
+				Config: configClusterAndBackup,
+				Check: resource.ComposeTestCheckFunc(
+					testAccWaitForBackupStatus(backupRes, qcb.BackupStatus_BACKUP_STATUS_SUCCEEDED, 5*time.Minute),
+				),
+			},
+
+			// Step 4: Verify terminal fields now that the backup reached SUCCEEDED
+			{
+				Config: configClusterAndBackup,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(backupRes, "status", "BACKUP_STATUS_SUCCEEDED"),
 					resource.TestCheckResourceAttrSet(backupRes, "backup_duration"),
@@ -105,10 +113,16 @@ provider "qdrant-cloud" {
 					testAccCheckListNonEmpty(backupRes, "cluster_info"),
 					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.name"),
 					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.configuration.0.version"),
+					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.restore_package_id"),
+					testAccCheckListNonEmpty(backupRes, "cluster_info.0.resources_summary"),
+					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.resources_summary.0.cpu.0.amount"),
+					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.resources_summary.0.cpu.0.unit"),
+					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.resources_summary.0.ram.0.amount"),
+					resource.TestCheckResourceAttrSet(backupRes, "cluster_info.0.resources_summary.0.disk.0.amount"),
 				),
 			},
 
-			// Step 4: Destroy both (backup and cluster)
+			// Step 5: Destroy both (backup and cluster)
 			{
 				Config:  configClusterAndBackup,
 				Destroy: true,
@@ -159,6 +173,15 @@ provider "qdrant-cloud" {
 				),
 			},
 
+			// Step 1b: wait for cluster status to show up before triggering backups
+			{
+				PreConfig: func() { time.Sleep(60 * time.Second) },
+				Config:    configClusterOnly,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckHasListAttr(clusterRes, "status"),
+				),
+			},
+
 			// Step 2: Create manual backup with retention period
 			{
 				Config: configWithRetention,
@@ -174,11 +197,17 @@ provider "qdrant-cloud" {
 				),
 			},
 
-			// Step 3: Wait then verify terminal fields
-			// Backups can only be deleted once they are ready
+			// Step 3: Wait for backup to succeed
 			{
-				PreConfig: func() { time.Sleep(240 * time.Second) },
-				Config:    configWithRetention,
+				Config: configWithRetention,
+				Check: resource.ComposeTestCheckFunc(
+					testAccWaitForBackupStatus(backupRes, qcb.BackupStatus_BACKUP_STATUS_SUCCEEDED, 5*time.Minute),
+				),
+			},
+
+			// Step 4: Verify terminal fields
+			{
+				Config: configWithRetention,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(backupRes, "status", "BACKUP_STATUS_SUCCEEDED"),
 					resource.TestCheckResourceAttrSet(backupRes, "backup_duration"),
@@ -186,7 +215,7 @@ provider "qdrant-cloud" {
 				),
 			},
 
-			// Step 4: Destroy both (backup and cluster)
+			// Step 5: Destroy both (backup and cluster)
 			{
 				Config:  configWithRetention,
 				Destroy: true,
@@ -243,11 +272,10 @@ provider "qdrant-cloud" {
 
 			// 4) Wait for backup to finish (ensure status = SUCCEEDED before import)
 			{
-				PreConfig: func() {
-					t.Log("Waiting 240s for backup to reach terminal state before import…")
-					time.Sleep(240 * time.Second)
-				},
 				Config: configClusterAndBackup,
+				Check: resource.ComposeTestCheckFunc(
+					testAccWaitForBackupStatus(backupRes, qcb.BackupStatus_BACKUP_STATUS_SUCCEEDED, 5*time.Minute),
+				),
 			},
 
 			// 5) Import the backup and verify state
