@@ -1152,7 +1152,7 @@ func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfigurati
 			collConfig.ReplicationFactor = newPointer(uint32(v.(int)))
 		}
 		if v, ok := collItem[dbConfigCollectionWriteConsistencyFactor]; ok {
-			collConfig.WriteConsistencyFactor = int32(v.(int))
+			collConfig.WriteConsistencyFactor = newPointer(int32(v.(int)))
 		}
 		if v, ok := collItem[dbConfigCollectionVectorsFieldName]; ok && len(v.([]interface{})) > 0 {
 			vecItem := v.([]interface{})[0].(map[string]interface{})

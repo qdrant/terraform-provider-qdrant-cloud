@@ -30,7 +30,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 			DatabaseConfiguration: &qcCluster.DatabaseConfiguration{
 				Collection: &qcCluster.DatabaseConfigurationCollection{
 					ReplicationFactor:      newPointer(uint32(2)),
-					WriteConsistencyFactor: 1,
+					WriteConsistencyFactor: newPointer(int32(1)),
 				},
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:         &commonv1.SecretKeyRef{Name: "api-key-secret", Key: "api-key"},
@@ -268,7 +268,8 @@ func TestExpandCluster(t *testing.T) {
 			},
 			DatabaseConfiguration: &qcCluster.DatabaseConfiguration{
 				Collection: &qcCluster.DatabaseConfigurationCollection{
-					ReplicationFactor: newPointer(uint32(3)),
+					ReplicationFactor:      newPointer(uint32(3)),
+					WriteConsistencyFactor: newPointer(int32(0)),
 				},
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:  &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
