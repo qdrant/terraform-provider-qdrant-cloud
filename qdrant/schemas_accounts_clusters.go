@@ -1149,10 +1149,16 @@ func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfigurati
 		collItem := val.([]interface{})[0].(map[string]interface{})
 		collConfig := &qcCluster.DatabaseConfigurationCollection{}
 		if v, ok := collItem[dbConfigCollectionReplicationFactor]; ok {
-			collConfig.ReplicationFactor = newPointer(uint32(v.(int)))
+			val := uint32(v.(int))
+			if val > 0 {
+				collConfig.ReplicationFactor = &val
+			}
 		}
 		if v, ok := collItem[dbConfigCollectionWriteConsistencyFactor]; ok {
-			collConfig.WriteConsistencyFactor = newPointer(int32(v.(int)))
+			val := int32(v.(int))
+			if val > 0 {
+				collConfig.WriteConsistencyFactor = &val
+			}
 		}
 		if v, ok := collItem[dbConfigCollectionVectorsFieldName]; ok && len(v.([]interface{})) > 0 {
 			vecItem := v.([]interface{})[0].(map[string]interface{})
@@ -1250,11 +1256,14 @@ func flattenDatabaseConfiguration(config *qcCluster.DatabaseConfiguration) []int
 	m := make(map[string]interface{})
 
 	if coll := config.GetCollection(); coll != nil {
-		collMap := map[string]interface{}{
-			dbConfigCollectionReplicationFactor:      int(coll.GetReplicationFactor()),
-			dbConfigCollectionWriteConsistencyFactor: int(coll.GetWriteConsistencyFactor()),
+		collMap := map[string]interface{}{}
+		if coll.ReplicationFactor != nil {
+			collMap[dbConfigCollectionReplicationFactor] = int(coll.GetReplicationFactor())
 		}
-		if vec := coll.GetVectors(); vec != nil {
+		if coll.WriteConsistencyFactor != nil {
+			collMap[dbConfigCollectionWriteConsistencyFactor] = int(coll.GetWriteConsistencyFactor())
+		}
+		if vec := coll.GetVectors(); vec != nil && vec.OnDisk != nil {
 			collMap[dbConfigCollectionVectorsFieldName] = []interface{}{
 				map[string]interface{}{
 					dbConfigCollectionVectorsOnDiskFieldName: vec.GetOnDisk(),
