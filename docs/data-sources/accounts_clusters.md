@@ -64,6 +64,7 @@ Read-Only:
 - `created_at` (String)
 - `delete_backups_on_destroy` (Boolean)
 - `id` (String)
+- `labels` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--labels))
 - `marked_for_deletion_at` (String)
 - `name` (String)
 - `private_region_id` (String)
@@ -271,6 +272,15 @@ Read-Only:
 - `toleration_seconds` (Number)
 - `value` (String)
 
+
+
+<a id="nestedobjatt--clusters--labels"></a>
+### Nested Schema for `clusters.labels`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
 
 
 <a id="nestedobjatt--clusters--status"></a>

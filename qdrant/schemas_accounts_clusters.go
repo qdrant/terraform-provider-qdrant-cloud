@@ -21,6 +21,7 @@ const (
 	clusterCreatedAtFieldName                  = "created_at"
 	clusterAccountIDFieldName                  = "account_id"
 	clusterNameFieldName                       = "name"
+	clusterLabelsFieldName                     = "labels"
 	clusterCloudProviderFieldName              = "cloud_provider"
 	clusterCloudRegionFieldName                = "cloud_region"
 	clusterVersionFieldName                    = "version"
@@ -157,6 +158,15 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    !asDataSource,
 			Computed:    asDataSource,
+		},
+		clusterLabelsFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "List of labels associated with the cluster"),
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(asDataSource),
+			},
 		},
 		clusterCloudProviderFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, `Cloud provider where the cluster is hosted.
@@ -818,6 +828,9 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 		CloudProviderRegionId: cloudRegion.(string),
 		AccountId:             accountID,
 	}
+	if v, ok := d.GetOk(clusterLabelsFieldName); ok {
+		cluster.Labels = expandKeyVal(v.([]interface{}))
+	}
 	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
 		cluster.DeletedAt = parseTime(v.(string))
 	}
@@ -1043,6 +1056,7 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
 		clusterAccountIDFieldName:           cluster.GetAccountId(),
 		clusterNameFieldName:                cluster.GetName(),
+		clusterLabelsFieldName:              flattenKeyVal(cluster.GetLabels()),
 		clusterCloudProviderFieldName:       cluster.GetCloudProviderId(),
 		clusterCloudRegionFieldName:         cluster.GetCloudProviderRegionId(),
 		clusterPrivateRegionIDFieldName:     privateRegionIdStr,

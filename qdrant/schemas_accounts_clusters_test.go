@@ -15,10 +15,13 @@ import (
 
 func TestResourceClusterFlatten(t *testing.T) {
 	cluster := &qcCluster.Cluster{
-		Id:                    "00000000-0000-0000-0000-000000000001",
-		CreatedAt:             timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
-		AccountId:             "00000000-1000-0000-0000-000000000001",
-		Name:                  "testName",
+		Id:        "00000000-0000-0000-0000-000000000001",
+		CreatedAt: timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId: "00000000-1000-0000-0000-000000000001",
+		Name:      "testName",
+		Labels: []*commonv1.KeyValue{
+			{Key: "key1", Value: "value1"},
+		},
 		CloudProviderId:       "Azure",
 		CloudProviderRegionId: "Uksouth",
 		DeletedAt:             timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
@@ -98,10 +101,13 @@ func TestResourceClusterFlatten(t *testing.T) {
 	flattened := flattenCluster(cluster)
 
 	expected := map[string]interface{}{
-		clusterIdentifierFieldName:          cluster.GetId(),
-		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
-		clusterAccountIDFieldName:           cluster.GetAccountId(),
-		clusterNameFieldName:                cluster.GetName(),
+		clusterIdentifierFieldName: cluster.GetId(),
+		clusterCreatedAtFieldName:  formatTime(cluster.GetCreatedAt()),
+		clusterAccountIDFieldName:  cluster.GetAccountId(),
+		clusterNameFieldName:       cluster.GetName(),
+		clusterLabelsFieldName: []interface{}{
+			map[string]interface{}{"key": "key1", "value": "value1"},
+		},
 		clusterCloudProviderFieldName:       cluster.GetCloudProviderId(),
 		clusterCloudRegionFieldName:         cluster.GetCloudProviderRegionId(),
 		clusterPrivateRegionIDFieldName:     "",
@@ -251,10 +257,13 @@ func TestResourceClusterFlatten(t *testing.T) {
 
 func TestExpandCluster(t *testing.T) {
 	expected := &qcCluster.Cluster{
-		Id:                    "00000000-0000-0000-0000-000000000001",
-		CreatedAt:             timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
-		AccountId:             "00000000-1000-0000-0000-000000000001",
-		Name:                  "testName",
+		Id:        "00000000-0000-0000-0000-000000000001",
+		CreatedAt: timestamppb.New(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)),
+		AccountId: "00000000-1000-0000-0000-000000000001",
+		Name:      "testName",
+		Labels: []*commonv1.KeyValue{
+			{Key: "key1", Value: "value1"},
+		},
 		CloudProviderId:       "Azure",
 		CloudProviderRegionId: "Uksouth",
 		DeletedAt:             timestamppb.New(time.Date(2023, 12, 31, 23, 59, 59, 0, time.UTC)),
@@ -301,10 +310,13 @@ func TestExpandCluster(t *testing.T) {
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
-		clusterIdentifierFieldName:          expected.GetId(),
-		clusterCreatedAtFieldName:           formatTime(expected.GetCreatedAt()),
-		clusterAccountIDFieldName:           expected.GetAccountId(),
-		clusterNameFieldName:                expected.GetName(),
+		clusterIdentifierFieldName: expected.GetId(),
+		clusterCreatedAtFieldName:  formatTime(expected.GetCreatedAt()),
+		clusterAccountIDFieldName:  expected.GetAccountId(),
+		clusterNameFieldName:       expected.GetName(),
+		clusterLabelsFieldName: []interface{}{
+			map[string]interface{}{"key": "key1", "value": "value1"},
+		},
 		clusterCloudProviderFieldName:       expected.GetCloudProviderId(),
 		clusterCloudRegionFieldName:         expected.GetCloudProviderRegionId(),
 		clusterPrivateRegionIDFieldName:     "",
