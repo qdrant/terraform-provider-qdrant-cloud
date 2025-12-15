@@ -61,6 +61,7 @@ Must match one of the region IDs returned by the "qdrant.cloud.platform.v1.Platf
 For hybrid this should be the hybrid cloud environment ID. field
 - `configuration` (List of Object) Cluster Schema The configuration options of a cluster field (see [below for nested schema](#nestedatt--configuration))
 - `created_at` (String) Cluster Schema Timestamp when the cluster is created field
+- `labels` (List of Object) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedatt--labels))
 - `marked_for_deletion_at` (String) Cluster Schema Timestamp when this cluster was marked for deletion field
 - `name` (String) Cluster Schema Name of the cluster field
 - `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
@@ -268,6 +269,15 @@ Read-Only:
 - `toleration_seconds` (Number)
 - `value` (String)
 
+
+
+<a id="nestedatt--labels"></a>
+### Nested Schema for `labels`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
 
 
 <a id="nestedatt--status"></a>

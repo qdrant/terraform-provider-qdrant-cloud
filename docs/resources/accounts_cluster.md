@@ -103,6 +103,7 @@ For hybrid this should be the hybrid cloud environment ID. field
 
 - `account_id` (String) Cluster Schema Identifier of the account field
 - `delete_backups_on_destroy` (Boolean) Whether to delete backups when the cluster is destroyed.
+- `labels` (Block List) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedblock--labels))
 - `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
 
 ### Read-Only
@@ -323,6 +324,15 @@ Optional:
 - `toleration_seconds` (Number)
 - `value` (String)
 
+
+
+<a id="nestedblock--labels"></a>
+### Nested Schema for `labels`
+
+Required:
+
+- `key` (String)
+- `value` (String)
 
 
 <a id="nestedatt--status"></a>
