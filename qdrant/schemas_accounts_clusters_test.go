@@ -71,8 +71,8 @@ func TestResourceClusterFlatten(t *testing.T) {
 			PodLabels: []*commonv1.KeyValue{
 				{Key: "podlabel1", Value: "podlabelval1"},
 			},
-			ReservedCpuPercentage:    10,
-			ReservedMemoryPercentage: 20,
+			ReservedCpuPercentage:    newPointer(uint32(10)),
+			ReservedMemoryPercentage: newPointer(uint32(20)),
 			GpuType:                  newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
 			RestartPolicy:            newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
 			RebalanceStrategy:        newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
