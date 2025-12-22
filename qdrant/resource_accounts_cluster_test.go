@@ -293,3 +293,121 @@ output "cluster_name_del" {
 		})
 	})
 }
+
+func TestAccResourceClusterAdvancedConfiguration(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("TF_ACC not set, skipping acceptance tests.")
+	}
+	if os.Getenv("QDRANT_CLOUD_API_KEY") == "" {
+		t.Skip("QDRANT_CLOUD_API_KEY not set, skipping acceptance tests.")
+	}
+	if os.Getenv("QDRANT_CLOUD_ACCOUNT_ID") == "" {
+		t.Skip("QDRANT_CLOUD_ACCOUNT_ID not set, skipping acceptance tests.")
+	}
+
+	apiKey := os.Getenv("QDRANT_CLOUD_API_KEY")
+	accountID := os.Getenv("QDRANT_CLOUD_ACCOUNT_ID")
+	cloudProvider := getEnvDefault("QDRANT_CLOUD_CLOUD_PROVIDER", "gcp")
+	cloudRegion := getEnvDefault("QDRANT_CLOUD_REGION", "europe-west3")
+
+	provider := fmt.Sprintf(`
+provider "qdrant-cloud" {
+  api_key = "%s"
+}
+	`, apiKey)
+
+	config := provider + fmt.Sprintf(`
+data "qdrant-cloud_booking_packages" "test" {
+  cloud_provider = "%s"
+  cloud_region   = "%s"
+}
+locals {
+  resource_data = data.qdrant-cloud_booking_packages.test.packages
+  gpx1_packages = [
+    for resource in local.resource_data : resource if resource.name == "gpx1"
+  ]
+  gpx1_package = local.gpx1_packages[0]
+}
+
+resource "qdrant-cloud_accounts_cluster" "advanced" {
+  name           = "test-cluster-advanced"
+  account_id     = "%s"
+  cloud_region   = "%s"
+  cloud_provider = "%s"
+
+  lifecycle {
+    ignore_changes = [
+      configuration[0].gpu_type,
+      configuration[0].rebalance_strategy,
+      configuration[0].restart_policy,
+      configuration[0].service_type,
+      configuration[0].allowed_ip_source_ranges,
+      configuration[0].database_configuration,
+    ]
+  }
+
+  configuration {
+    number_of_nodes            = 1
+    reserved_cpu_percentage    = 25
+    reserved_memory_percentage = 30
+    allowed_ip_source_ranges   = ["10.0.0.0/24"]
+
+    service_annotations {
+      key   = "test-annotation"
+      value = "value"
+    }
+
+    pod_labels {
+      key   = "env"
+      value = "acceptance"
+    }
+
+    node_configuration {
+      package_id = local.gpx1_package.id
+    }
+  }
+}
+
+output "advanced_reserved_cpu" {
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].reserved_cpu_percentage
+}
+
+output "advanced_reserved_memory" {
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].reserved_memory_percentage
+}
+
+output "advanced_allowed_ip" {
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].allowed_ip_source_ranges[0]
+}
+
+output "advanced_service_annotation" {
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].service_annotations[0].value
+}
+
+output "advanced_pod_label" {
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].pod_labels[0].value
+}
+`, cloudProvider, cloudRegion, accountID, cloudRegion, cloudProvider)
+
+	t.Run("creates a cluster with advanced configuration", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			ProviderFactories: map[string]func() (*schema.Provider, error){
+				//nolint:unparam // Ignoring unparam as we know error will always be nil
+				"qdrant-cloud": func() (*schema.Provider, error) { return Provider(), nil },
+			},
+			Steps: []resource.TestStep{
+				{
+					Config:  config,
+					Destroy: true,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckOutput("advanced_reserved_cpu", "25"),
+						resource.TestCheckOutput("advanced_reserved_memory", "30"),
+						resource.TestCheckOutput("advanced_allowed_ip", "10.0.0.0/24"),
+						resource.TestCheckOutput("advanced_service_annotation", "value"),
+						resource.TestCheckOutput("advanced_pod_label", "acceptance"),
+					),
+				},
+			},
+		})
+	})
+}

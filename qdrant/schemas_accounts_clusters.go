@@ -912,10 +912,14 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 			config.PodLabels = expandKeyVal(v.([]interface{}))
 		}
 		if v, ok := item[dbConfigReservedCpuPercentageFieldName]; ok {
-			config.ReservedCpuPercentage = uint32(v.(int))
+			if percent := v.(int); percent != 0 {
+				config.ReservedCpuPercentage = newPointer(uint32(percent))
+			}
 		}
 		if v, ok := item[dbConfigReservedMemoryPercentageFieldName]; ok {
-			config.ReservedMemoryPercentage = uint32(v.(int))
+			if percent := v.(int); percent != 0 {
+				config.ReservedMemoryPercentage = newPointer(uint32(percent))
+			}
 		}
 		if v, ok := item[dbConfigGpuTypeFieldName]; ok {
 			gt, gtOK := qcCluster.ClusterConfigurationGpuType_value[v.(string)]
@@ -1069,27 +1073,35 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 
 // flattenClusterConfiguration creates a map from a cluster configuration for easy storage in Terraform.
 func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) []interface{} {
-	return []interface{}{
-		map[string]interface{}{
-			clusterVersionFieldName:                   clusterConfig.GetVersion(),
-			clusterLastModifiedAtFieldName:            formatTime(clusterConfig.GetLastModifiedAt()),
-			numberOfNodesFieldName:                    int(clusterConfig.GetNumberOfNodes()),
-			nodeConfigurationFieldName:                flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
-			databaseConfigurationFieldName:            flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
-			nodeSelectorFieldName:                     flattenKeyVal(clusterConfig.GetNodeSelector()),
-			tolerationsFieldName:                      flattenTolerations(clusterConfig.GetTolerations()),
-			annotationsFieldName:                      flattenKeyVal(clusterConfig.GetAnnotations()),
-			allowedIpSourceRangesFieldName:            clusterConfig.GetAllowedIpSourceRanges(),
-			serviceTypeFieldName:                      clusterConfig.GetServiceType().String(),
-			serviceAnnotationsFieldName:               flattenKeyVal(clusterConfig.GetServiceAnnotations()),
-			podLabelsFieldName:                        flattenKeyVal(clusterConfig.GetPodLabels()),
-			dbConfigReservedCpuPercentageFieldName:    int(clusterConfig.GetReservedCpuPercentage()),
-			dbConfigReservedMemoryPercentageFieldName: int(clusterConfig.GetReservedMemoryPercentage()),
-			dbConfigGpuTypeFieldName:                  clusterConfig.GetGpuType().String(),
-			dbConfigRestartPolicyFieldName:            clusterConfig.GetRestartPolicy().String(),
-			dbConfigRebalanceStrategyFieldName:        clusterConfig.GetRebalanceStrategy().String(),
-		},
+	if clusterConfig == nil {
+		return []interface{}{}
 	}
+	config := map[string]interface{}{
+		clusterVersionFieldName:            clusterConfig.GetVersion(),
+		clusterLastModifiedAtFieldName:     formatTime(clusterConfig.GetLastModifiedAt()),
+		numberOfNodesFieldName:             int(clusterConfig.GetNumberOfNodes()),
+		nodeConfigurationFieldName:         flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
+		databaseConfigurationFieldName:     flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
+		nodeSelectorFieldName:              flattenKeyVal(clusterConfig.GetNodeSelector()),
+		tolerationsFieldName:               flattenTolerations(clusterConfig.GetTolerations()),
+		annotationsFieldName:               flattenKeyVal(clusterConfig.GetAnnotations()),
+		allowedIpSourceRangesFieldName:     clusterConfig.GetAllowedIpSourceRanges(),
+		serviceTypeFieldName:               clusterConfig.GetServiceType().String(),
+		serviceAnnotationsFieldName:        flattenKeyVal(clusterConfig.GetServiceAnnotations()),
+		podLabelsFieldName:                 flattenKeyVal(clusterConfig.GetPodLabels()),
+		dbConfigGpuTypeFieldName:           clusterConfig.GetGpuType().String(),
+		dbConfigRestartPolicyFieldName:     clusterConfig.GetRestartPolicy().String(),
+		dbConfigRebalanceStrategyFieldName: clusterConfig.GetRebalanceStrategy().String(),
+	}
+
+	if clusterConfig.ReservedCpuPercentage != nil {
+		config[dbConfigReservedCpuPercentageFieldName] = int(clusterConfig.GetReservedCpuPercentage())
+	}
+	if clusterConfig.ReservedMemoryPercentage != nil {
+		config[dbConfigReservedMemoryPercentageFieldName] = int(clusterConfig.GetReservedMemoryPercentage())
+	}
+
+	return []interface{}{config}
 }
 
 // flattenNodeConfiguration creates a map from a packageID and additional resources for easy storage in Terraform.
