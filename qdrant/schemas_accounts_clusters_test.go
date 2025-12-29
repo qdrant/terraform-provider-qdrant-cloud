@@ -8,6 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	k8v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
 	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
@@ -58,6 +60,23 @@ func TestResourceClusterFlatten(t *testing.T) {
 					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
 					Value:    "value1",
 					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
+				},
+			},
+			TopologySpreadConstraints: []*k8v1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "topology.kubernetes.io/zone",
+					WhenUnsatisfiable: k8v1.UnsatisfiableConstraintAction("DoNotSchedule"),
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"key1": "value1"},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "key2",
+								Operator: metav1.LabelSelectorOperator("In"),
+								Values:   []string{"val1", "val2"},
+							},
+						},
+					},
 				},
 			},
 			Annotations: []*commonv1.KeyValue{
@@ -232,6 +251,27 @@ func TestResourceClusterFlatten(t *testing.T) {
 						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
 					},
 				},
+				topologySpreadConstraintsFieldName: []interface{}{
+					map[string]interface{}{
+						topologySpreadConstraintMaxSkewFieldName:           1,
+						topologySpreadConstraintTopologyKeyFieldName:       "topology.kubernetes.io/zone",
+						topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+						topologySpreadConstraintLabelSelectorFieldName: []interface{}{
+							map[string]interface{}{
+								matchLabelsFieldName: []interface{}{
+									map[string]interface{}{"key": "key1", "value": "value1"},
+								},
+								matchExpressionsFieldName: []interface{}{
+									map[string]interface{}{
+										"key":      "key2",
+										"operator": "In",
+										"values":   []interface{}{"val1", "val2"},
+									},
+								},
+							},
+						},
+					},
+				},
 				annotationsFieldName: []interface{}{
 					map[string]interface{}{"key": "anno1", "value": "annoval1"},
 				},
@@ -297,6 +337,23 @@ func TestExpandCluster(t *testing.T) {
 					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
 					Value:    "value1",
 					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
+				},
+			},
+			TopologySpreadConstraints: []*k8v1.TopologySpreadConstraint{
+				{
+					MaxSkew:           1,
+					TopologyKey:       "topology.kubernetes.io/zone",
+					WhenUnsatisfiable: k8v1.UnsatisfiableConstraintAction("DoNotSchedule"),
+					LabelSelector: &metav1.LabelSelector{
+						MatchLabels: map[string]string{"key1": "value1"},
+						MatchExpressions: []metav1.LabelSelectorRequirement{
+							{
+								Key:      "key2",
+								Operator: metav1.LabelSelectorOperator("In"),
+								Values:   []string{"val1", "val2"},
+							},
+						},
+					},
 				},
 			},
 			ServiceType: newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
@@ -378,6 +435,27 @@ func TestExpandCluster(t *testing.T) {
 						tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL",
 						tolerationValueFieldName:    "value1",
 						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
+					},
+				},
+				topologySpreadConstraintsFieldName: []interface{}{
+					map[string]interface{}{
+						topologySpreadConstraintMaxSkewFieldName:           1,
+						topologySpreadConstraintTopologyKeyFieldName:       "topology.kubernetes.io/zone",
+						topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+						topologySpreadConstraintLabelSelectorFieldName: []interface{}{
+							map[string]interface{}{
+								matchLabelsFieldName: []interface{}{
+									map[string]interface{}{"key": "key1", "value": "value1"},
+								},
+								matchExpressionsFieldName: []interface{}{
+									map[string]interface{}{
+										"key":      "key2",
+										"operator": "In",
+										"values":   []interface{}{"val1", "val2"},
+									},
+								},
+							},
+						},
 					},
 				},
 				serviceTypeFieldName:     "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
