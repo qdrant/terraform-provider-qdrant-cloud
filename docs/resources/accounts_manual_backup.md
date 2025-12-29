@@ -140,6 +140,7 @@ Read-Only:
 - `service_annotations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--service_annotations))
 - `service_type` (String)
 - `tolerations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--tolerations))
+- `topology_spread_constraints` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--topology_spread_constraints))
 - `version` (String)
 
 <a id="nestedobjatt--cluster_info--configuration--annotations"></a>
@@ -319,6 +320,45 @@ Read-Only:
 - `operator` (String)
 - `toleration_seconds` (Number)
 - `value` (String)
+
+
+<a id="nestedobjatt--cluster_info--configuration--topology_spread_constraints"></a>
+### Nested Schema for `cluster_info.configuration.topology_spread_constraints`
+
+Read-Only:
+
+- `label_selector` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--topology_spread_constraints--label_selector))
+- `max_skew` (Number)
+- `topology_key` (String)
+- `when_unsatisfiable` (String)
+
+<a id="nestedobjatt--cluster_info--configuration--topology_spread_constraints--label_selector"></a>
+### Nested Schema for `cluster_info.configuration.topology_spread_constraints.label_selector`
+
+Read-Only:
+
+- `match_expressions` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--topology_spread_constraints--label_selector--match_expressions))
+- `match_labels` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--topology_spread_constraints--label_selector--match_labels))
+
+<a id="nestedobjatt--cluster_info--configuration--topology_spread_constraints--label_selector--match_expressions"></a>
+### Nested Schema for `cluster_info.configuration.topology_spread_constraints.label_selector.match_expressions`
+
+Read-Only:
+
+- `key` (String)
+- `operator` (String)
+- `values` (List of String)
+
+
+<a id="nestedobjatt--cluster_info--configuration--topology_spread_constraints--label_selector--match_labels"></a>
+### Nested Schema for `cluster_info.configuration.topology_spread_constraints.label_selector.match_labels`
+
+Read-Only:
+
+- `key` (String)
+- `value` (String)
+
+
 
 
 
