@@ -276,38 +276,9 @@ Read-Only:
 
 Read-Only:
 
-- `label_selector` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--topology_spread_constraints--label_selector))
 - `max_skew` (Number)
 - `topology_key` (String)
 - `when_unsatisfiable` (String)
-
-<a id="nestedobjatt--configuration--topology_spread_constraints--label_selector"></a>
-### Nested Schema for `configuration.topology_spread_constraints.label_selector`
-
-Read-Only:
-
-- `match_expressions` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--topology_spread_constraints--label_selector--match_expressions))
-- `match_labels` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--topology_spread_constraints--label_selector--match_labels))
-
-<a id="nestedobjatt--configuration--topology_spread_constraints--label_selector--match_expressions"></a>
-### Nested Schema for `configuration.topology_spread_constraints.label_selector.match_expressions`
-
-Read-Only:
-
-- `key` (String)
-- `operator` (String)
-- `values` (List of String)
-
-
-<a id="nestedobjatt--configuration--topology_spread_constraints--label_selector--match_labels"></a>
-### Nested Schema for `configuration.topology_spread_constraints.label_selector.match_labels`
-
-Read-Only:
-
-- `key` (String)
-- `value` (String)
-
-
 
 
 

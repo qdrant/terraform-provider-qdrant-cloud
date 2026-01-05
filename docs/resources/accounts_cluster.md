@@ -331,38 +331,9 @@ Optional:
 
 Required:
 
-- `label_selector` (Block List, Min: 1, Max: 1) (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints--label_selector))
 - `max_skew` (Number)
 - `topology_key` (String)
 - `when_unsatisfiable` (String)
-
-<a id="nestedblock--configuration--topology_spread_constraints--label_selector"></a>
-### Nested Schema for `configuration.topology_spread_constraints.label_selector`
-
-Required:
-
-- `match_expressions` (Block List, Min: 1) (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints--label_selector--match_expressions))
-- `match_labels` (Block List, Min: 1) (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints--label_selector--match_labels))
-
-<a id="nestedblock--configuration--topology_spread_constraints--label_selector--match_expressions"></a>
-### Nested Schema for `configuration.topology_spread_constraints.label_selector.match_expressions`
-
-Required:
-
-- `key` (String)
-- `operator` (String)
-- `values` (List of String)
-
-
-<a id="nestedblock--configuration--topology_spread_constraints--label_selector--match_labels"></a>
-### Nested Schema for `configuration.topology_spread_constraints.label_selector.match_labels`
-
-Required:
-
-- `key` (String)
-- `value` (String)
-
-
 
 
 

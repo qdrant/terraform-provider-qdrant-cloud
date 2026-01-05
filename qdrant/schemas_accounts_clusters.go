@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	k8v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
 	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
@@ -69,9 +67,6 @@ const (
 	topologySpreadConstraintMaxSkewFieldName           = "max_skew"
 	topologySpreadConstraintTopologyKeyFieldName       = "topology_key"
 	topologySpreadConstraintWhenUnsatisfiableFieldName = "when_unsatisfiable"
-	topologySpreadConstraintLabelSelectorFieldName     = "label_selector"
-	matchLabelsFieldName                               = "match_labels"
-	matchExpressionsFieldName                          = "match_expressions"
 	annotationsFieldName                               = "annotations"
 	allowedIpSourceRangesFieldName                     = "allowed_ip_source_ranges"
 	serviceTypeFieldName                               = "service_type"
@@ -703,11 +698,6 @@ func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
 }
 
 func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema {
-	maxItems := 1
-	if asDataSource {
-		// We should not set Max Items
-		maxItems = 0
-	}
 	return map[string]*schema.Schema{
 		topologySpreadConstraintMaxSkewFieldName: {
 			Type:     schema.TypeInt,
@@ -723,59 +713,6 @@ func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema
 			Type:     schema.TypeString,
 			Required: !asDataSource,
 			Computed: asDataSource,
-		},
-		topologySpreadConstraintLabelSelectorFieldName: {
-			Type:     schema.TypeList,
-			Required: !asDataSource,
-			Computed: asDataSource,
-			MaxItems: maxItems,
-			Elem: &schema.Resource{
-				Schema: labelSelectorSchema(asDataSource),
-			},
-		},
-	}
-}
-
-func labelSelectorSchema(asDataSource bool) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		matchLabelsFieldName: {
-			Type:     schema.TypeList,
-			Required: !asDataSource,
-			Computed: asDataSource,
-			Elem: &schema.Resource{
-				Schema: keyValSchema(asDataSource),
-			},
-		},
-		matchExpressionsFieldName: {
-			Type:     schema.TypeList,
-			Required: !asDataSource,
-			Computed: asDataSource,
-			Elem: &schema.Resource{
-				Schema: labelSelectorRequirementSchema(asDataSource),
-			},
-		},
-	}
-}
-
-func labelSelectorRequirementSchema(asDataSource bool) map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"key": {
-			Type:     schema.TypeString,
-			Required: !asDataSource,
-			Computed: asDataSource,
-		},
-		"operator": {
-			Type:     schema.TypeString,
-			Required: !asDataSource,
-			Computed: asDataSource,
-		},
-		"values": {
-			Type:     schema.TypeList,
-			Required: !asDataSource,
-			Computed: asDataSource,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
 		},
 	}
 }
@@ -1139,61 +1076,24 @@ func expandTolerations(v []interface{}) []*qcCluster.Toleration {
 }
 
 // expandTopologySpreadConstraints expands topology spread constraints from Terraform data.
-func expandTopologySpreadConstraints(v []interface{}) []*k8v1.TopologySpreadConstraint {
-	var result []*k8v1.TopologySpreadConstraint
+func expandTopologySpreadConstraints(v []interface{}) []*commonv1.TopologySpreadConstraint {
+	var result []*commonv1.TopologySpreadConstraint
 
 	for _, m := range v {
 		item := m.(map[string]interface{})
-		constraint := &k8v1.TopologySpreadConstraint{}
+		constraint := &commonv1.TopologySpreadConstraint{}
 		if v, ok := item[topologySpreadConstraintMaxSkewFieldName]; ok {
-			constraint.MaxSkew = int32(v.(int))
+			constraint.MaxSkew = newPointer(int32(v.(int)))
 		}
 		if v, ok := item[topologySpreadConstraintTopologyKeyFieldName]; ok {
 			constraint.TopologyKey = v.(string)
 		}
 		if v, ok := item[topologySpreadConstraintWhenUnsatisfiableFieldName]; ok {
-			constraint.WhenUnsatisfiable = k8v1.UnsatisfiableConstraintAction(v.(string))
-		}
-		if v, ok := item[topologySpreadConstraintLabelSelectorFieldName]; ok {
-			constraint.LabelSelector = expandLabelSelector(v.([]interface{}))
+			constraint.WhenUnsatisfiable = newPointer(v.(string))
 		}
 		result = append(result, constraint)
 	}
 	return result
-}
-
-func expandLabelSelector(v []interface{}) *metav1.LabelSelector {
-	selector := &metav1.LabelSelector{}
-	for _, m := range v {
-		item := m.(map[string]interface{})
-
-		if v, ok := item[matchLabelsFieldName]; ok {
-			selector.MatchLabels = make(map[string]string)
-			for _, m := range v.([]interface{}) {
-				kv := m.(map[string]interface{})
-				selector.MatchLabels[kv["key"].(string)] = kv["value"].(string)
-			}
-		}
-		if v, ok := item[matchExpressionsFieldName]; ok {
-			for _, m := range v.([]interface{}) {
-				exprItem := m.(map[string]interface{})
-				expr := metav1.LabelSelectorRequirement{
-					Key: exprItem["key"].(string),
-				}
-				if op, ok := exprItem["operator"]; ok {
-					expr.Operator = metav1.LabelSelectorOperator(op.(string))
-				}
-				if vals, ok := exprItem["values"]; ok {
-					for _, val := range vals.([]interface{}) {
-						expr.Values = append(expr.Values, val.(string))
-					}
-				}
-				selector.MatchExpressions = append(selector.MatchExpressions, expr)
-			}
-		}
-	}
-
-	return selector
 }
 
 // flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
@@ -1322,64 +1222,22 @@ func flattenTolerations(tolerations []*qcCluster.Toleration) []interface{} {
 }
 
 // flattenTopologySpreadConstraints flattens topology spread constraints for storage in Terraform.
-func flattenTopologySpreadConstraints(constraints []*k8v1.TopologySpreadConstraint) []interface{} {
+func flattenTopologySpreadConstraints(constraints []*commonv1.TopologySpreadConstraint) []interface{} {
 	var result []interface{}
 	for _, c := range constraints {
 		constraintMap := map[string]interface{}{}
-		if c.MaxSkew != 0 {
-			constraintMap[topologySpreadConstraintMaxSkewFieldName] = int(c.MaxSkew)
+		if c.MaxSkew != nil {
+			constraintMap[topologySpreadConstraintMaxSkewFieldName] = int(c.GetMaxSkew())
 		}
 		if c.TopologyKey != "" {
-			constraintMap[topologySpreadConstraintTopologyKeyFieldName] = c.TopologyKey
+			constraintMap[topologySpreadConstraintTopologyKeyFieldName] = c.GetTopologyKey()
 		}
-		if c.WhenUnsatisfiable != "" {
-			constraintMap[topologySpreadConstraintWhenUnsatisfiableFieldName] = string(c.WhenUnsatisfiable)
-		}
-		if c.LabelSelector != nil {
-			constraintMap[topologySpreadConstraintLabelSelectorFieldName] = flattenLabelSelector(c.LabelSelector)
+		if c.WhenUnsatisfiable != nil {
+			constraintMap[topologySpreadConstraintWhenUnsatisfiableFieldName] = c.GetWhenUnsatisfiable()
 		}
 		result = append(result, constraintMap)
 	}
 	return result
-}
-
-// flattenLabelSelector flattens a label selector for storage in Terraform.
-func flattenLabelSelector(selector *metav1.LabelSelector) []interface{} {
-	if selector == nil {
-		return []interface{}{}
-	}
-	selectorMap := map[string]interface{}{}
-	if len(selector.MatchLabels) > 0 {
-		var matchLabels []interface{}
-		for k, v := range selector.MatchLabels {
-			matchLabels = append(matchLabels, map[string]interface{}{
-				"key":   k,
-				"value": v,
-			})
-		}
-		selectorMap[matchLabelsFieldName] = matchLabels
-	}
-	if len(selector.MatchExpressions) > 0 {
-		var matchExpressions []interface{}
-		for _, expr := range selector.MatchExpressions {
-			exprMap := map[string]interface{}{
-				"key":      expr.Key,
-				"operator": string(expr.Operator),
-			}
-			if len(expr.Values) > 0 {
-				var values []interface{}
-				for _, v := range expr.Values {
-					values = append(values, v)
-				}
-				exprMap["values"] = values
-			}
-			matchExpressions = append(matchExpressions, exprMap)
-		}
-		selectorMap[matchExpressionsFieldName] = matchExpressions
-	}
-	return []interface{}{
-		selectorMap,
-	}
 }
 
 // expandDatabaseConfiguration expands the Terraform resource data into a database configuration object.
