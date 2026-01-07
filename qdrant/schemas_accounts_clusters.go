@@ -16,86 +16,90 @@ const (
 	clustersAccountIDFieldName = "account_id"
 	clustersClustersFieldName  = "clusters"
 
-	clusterFieldTemplate                       = "Cluster Schema %s field"
-	clusterIdentifierFieldName                 = "id"
-	clusterCreatedAtFieldName                  = "created_at"
-	clusterAccountIDFieldName                  = "account_id"
-	clusterNameFieldName                       = "name"
-	clusterLabelsFieldName                     = "labels"
-	clusterCloudProviderFieldName              = "cloud_provider"
-	clusterCloudRegionFieldName                = "cloud_region"
-	clusterVersionFieldName                    = "version"
-	clusterLastModifiedAtFieldName             = "last_modified_at"
-	clusterPrivateRegionIDFieldName            = "private_region_id"
-	clusterMarkedForDeletionAtFieldName        = "marked_for_deletion_at"
-	clusterURLFieldName                        = "url"
-	clusterStatusFieldName                     = "status"
-	clusterStatusVersionFieldName              = "version"
-	clusterDeleteBackupsOnDestroyFieldName     = "delete_backups_on_destroy"
-	clusterStatusNodesUpFieldName              = "nodes_up"
-	clusterStatusRestartedAtFieldName          = "restarted_at"
-	clusterStatusPhaseFieldName                = "phase"
-	clusterStatusReasonFieldName               = "reason"
-	clusterStatusResourcesFieldName            = "resources"
-	clusterStatusScalabilityInfoFieldName      = "scalability_info"
-	clusterNodeResourcesSummaryDiskFieldName   = "disk"
-	clusterNodeResourcesSummaryRamFieldName    = "ram"
-	clusterNodeResourcesSummaryCpuFieldName    = "cpu"
-	clusterNodeResourcesBaseFieldName          = "base"
-	clusterNodeResourcesComplimentaryFieldName = "complimentary"
-	clusterNodeResourcesAdditionalFieldName    = "additional"
-	clusterNodeResourcesReservedFieldName      = "reserved"
-	clusterNodeResourcesAvailableFieldName     = "available"
-	clusterScalabilityInfoStatusFieldName      = "status"
-	clusterScalabilityInfoReasonFieldName      = "reason"
-	configurationFieldName                     = "configuration"
-	nodeConfigurationFieldName                 = "node_configuration"
-	numberOfNodesFieldName                     = "number_of_nodes"
-	packageIDFieldName                         = "package_id"
-	resourceConfigurationsFieldName            = "resource_configurations"
-	resourceConfigurationAmountFieldName       = "amount"
-	resourceConfigurationResourceTypeFieldName = "resource_type"
-	resourceConfigurationResourceUnitFieldName = "resource_unit"
-	nodeSelectorFieldName                      = "node_selector"
-	tolerationsFieldName                       = "tolerations"
-	tolerationKeyFieldName                     = "key"
-	tolerationOperatorFieldName                = "operator"
-	tolerationValueFieldName                   = "value"
-	tolerationEffectFieldName                  = "effect"
-	tolerationSecondsFieldName                 = "toleration_seconds"
-	annotationsFieldName                       = "annotations"
-	allowedIpSourceRangesFieldName             = "allowed_ip_source_ranges"
-	serviceTypeFieldName                       = "service_type"
-	serviceAnnotationsFieldName                = "service_annotations"
-	podLabelsFieldName                         = "pod_labels"
-	databaseConfigurationFieldName             = "database_configuration"
-	dbConfigCollectionFieldName                = "collection"
-	dbConfigStorageFieldName                   = "storage"
-	dbConfigServiceFieldName                   = "service"
-	dbConfigLogLevelFieldName                  = "log_level"
-	dbConfigTlsFieldName                       = "tls"
-	dbConfigInferenceFieldName                 = "inference"
-	dbConfigReservedCpuPercentageFieldName     = "reserved_cpu_percentage"
-	dbConfigReservedMemoryPercentageFieldName  = "reserved_memory_percentage"
-	dbConfigGpuTypeFieldName                   = "gpu_type"
-	dbConfigRestartPolicyFieldName             = "restart_policy"
-	dbConfigRebalanceStrategyFieldName         = "rebalance_strategy"
-	dbConfigCollectionReplicationFactor        = "replication_factor"
-	dbConfigCollectionWriteConsistencyFactor   = "write_consistency_factor"
-	dbConfigCollectionVectorsFieldName         = "vectors"
-	dbConfigCollectionVectorsOnDiskFieldName   = "on_disk"
-	dbConfigStoragePerformanceFieldName        = "performance"
-	dbConfigStoragePerfOptimizerCpuBudget      = "optimizer_cpu_budget"
-	dbConfigStoragePerfAsyncScorer             = "async_scorer"
-	dbConfigServiceApiKeyFieldName             = "api_key"
-	dbConfigServiceReadOnlyApiKeyFieldName     = "read_only_api_key"
-	dbConfigServiceJwtRbacFieldName            = "jwt_rbac"
-	dbConfigServiceEnableTlsFieldName          = "enable_tls"
-	dbConfigSecretKeyRefSecretNameFieldName    = "secret_name"
-	dbConfigSecretKeyRefSecretKeyFieldName     = "secret_key"
-	dbConfigTlsCertFieldName                   = "cert"
-	dbConfigTlsKeyFieldName                    = "key"
-	dbConfigInferenceEnabledFieldName          = "enabled"
+	clusterFieldTemplate                               = "Cluster Schema %s field"
+	clusterIdentifierFieldName                         = "id"
+	clusterCreatedAtFieldName                          = "created_at"
+	clusterAccountIDFieldName                          = "account_id"
+	clusterNameFieldName                               = "name"
+	clusterLabelsFieldName                             = "labels"
+	clusterCloudProviderFieldName                      = "cloud_provider"
+	clusterCloudRegionFieldName                        = "cloud_region"
+	clusterVersionFieldName                            = "version"
+	clusterLastModifiedAtFieldName                     = "last_modified_at"
+	clusterPrivateRegionIDFieldName                    = "private_region_id"
+	clusterMarkedForDeletionAtFieldName                = "marked_for_deletion_at"
+	clusterURLFieldName                                = "url"
+	clusterStatusFieldName                             = "status"
+	clusterStatusVersionFieldName                      = "version"
+	clusterDeleteBackupsOnDestroyFieldName             = "delete_backups_on_destroy"
+	clusterStatusNodesUpFieldName                      = "nodes_up"
+	clusterStatusRestartedAtFieldName                  = "restarted_at"
+	clusterStatusPhaseFieldName                        = "phase"
+	clusterStatusReasonFieldName                       = "reason"
+	clusterStatusResourcesFieldName                    = "resources"
+	clusterStatusScalabilityInfoFieldName              = "scalability_info"
+	clusterNodeResourcesSummaryDiskFieldName           = "disk"
+	clusterNodeResourcesSummaryRamFieldName            = "ram"
+	clusterNodeResourcesSummaryCpuFieldName            = "cpu"
+	clusterNodeResourcesBaseFieldName                  = "base"
+	clusterNodeResourcesComplimentaryFieldName         = "complimentary"
+	clusterNodeResourcesAdditionalFieldName            = "additional"
+	clusterNodeResourcesReservedFieldName              = "reserved"
+	clusterNodeResourcesAvailableFieldName             = "available"
+	clusterScalabilityInfoStatusFieldName              = "status"
+	clusterScalabilityInfoReasonFieldName              = "reason"
+	configurationFieldName                             = "configuration"
+	nodeConfigurationFieldName                         = "node_configuration"
+	numberOfNodesFieldName                             = "number_of_nodes"
+	packageIDFieldName                                 = "package_id"
+	resourceConfigurationsFieldName                    = "resource_configurations"
+	resourceConfigurationAmountFieldName               = "amount"
+	resourceConfigurationResourceTypeFieldName         = "resource_type"
+	resourceConfigurationResourceUnitFieldName         = "resource_unit"
+	nodeSelectorFieldName                              = "node_selector"
+	tolerationsFieldName                               = "tolerations"
+	tolerationKeyFieldName                             = "key"
+	tolerationOperatorFieldName                        = "operator"
+	tolerationValueFieldName                           = "value"
+	tolerationEffectFieldName                          = "effect"
+	tolerationSecondsFieldName                         = "toleration_seconds"
+	topologySpreadConstraintsFieldName                 = "topology_spread_constraints"
+	topologySpreadConstraintMaxSkewFieldName           = "max_skew"
+	topologySpreadConstraintTopologyKeyFieldName       = "topology_key"
+	topologySpreadConstraintWhenUnsatisfiableFieldName = "when_unsatisfiable"
+	annotationsFieldName                               = "annotations"
+	allowedIpSourceRangesFieldName                     = "allowed_ip_source_ranges"
+	serviceTypeFieldName                               = "service_type"
+	serviceAnnotationsFieldName                        = "service_annotations"
+	podLabelsFieldName                                 = "pod_labels"
+	databaseConfigurationFieldName                     = "database_configuration"
+	dbConfigCollectionFieldName                        = "collection"
+	dbConfigStorageFieldName                           = "storage"
+	dbConfigServiceFieldName                           = "service"
+	dbConfigLogLevelFieldName                          = "log_level"
+	dbConfigTlsFieldName                               = "tls"
+	dbConfigInferenceFieldName                         = "inference"
+	dbConfigReservedCpuPercentageFieldName             = "reserved_cpu_percentage"
+	dbConfigReservedMemoryPercentageFieldName          = "reserved_memory_percentage"
+	dbConfigGpuTypeFieldName                           = "gpu_type"
+	dbConfigRestartPolicyFieldName                     = "restart_policy"
+	dbConfigRebalanceStrategyFieldName                 = "rebalance_strategy"
+	dbConfigCollectionReplicationFactor                = "replication_factor"
+	dbConfigCollectionWriteConsistencyFactor           = "write_consistency_factor"
+	dbConfigCollectionVectorsFieldName                 = "vectors"
+	dbConfigCollectionVectorsOnDiskFieldName           = "on_disk"
+	dbConfigStoragePerformanceFieldName                = "performance"
+	dbConfigStoragePerfOptimizerCpuBudget              = "optimizer_cpu_budget"
+	dbConfigStoragePerfAsyncScorer                     = "async_scorer"
+	dbConfigServiceApiKeyFieldName                     = "api_key"
+	dbConfigServiceReadOnlyApiKeyFieldName             = "read_only_api_key"
+	dbConfigServiceJwtRbacFieldName                    = "jwt_rbac"
+	dbConfigServiceEnableTlsFieldName                  = "enable_tls"
+	dbConfigSecretKeyRefSecretNameFieldName            = "secret_name"
+	dbConfigSecretKeyRefSecretKeyFieldName             = "secret_key"
+	dbConfigTlsCertFieldName                           = "cert"
+	dbConfigTlsKeyFieldName                            = "key"
+	dbConfigInferenceEnabledFieldName                  = "enabled"
 
 	// Backward compatibility.
 	fieldAmount       = "amount"
@@ -281,6 +285,15 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: tolerationSchema(asDataSource),
+			},
+		},
+		topologySpreadConstraintsFieldName: {
+			Description: "List of topology spread constraints for this cluster in a hybrid cloud environment.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			Elem: &schema.Resource{
+				Schema: topologySpreadConstraintSchema(asDataSource),
 			},
 		},
 		annotationsFieldName: {
@@ -684,6 +697,26 @@ func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
 	}
 }
 
+func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		topologySpreadConstraintMaxSkewFieldName: {
+			Type:     schema.TypeInt,
+			Required: !asDataSource,
+			Computed: asDataSource,
+		},
+		topologySpreadConstraintTopologyKeyFieldName: {
+			Type:     schema.TypeString,
+			Required: !asDataSource,
+			Computed: asDataSource,
+		},
+		topologySpreadConstraintWhenUnsatisfiableFieldName: {
+			Type:     schema.TypeString,
+			Required: !asDataSource,
+			Computed: asDataSource,
+		},
+	}
+}
+
 // accountsClusterStatusSchema defines the schema for a cluster status.
 func accountsClusterStatusSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
@@ -888,6 +921,9 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 		if v, ok := item[tolerationsFieldName]; ok {
 			config.Tolerations = expandTolerations(v.([]interface{}))
 		}
+		if v, ok := item[topologySpreadConstraintsFieldName]; ok {
+			config.TopologySpreadConstraints = expandTopologySpreadConstraints(v.([]interface{}))
+		}
 		if v, ok := item[annotationsFieldName]; ok {
 			config.Annotations = expandKeyVal(v.([]interface{}))
 		}
@@ -1039,6 +1075,27 @@ func expandTolerations(v []interface{}) []*qcCluster.Toleration {
 	return result
 }
 
+// expandTopologySpreadConstraints expands topology spread constraints from Terraform data.
+func expandTopologySpreadConstraints(v []interface{}) []*commonv1.TopologySpreadConstraint {
+	var result []*commonv1.TopologySpreadConstraint
+
+	for _, m := range v {
+		item := m.(map[string]interface{})
+		constraint := &commonv1.TopologySpreadConstraint{}
+		if v, ok := item[topologySpreadConstraintMaxSkewFieldName]; ok {
+			constraint.MaxSkew = newPointer(int32(v.(int)))
+		}
+		if v, ok := item[topologySpreadConstraintTopologyKeyFieldName]; ok {
+			constraint.TopologyKey = v.(string)
+		}
+		if v, ok := item[topologySpreadConstraintWhenUnsatisfiableFieldName]; ok {
+			constraint.WhenUnsatisfiable = newPointer(v.(string))
+		}
+		result = append(result, constraint)
+	}
+	return result
+}
+
 // flattenClusters creates an interface from a list of clusters for easy storage in Terraform.
 func flattenClusters(clusters []*qcCluster.Cluster) []interface{} {
 	var flattenedClusters []interface{}
@@ -1084,6 +1141,7 @@ func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) 
 		databaseConfigurationFieldName:     flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
 		nodeSelectorFieldName:              flattenKeyVal(clusterConfig.GetNodeSelector()),
 		tolerationsFieldName:               flattenTolerations(clusterConfig.GetTolerations()),
+		topologySpreadConstraintsFieldName: flattenTopologySpreadConstraints(clusterConfig.GetTopologySpreadConstraints()),
 		annotationsFieldName:               flattenKeyVal(clusterConfig.GetAnnotations()),
 		allowedIpSourceRangesFieldName:     clusterConfig.GetAllowedIpSourceRanges(),
 		serviceTypeFieldName:               clusterConfig.GetServiceType().String(),
@@ -1159,6 +1217,25 @@ func flattenTolerations(tolerations []*qcCluster.Toleration) []interface{} {
 		}
 
 		result = append(result, tolerationMap)
+	}
+	return result
+}
+
+// flattenTopologySpreadConstraints flattens topology spread constraints for storage in Terraform.
+func flattenTopologySpreadConstraints(constraints []*commonv1.TopologySpreadConstraint) []interface{} {
+	var result []interface{}
+	for _, c := range constraints {
+		constraintMap := map[string]interface{}{}
+		if c.MaxSkew != nil {
+			constraintMap[topologySpreadConstraintMaxSkewFieldName] = int(c.GetMaxSkew())
+		}
+		if c.TopologyKey != "" {
+			constraintMap[topologySpreadConstraintTopologyKeyFieldName] = c.GetTopologyKey()
+		}
+		if c.WhenUnsatisfiable != nil {
+			constraintMap[topologySpreadConstraintWhenUnsatisfiableFieldName] = c.GetWhenUnsatisfiable()
+		}
+		result = append(result, constraintMap)
 	}
 	return result
 }

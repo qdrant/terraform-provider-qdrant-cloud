@@ -137,6 +137,7 @@ Optional:
 - `service_annotations` (Block List) List of annotations applied to the service of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--service_annotations))
 - `service_type` (String) The type of service to use for this cluster in a hybrid cloud environment.
 - `tolerations` (Block List) List of tolerations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--tolerations))
+- `topology_spread_constraints` (Block List) List of topology spread constraints for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints))
 - `version` (String) Cluster Schema Version of the Qdrant cluster field
 
 Read-Only:
@@ -323,6 +324,16 @@ Optional:
 - `operator` (String)
 - `toleration_seconds` (Number)
 - `value` (String)
+
+
+<a id="nestedblock--configuration--topology_spread_constraints"></a>
+### Nested Schema for `configuration.topology_spread_constraints`
+
+Required:
+
+- `max_skew` (Number)
+- `topology_key` (String)
+- `when_unsatisfiable` (String)
 
 
 

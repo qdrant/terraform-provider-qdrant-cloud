@@ -60,6 +60,13 @@ func TestResourceClusterFlatten(t *testing.T) {
 					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
 				},
 			},
+			TopologySpreadConstraints: []*commonv1.TopologySpreadConstraint{
+				{
+					MaxSkew:           newPointer(int32(1)),
+					TopologyKey:       "topology.kubernetes.io/zone",
+					WhenUnsatisfiable: newPointer("DoNotSchedule"),
+				},
+			},
 			Annotations: []*commonv1.KeyValue{
 				{Key: "anno1", Value: "annoval1"},
 			},
@@ -232,6 +239,13 @@ func TestResourceClusterFlatten(t *testing.T) {
 						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
 					},
 				},
+				topologySpreadConstraintsFieldName: []interface{}{
+					map[string]interface{}{
+						topologySpreadConstraintMaxSkewFieldName:           1,
+						topologySpreadConstraintTopologyKeyFieldName:       "topology.kubernetes.io/zone",
+						topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+					},
+				},
 				annotationsFieldName: []interface{}{
 					map[string]interface{}{"key": "anno1", "value": "annoval1"},
 				},
@@ -297,6 +311,13 @@ func TestExpandCluster(t *testing.T) {
 					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
 					Value:    "value1",
 					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
+				},
+			},
+			TopologySpreadConstraints: []*commonv1.TopologySpreadConstraint{
+				{
+					MaxSkew:           newPointer(int32(1)),
+					TopologyKey:       "topology.kubernetes.io/zone",
+					WhenUnsatisfiable: newPointer("DoNotSchedule"),
 				},
 			},
 			ServiceType: newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
@@ -378,6 +399,13 @@ func TestExpandCluster(t *testing.T) {
 						tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL",
 						tolerationValueFieldName:    "value1",
 						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
+					},
+				},
+				topologySpreadConstraintsFieldName: []interface{}{
+					map[string]interface{}{
+						topologySpreadConstraintMaxSkewFieldName:           1,
+						topologySpreadConstraintTopologyKeyFieldName:       "topology.kubernetes.io/zone",
+						topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
 					},
 				},
 				serviceTypeFieldName:     "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",

@@ -89,6 +89,7 @@ Read-Only:
 - `service_annotations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--service_annotations))
 - `service_type` (String)
 - `tolerations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--tolerations))
+- `topology_spread_constraints` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--topology_spread_constraints))
 - `version` (String)
 
 <a id="nestedobjatt--configuration--annotations"></a>
@@ -268,6 +269,16 @@ Read-Only:
 - `operator` (String)
 - `toleration_seconds` (Number)
 - `value` (String)
+
+
+<a id="nestedobjatt--configuration--topology_spread_constraints"></a>
+### Nested Schema for `configuration.topology_spread_constraints`
+
+Read-Only:
+
+- `max_skew` (Number)
+- `topology_key` (String)
+- `when_unsatisfiable` (String)
 
 
 
