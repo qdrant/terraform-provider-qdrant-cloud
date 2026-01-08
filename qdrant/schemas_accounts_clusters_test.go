@@ -54,9 +54,9 @@ func TestResourceClusterFlatten(t *testing.T) {
 			},
 			Tolerations: []*qcCluster.Toleration{
 				{
-					Key:      "key1",
+					Key:      newPointer("key1"),
 					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
-					Value:    "value1",
+					Value:    newPointer("value1"),
 					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
 				},
 			},
@@ -307,9 +307,9 @@ func TestExpandCluster(t *testing.T) {
 			},
 			Tolerations: []*qcCluster.Toleration{
 				{
-					Key:      "key1",
+					Key:      newPointer("key1"),
 					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
-					Value:    "value1",
+					Value:    newPointer("value1"),
 					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
 				},
 			},
