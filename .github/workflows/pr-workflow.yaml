@@ -20,7 +20,7 @@ jobs:
           
       - uses: actions/setup-go@v6
         with:
-          go-version: '^1.24'
+          go-version: '^1.25'
           cache: false
 
       - name: Check Go Formatting
@@ -60,7 +60,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: '^1.24'
+          go-version: '^1.25'
           cache: false
 
       - name: Setup Terraform

@@ -5,7 +5,7 @@ If you find any issues or would like to contribute, feel free to create an issue
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 1.7.x+
-- [Go](https://golang.org/doc/install) 1.24+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.25+ (to build the provider plugin)
 
 ## Building & Using the Provider (Local Development)
 

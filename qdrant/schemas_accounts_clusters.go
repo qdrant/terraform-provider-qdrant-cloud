@@ -1049,9 +1049,12 @@ func expandTolerations(v []interface{}) []*qcCluster.Toleration {
 	var result []*qcCluster.Toleration
 	for _, m := range v {
 		item := m.(map[string]interface{})
-		toleration := &qcCluster.Toleration{
-			Key:   item[tolerationKeyFieldName].(string),
-			Value: item[tolerationValueFieldName].(string),
+		toleration := &qcCluster.Toleration{}
+		if v, ok := item[tolerationKeyFieldName]; ok {
+			toleration.Key = newPointer(v.(string))
+		}
+		if v, ok := item[tolerationValueFieldName]; ok {
+			toleration.Value = newPointer(v.(string))
 		}
 		if op, ok := item[tolerationOperatorFieldName]; ok {
 			opVal, opOk := qcCluster.TolerationOperator_value[op.(string)]
@@ -1202,9 +1205,12 @@ func flattenKeyVal(kvs []*commonv1.KeyValue) []interface{} {
 func flattenTolerations(tolerations []*qcCluster.Toleration) []interface{} {
 	var result []interface{}
 	for _, t := range tolerations {
-		tolerationMap := map[string]interface{}{
-			tolerationKeyFieldName:   t.GetKey(),
-			tolerationValueFieldName: t.GetValue(),
+		tolerationMap := map[string]interface{}{}
+		if t.Key != nil {
+			tolerationMap[tolerationKeyFieldName] = t.GetKey()
+		}
+		if t.Value != nil {
+			tolerationMap[tolerationValueFieldName] = t.GetValue()
 		}
 		if t.Operator != nil {
 			tolerationMap[tolerationOperatorFieldName] = t.GetOperator().String()
@@ -1215,7 +1221,6 @@ func flattenTolerations(tolerations []*qcCluster.Toleration) []interface{} {
 		if t.TolerationSeconds != nil {
 			tolerationMap[tolerationSecondsFieldName] = int(t.GetTolerationSeconds())
 		}
-
 		result = append(result, tolerationMap)
 	}
 	return result
