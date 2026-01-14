@@ -39,6 +39,9 @@ const (
 	hcEnvCfgVolumeSnapshotStorageClassFieldName = "volume_snapshot_storage_class"
 	hcEnvCfgLogLevelFieldName                   = "log_level"
 	hcEnvCfgAdvancedOperatorSettingsFieldName   = "advanced_operator_settings"
+	hcEnvCfgNodeSelectorFieldName               = "node_selector"
+	hcEnvCfgTolerationsFieldName                = "tolerations"
+	hcEnvCfgControlPlaneLabelsFieldName         = "control_plane_labels"
 
 	hcEnvStatusLastModifiedAtFieldName           = "last_modified_at"
 	hcEnvStatusPhaseFieldName                    = "phase"
@@ -237,6 +240,30 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 				}
 				out, _ := yaml.Marshal(data)
 				return string(out)
+			},
+		},
+		hcEnvCfgNodeSelectorFieldName: {
+			Description: "Node selector labels for scheduling control plane components.",
+			Type:        schema.TypeList,
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(false),
+			},
+		},
+		hcEnvCfgTolerationsFieldName: {
+			Description: "Tolerations for scheduling control plane components.",
+			Type:        schema.TypeList,
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: tolerationSchema(false),
+			},
+		},
+		hcEnvCfgControlPlaneLabelsFieldName: {
+			Description: "Additional labels to apply to control plane components.",
+			Type:        schema.TypeList,
+			Optional:    true,
+			Elem: &schema.Resource{
+				Schema: keyValSchema(false),
 			},
 		},
 	}
@@ -446,6 +473,9 @@ func flattenHCEnvConfiguration(cfg *qch.HybridCloudEnvironmentConfiguration) []i
 		hcEnvCfgDatabaseStorageClassFieldName:       cfg.GetDatabaseStorageClass(),
 		hcEnvCfgSnapshotStorageClassFieldName:       cfg.GetSnapshotStorageClass(),
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: cfg.GetVolumeSnapshotStorageClass(),
+		hcEnvCfgTolerationsFieldName:                flattenTolerations(cfg.GetTolerations()),
+		hcEnvCfgNodeSelectorFieldName:               flattenKeyVal(cfg.GetNodeSelector()),
+		hcEnvCfgControlPlaneLabelsFieldName:         flattenKeyVal(cfg.GetControlPlaneLabels()),
 	}
 	if adv := cfg.GetAdvancedOperatorSettings(); adv != nil {
 		advMap := adv.AsMap()
@@ -526,6 +556,15 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 				}
 			}
 		}
+	}
+	if val, ok := m[hcEnvCfgNodeSelectorFieldName]; ok {
+		config.NodeSelector = expandKeyVal(val.([]interface{}))
+	}
+	if val, ok := m[hcEnvCfgTolerationsFieldName]; ok {
+		config.Tolerations = expandTolerations(val.([]interface{}))
+	}
+	if val, ok := m[hcEnvCfgControlPlaneLabelsFieldName]; ok {
+		config.ControlPlaneLabels = expandKeyVal(val.([]interface{}))
 	}
 
 	return config

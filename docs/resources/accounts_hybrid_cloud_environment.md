@@ -124,18 +124,51 @@ Optional:
 - `ca_certificates` (String) CA certificates for custom certificate authorities.
 - `chart_repository_url` (String) Chart registry URL.
 - `container_registry_url` (String) Container registry URL.
+- `control_plane_labels` (Block List) Additional labels to apply to control plane components. (see [below for nested schema](#nestedblock--configuration--control_plane_labels))
 - `database_storage_class` (String) Default database storage class.
 - `http_proxy_url` (String) Optional HTTP proxy URL.
 - `https_proxy_url` (String) Optional HTTPS proxy URL.
 - `log_level` (String) Log level for deployed components.
 - `no_proxy_configs` (List of String) List of hosts that should not be proxied.
+- `node_selector` (Block List) Node selector labels for scheduling control plane components. (see [below for nested schema](#nestedblock--configuration--node_selector))
 - `registry_secret_name` (String) Kubernetes secret name containing registry credentials.
 - `snapshot_storage_class` (String) Default snapshot storage class.
+- `tolerations` (Block List) Tolerations for scheduling control plane components. (see [below for nested schema](#nestedblock--configuration--tolerations))
 - `volume_snapshot_storage_class` (String) Default volume snapshot storage class.
 
 Read-Only:
 
 - `last_modified_at` (String) Last modification timestamp of the configuration.
+
+<a id="nestedblock--configuration--control_plane_labels"></a>
+### Nested Schema for `configuration.control_plane_labels`
+
+Required:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedblock--configuration--node_selector"></a>
+### Nested Schema for `configuration.node_selector`
+
+Required:
+
+- `key` (String)
+- `value` (String)
+
+
+<a id="nestedblock--configuration--tolerations"></a>
+### Nested Schema for `configuration.tolerations`
+
+Optional:
+
+- `effect` (String)
+- `key` (String)
+- `operator` (String)
+- `toleration_seconds` (Number)
+- `value` (String)
+
 
 
 <a id="nestedatt--status"></a>
