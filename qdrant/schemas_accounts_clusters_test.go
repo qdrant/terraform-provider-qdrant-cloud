@@ -44,7 +44,6 @@ func TestResourceClusterFlatten(t *testing.T) {
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:         &commonv1.SecretKeyRef{Name: "api-key-secret", Key: "api-key"},
 					ReadOnlyApiKey: &commonv1.SecretKeyRef{Name: "ro-api-key-secret", Key: "ro-api-key"},
-					JwtRbac:        newPointer(true),
 				},
 				LogLevel: newPointer(qcCluster.DatabaseConfigurationLogLevel_DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG),
 				Tls: &qcCluster.DatabaseConfigurationTls{
@@ -222,7 +221,6 @@ func TestResourceClusterFlatten(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "ro-api-key",
 									},
 								},
-								dbConfigServiceJwtRbacFieldName: cluster.GetConfiguration().GetDatabaseConfiguration().GetService().GetJwtRbac(), //nolint: staticcheck // deprecated
 							},
 						},
 						dbConfigLogLevelFieldName: "DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG",
@@ -317,7 +315,6 @@ func TestExpandCluster(t *testing.T) {
 				},
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:    &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
-					JwtRbac:   newPointer(false),
 					EnableTls: newPointer(false)},
 				Tls: &qcCluster.DatabaseConfigurationTls{
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
@@ -435,7 +432,8 @@ func TestExpandCluster(t *testing.T) {
 		},
 	})
 
-	result, err := expandCluster(d, expected.GetAccountId())
+	result, jwtRbac, err := expandCluster(d, expected.GetAccountId())
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
+	assert.Nil(t, jwtRbac)
 }
