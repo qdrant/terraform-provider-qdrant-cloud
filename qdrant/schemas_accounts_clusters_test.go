@@ -222,7 +222,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "ro-api-key",
 									},
 								},
-								dbConfigServiceJwtRbacFieldName: cluster.GetConfiguration().GetDatabaseConfiguration().GetService().GetJwtRbac(),
+								dbConfigServiceJwtRbacFieldName: cluster.GetConfiguration().GetDatabaseConfiguration().GetService().GetJwtRbac(), //nolint: staticcheck // deprecated
 							},
 						},
 						dbConfigLogLevelFieldName: "DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG",
