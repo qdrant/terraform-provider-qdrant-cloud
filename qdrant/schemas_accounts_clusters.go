@@ -486,7 +486,7 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
-				Schema: databaseConfigurationInferenceSchema(asDataSource),
+				Schema: databaseConfigurationInferenceSchema(),
 			},
 		},
 	}
@@ -620,7 +620,7 @@ func databaseConfigurationTlsSchema(asDataSource bool) map[string]*schema.Schema
 }
 
 // databaseConfigurationInferenceSchema defines the schema for inference configuration.
-func databaseConfigurationInferenceSchema(asDataSource bool) map[string]*schema.Schema {
+func databaseConfigurationInferenceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		dbConfigInferenceEnabledFieldName: {
 			Type:     schema.TypeBool,
