@@ -221,6 +221,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "ro-api-key",
 									},
 								},
+								dbConfigServiceJwtRbacFieldName: false,
 							},
 						},
 						dbConfigLogLevelFieldName: "DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG",
