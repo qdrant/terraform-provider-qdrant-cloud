@@ -482,8 +482,8 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 		dbConfigInferenceFieldName: {
 			Description: "Inference service configuration.",
 			Type:        schema.TypeList,
-			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Optional:    true,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationInferenceSchema(asDataSource),
@@ -624,8 +624,8 @@ func databaseConfigurationInferenceSchema(asDataSource bool) map[string]*schema.
 	return map[string]*schema.Schema{
 		dbConfigInferenceEnabledFieldName: {
 			Type:     schema.TypeBool,
-			Optional: !asDataSource,
-			Computed: asDataSource,
+			Optional: true,
+			Computed: true,
 		},
 	}
 }
