@@ -35,16 +35,22 @@ func TestResourceClusterFlatten(t *testing.T) {
 					ReplicationFactor:      newPointer(uint32(2)),
 					WriteConsistencyFactor: newPointer(int32(1)),
 				},
+				Storage: &qcCluster.DatabaseConfigurationStorage{
+					Performance: &qcCluster.DatabaseConfigurationStoragePerformance{
+						OptimizerCpuBudget: newPointer(int32(10)),
+						AsyncScorer:        newPointer(true),
+					},
+				},
 				Service: &qcCluster.DatabaseConfigurationService{
 					ApiKey:         &commonv1.SecretKeyRef{Name: "api-key-secret", Key: "api-key"},
 					ReadOnlyApiKey: &commonv1.SecretKeyRef{Name: "ro-api-key-secret", Key: "ro-api-key"},
-					JwtRbac:        newPointer(true),
 				},
 				LogLevel: newPointer(qcCluster.DatabaseConfigurationLogLevel_DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG),
 				Tls: &qcCluster.DatabaseConfigurationTls{
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret", Key: "cert.pem"},
 					Key:  &commonv1.SecretKeyRef{Name: "key-secret", Key: "key.pem"},
 				},
+				Inference: &qcCluster.DatabaseConfigurationInference{Enabled: true},
 			},
 			AdditionalResources: &qcCluster.AdditionalResources{
 				Disk: 8,
@@ -191,6 +197,16 @@ func TestResourceClusterFlatten(t *testing.T) {
 								dbConfigCollectionWriteConsistencyFactor: 1,
 							},
 						},
+						dbConfigStorageFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigStoragePerformanceFieldName: []interface{}{
+									map[string]interface{}{
+										dbConfigStoragePerfOptimizerCpuBudget: 10,
+										dbConfigStoragePerfAsyncScorer:        true,
+									},
+								},
+							},
+						},
 						dbConfigServiceFieldName: []interface{}{
 							map[string]interface{}{
 								dbConfigServiceApiKeyFieldName: []interface{}{
@@ -205,8 +221,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "ro-api-key",
 									},
 								},
-								dbConfigServiceJwtRbacFieldName:   cluster.GetConfiguration().GetDatabaseConfiguration().GetService().GetJwtRbac(),
-								dbConfigServiceEnableTlsFieldName: false,
+								dbConfigServiceJwtRbacFieldName: false,
 							},
 						},
 						dbConfigLogLevelFieldName: "DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG",
@@ -224,6 +239,11 @@ func TestResourceClusterFlatten(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "key.pem",
 									},
 								},
+							},
+						},
+						dbConfigInferenceFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigInferenceEnabledFieldName: true,
 							},
 						},
 					},
@@ -295,9 +315,8 @@ func TestExpandCluster(t *testing.T) {
 					WriteConsistencyFactor: newPointer(int32(2)),
 				},
 				Service: &qcCluster.DatabaseConfigurationService{
-					ApiKey:  &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
-					JwtRbac: newPointer(false),
-				},
+					ApiKey:    &commonv1.SecretKeyRef{Name: "api-key-secret-expand", Key: "api-key-expand"},
+					EnableTls: newPointer(false)},
 				Tls: &qcCluster.DatabaseConfigurationTls{
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
 				},
@@ -414,7 +433,8 @@ func TestExpandCluster(t *testing.T) {
 		},
 	})
 
-	result, err := expandCluster(d, expected.GetAccountId())
+	result, jwtRbac, err := expandCluster(d, expected.GetAccountId())
 	require.NoError(t, err)
 	assert.Equal(t, expected, result)
+	assert.Nil(t, jwtRbac)
 }

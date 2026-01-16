@@ -246,7 +246,7 @@ func flattenBackupClusterInfo(ci *qcb.ClusterInfo) []interface{} {
 	if pkg := ci.GetRestorePackageId(); pkg != "" {
 		m[bClusterInfoRestorePackageID] = pkg
 	}
-	m[bClusterCfgField] = flattenClusterConfiguration(ci.GetConfiguration())
+	m[bClusterCfgField] = flattenClusterConfiguration(ci.GetConfiguration(), nil)
 	return []interface{}{m}
 }
 
