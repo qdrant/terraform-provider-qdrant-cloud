@@ -1290,36 +1290,6 @@ func expandDatabaseConfiguration(v []interface{}) (*qcCluster.DatabaseConfigurat
 	return config, jwtRbac
 }
 
-// expandDatabaseConfigurationCollection expands collection configuration from Terraform data.
-func expandDatabaseConfigurationCollection(v []interface{}) *qcCluster.DatabaseConfigurationCollection {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	collItem := v[0].(map[string]interface{})
-	collConfig := &qcCluster.DatabaseConfigurationCollection{}
-	if v, ok := collItem[dbConfigCollectionReplicationFactor]; ok {
-		val := uint32(v.(int))
-		if val > 0 {
-			collConfig.ReplicationFactor = &val
-		}
-	}
-	if v, ok := collItem[dbConfigCollectionWriteConsistencyFactor]; ok {
-		val := int32(v.(int))
-		if val > 0 {
-			collConfig.WriteConsistencyFactor = &val
-		}
-	}
-	if v, ok := collItem[dbConfigCollectionVectorsFieldName]; ok && len(v.([]interface{})) > 0 {
-		vecItem := v.([]interface{})[0].(map[string]interface{})
-		if onDisk, ok := vecItem[dbConfigCollectionVectorsOnDiskFieldName]; ok {
-			collConfig.Vectors = &qcCluster.DatabaseConfigurationCollectionVectors{
-				OnDisk: newPointer(onDisk.(bool)),
-			}
-		}
-	}
-	return collConfig
-}
-
 // expandDatabaseConfigurationStorage expands storage configuration from Terraform data.
 func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConfigurationStorage {
 	if len(v) == 0 || v[0] == nil {
@@ -1431,77 +1401,6 @@ func expandDatabaseConfigurationCollection(v []interface{}) *qcCluster.DatabaseC
 		}
 	}
 	return collConfig
-}
-
-// expandDatabaseConfigurationStorage expands storage configuration from Terraform data.
-func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConfigurationStorage {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	storageItem := v[0].(map[string]interface{})
-	storageConfig := &qcCluster.DatabaseConfigurationStorage{}
-	if v, ok := storageItem[dbConfigStoragePerformanceFieldName]; ok && len(v.([]interface{})) > 0 {
-		perfItem := v.([]interface{})[0].(map[string]interface{})
-		perfConfig := &qcCluster.DatabaseConfigurationStoragePerformance{}
-		if budget, ok := perfItem[dbConfigStoragePerfOptimizerCpuBudget]; ok {
-			perfConfig.OptimizerCpuBudget = newPointer(int32(budget.(int)))
-		}
-		if scorer, ok := perfItem[dbConfigStoragePerfAsyncScorer]; ok {
-			perfConfig.AsyncScorer = newPointer(scorer.(bool))
-		}
-		storageConfig.Performance = perfConfig
-	}
-	return storageConfig
-}
-
-// expandDatabaseConfigurationService expands service configuration from Terraform data.
-func expandDatabaseConfigurationService(v []interface{}) *qcCluster.DatabaseConfigurationService {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	serviceItem := v[0].(map[string]interface{})
-	serviceConfig := &qcCluster.DatabaseConfigurationService{}
-	if v, ok := serviceItem[dbConfigServiceApiKeyFieldName]; ok {
-		serviceConfig.ApiKey = expandSecretKeyRef(v.([]interface{}))
-	}
-	if v, ok := serviceItem[dbConfigServiceReadOnlyApiKeyFieldName]; ok {
-		serviceConfig.ReadOnlyApiKey = expandSecretKeyRef(v.([]interface{}))
-	}
-	if v, ok := serviceItem[dbConfigServiceJwtRbacFieldName]; ok {
-		serviceConfig.JwtRbac = newPointer(v.(bool)) //nolint: staticcheck // deprecated
-	}
-	if v, ok := serviceItem[dbConfigServiceEnableTlsFieldName]; ok {
-		serviceConfig.EnableTls = newPointer(v.(bool))
-	}
-	return serviceConfig
-}
-
-// expandDatabaseConfigurationTls expands TLS configuration from Terraform data.
-func expandDatabaseConfigurationTls(v []interface{}) *qcCluster.DatabaseConfigurationTls {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	tlsItem := v[0].(map[string]interface{})
-	tlsConfig := &qcCluster.DatabaseConfigurationTls{}
-	if v, ok := tlsItem[dbConfigTlsCertFieldName]; ok {
-		tlsConfig.Cert = expandSecretKeyRef(v.([]interface{}))
-	}
-	if v, ok := tlsItem[dbConfigTlsKeyFieldName]; ok {
-		tlsConfig.Key = expandSecretKeyRef(v.([]interface{}))
-	}
-	return tlsConfig
-}
-
-// expandDatabaseConfigurationInference expands inference configuration from Terraform data.
-func expandDatabaseConfigurationInference(v []interface{}) *qcCluster.DatabaseConfigurationInference {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	infItem := v[0].(map[string]interface{})
-	if enabled, ok := infItem[dbConfigInferenceEnabledFieldName]; ok {
-		return &qcCluster.DatabaseConfigurationInference{Enabled: enabled.(bool)}
-	}
-	return nil
 }
 
 // expandSecretKeyRef expands a secret key reference from Terraform data.
