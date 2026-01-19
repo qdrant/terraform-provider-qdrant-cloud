@@ -75,9 +75,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 	// Get a client
 	client := qcCluster.NewClusterServiceClient(apiClientConn)
 	// Expand the cluster
-	cluster, _, err := expandCluster(d, getDefaultAccountID(m))
+	cluster, jwtRbac, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+	if jwtRbac != nil {
+		// If jwtRbac is not nil, we need to add the value ("true" or "false") to the gRPC context with key "qc_jwt_rbac"
+		clientCtx = metadata.AppendToOutgoingContext(clientCtx, "qc_jwt_rbac", fmt.Sprintf("%t", *jwtRbac))
 	}
 	// Create the cluster
 	var trailer metadata.MD
