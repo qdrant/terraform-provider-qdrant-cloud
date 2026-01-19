@@ -1290,6 +1290,36 @@ func expandDatabaseConfiguration(v []interface{}) (*qcCluster.DatabaseConfigurat
 	return config, jwtRbac
 }
 
+// expandDatabaseConfigurationCollection expands collection configuration from Terraform data.
+func expandDatabaseConfigurationCollection(v []interface{}) *qcCluster.DatabaseConfigurationCollection {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	collItem := v[0].(map[string]interface{})
+	collConfig := &qcCluster.DatabaseConfigurationCollection{}
+	if v, ok := collItem[dbConfigCollectionReplicationFactor]; ok {
+		val := uint32(v.(int))
+		if val > 0 {
+			collConfig.ReplicationFactor = &val
+		}
+	}
+	if v, ok := collItem[dbConfigCollectionWriteConsistencyFactor]; ok {
+		val := int32(v.(int))
+		if val > 0 {
+			collConfig.WriteConsistencyFactor = &val
+		}
+	}
+	if v, ok := collItem[dbConfigCollectionVectorsFieldName]; ok && len(v.([]interface{})) > 0 {
+		vecItem := v.([]interface{})[0].(map[string]interface{})
+		if onDisk, ok := vecItem[dbConfigCollectionVectorsOnDiskFieldName]; ok {
+			collConfig.Vectors = &qcCluster.DatabaseConfigurationCollectionVectors{
+				OnDisk: newPointer(onDisk.(bool)),
+			}
+		}
+	}
+	return collConfig
+}
+
 // expandDatabaseConfigurationStorage expands storage configuration from Terraform data.
 func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConfigurationStorage {
 	if len(v) == 0 || v[0] == nil {
@@ -1371,36 +1401,6 @@ func expandDatabaseConfigurationInference(v []interface{}) *qcCluster.DatabaseCo
 		return &qcCluster.DatabaseConfigurationInference{Enabled: enabled.(bool)}
 	}
 	return nil
-}
-
-// expandDatabaseConfigurationCollection expands collection configuration from Terraform data.
-func expandDatabaseConfigurationCollection(v []interface{}) *qcCluster.DatabaseConfigurationCollection {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	collItem := v[0].(map[string]interface{})
-	collConfig := &qcCluster.DatabaseConfigurationCollection{}
-	if v, ok := collItem[dbConfigCollectionReplicationFactor]; ok {
-		val := uint32(v.(int))
-		if val > 0 {
-			collConfig.ReplicationFactor = &val
-		}
-	}
-	if v, ok := collItem[dbConfigCollectionWriteConsistencyFactor]; ok {
-		val := int32(v.(int))
-		if val > 0 {
-			collConfig.WriteConsistencyFactor = &val
-		}
-	}
-	if v, ok := collItem[dbConfigCollectionVectorsFieldName]; ok && len(v.([]interface{})) > 0 {
-		vecItem := v.([]interface{})[0].(map[string]interface{})
-		if onDisk, ok := vecItem[dbConfigCollectionVectorsOnDiskFieldName]; ok {
-			collConfig.Vectors = &qcCluster.DatabaseConfigurationCollectionVectors{
-				OnDisk: newPointer(onDisk.(bool)),
-			}
-		}
-	}
-	return collConfig
 }
 
 // expandSecretKeyRef expands a secret key reference from Terraform data.
