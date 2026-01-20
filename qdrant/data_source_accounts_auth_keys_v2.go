@@ -29,12 +29,10 @@ func dataSourceAccountsAuthKeysV2() *schema.Resource {
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataAccountsAuthKeysV2Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error listing API Keys (v2)"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, authv2.NewDatabaseApiKeyServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := authv2.NewDatabaseApiKeyServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))

@@ -55,6 +55,24 @@ func getClientConnection(ctx context.Context, m interface{}) (*grpc.ClientConn, 
 	return conn, ctxWithToken, nil
 }
 
+// getServiceClient creates a gRPC service client of a specific type.
+// It handles getting the connection, context, and checking for initial diagnostics.
+// Returns: The service client, the enriched context to use, and TF Diagnostics.
+func getServiceClient[T any](
+	ctx context.Context,
+	m interface{},
+	newClientFunc func(cc grpc.ClientConnInterface) T,
+) (T, context.Context, diag.Diagnostics) {
+	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	if diags.HasError() {
+		var zero T // return zero value for the client
+		return zero, nil, diags
+	}
+
+	client := newClientFunc(apiClientConn)
+	return client, clientCtx, nil
+}
+
 // getAccountUUID get the Account ID as UUID, if defined at resouce level that is used, otherwise it fallback to the default on, specified on provider level.
 // if no account ID can be found an error will be returned.
 func getAccountUUID(d *schema.ResourceData, m interface{}) (uuid.UUID, error) {

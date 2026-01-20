@@ -78,6 +78,9 @@ func resourceUserRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 	toAdd, _ := diffStringSets(desired, current)
 	if len(toAdd) > 0 {
 		if reqID, err = assignUserRoles(clientCtx, iamClient, accountID, userID, toAdd, nil); err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+				return diag.Errorf("Invalid argument for assigning user roles%s: %s", reqID, st.Message())
+			}
 			return diag.FromErr(fmt.Errorf("%s%s: %w", op, reqID, err))
 		}
 	}
@@ -96,14 +99,10 @@ func resourceUserRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceUserRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error reading user roles"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	acctClient, clientCtx, diags := getServiceClient(ctx, m, qca.NewAccountServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get client
-	acctClient := qca.NewAccountServiceClient(apiClientConn)
-
 	// Get account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -208,6 +207,9 @@ func resourceUserRolesUpdate(ctx context.Context, d *schema.ResourceData, m inte
 	// Single RPC with both add + delete if needed
 	if len(toAdd) > 0 || len(toDelete) > 0 {
 		if reqID, err = assignUserRoles(clientCtx, iamClient, accountID, userID, toAdd, toDelete); err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+				return diag.Errorf("Invalid argument for updating user roles%s: %s", reqID, st.Message())
+			}
 			return diag.FromErr(fmt.Errorf("%s%s: %w", op, reqID, err))
 		}
 	}
@@ -273,6 +275,9 @@ func resourceUserRolesDelete(ctx context.Context, d *schema.ResourceData, m inte
 	toDelete := intersectStrings(current, desired)
 	if len(toDelete) > 0 {
 		if reqID, err = assignUserRoles(clientCtx, iamClient, accountID, userID, nil, toDelete); err != nil {
+			if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+				return diag.Errorf("Invalid argument for revoking user roles%s: %s", reqID, st.Message())
+			}
 			return diag.FromErr(fmt.Errorf("%s%s: %w", op, reqID, err))
 		}
 	}

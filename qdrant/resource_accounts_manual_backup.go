@@ -39,13 +39,10 @@ func resourceAccountsManualBackup() *schema.Resource {
 func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating backup"
 
-	// Client
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qcb.NewBackupServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	client := qcb.NewBackupServiceClient(apiClientConn)
-
 	// Build request
 	backup, err := expandBackup(d, getDefaultAccountID(m))
 	if err != nil {
@@ -58,9 +55,12 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, m interfa
 		&qcb.CreateBackupRequest{Backup: backup},
 		grpc.Trailer(&trailer),
 	)
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for backup creation%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 
 	created := resp.GetBackup()
@@ -83,13 +83,10 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceBackupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error reading backup"
 
-	// Client
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qcb.NewBackupServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	client := qcb.NewBackupServiceClient(apiClientConn)
-
 	// Account from state or provider default
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -145,13 +142,10 @@ func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting backup"
 
-	// Client
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qcb.NewBackupServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	client := qcb.NewBackupServiceClient(apiClientConn)
-
 	// Account from state or provider default
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
