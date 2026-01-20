@@ -7,7 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	qcAuth "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v1"
 )
@@ -35,13 +37,10 @@ func resourceAccountsAuthKey() *schema.Resource {
 // m: The interface where the configured client is passed.
 func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error getting API key"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, qcAuth.NewDatabaseApiKeyServiceClient) //nolint: staticcheck //SA1019: deprecated: Do not use.
+	if diags.HasError() {
+		return diags
 	}
-	// Get a client
-	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn) //nolint: staticcheck //SA1019: deprecated: Do not use.
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -84,13 +83,10 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, m interface
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating API Key"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, qcAuth.NewDatabaseApiKeyServiceClient) //nolint: staticcheck //SA1019: deprecated: Do not use.
+	if diags.HasError() {
+		return diags
 	}
-	// Get a client
-	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn) //nolint: staticcheck //SA1019: deprecated: Do not use.
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -114,10 +110,12 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 			ClusterIds: clusterIDs,
 		},
 	}, grpc.Trailer(&trailer))
-	// enrich prefix with request ID
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for API key creation%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenAuthKey(resp.GetDatabaseApiKey(), true) {
@@ -136,13 +134,10 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, m interfa
 // m: The interface where the configured client is passed.
 func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting API Key"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, qcAuth.NewDatabaseApiKeyServiceClient) //nolint: staticcheck //SA1019: deprecated: Do not use.
+	if diags.HasError() {
+		return diags
 	}
-	// Get a client
-	client := qcAuth.NewDatabaseApiKeyServiceClient(apiClientConn) //nolint: staticcheck //SA1019: deprecated: Do not use.
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -154,10 +149,13 @@ func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, m interfa
 		AccountId:        accountUUID.String(),
 		DatabaseApiKeyId: d.Id(),
 	}, grpc.Trailer(&trailer))
-	// enrich prefix with request ID
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 	// Clear the resource ID to mark as deleted
 	d.SetId("")

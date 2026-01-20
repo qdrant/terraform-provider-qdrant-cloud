@@ -27,13 +27,10 @@ func dataSourceBookingPackages() *schema.Resource {
 // m: The Terraform meta object containing the client configuration.
 func dataBookingPackagesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error listing packages"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, qcBooking.NewBookingServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	// Get a client
-	client := qcBooking.NewBookingServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {

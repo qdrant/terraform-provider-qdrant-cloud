@@ -41,12 +41,10 @@ func resourceAccountsBackupSchedule() *schema.Resource {
 
 func resourceBackupScheduleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating backup schedule"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, backupv1.NewBackupServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := backupv1.NewBackupServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -59,9 +57,12 @@ func resourceBackupScheduleCreate(ctx context.Context, d *schema.ResourceData, m
 	resp, err := client.CreateBackupSchedule(clientCtx, &backupv1.CreateBackupScheduleRequest{
 		BackupSchedule: schedule,
 	}, grpc.Trailer(&trailer))
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for backup schedule creation%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 
 	d.SetId(resp.GetBackupSchedule().GetId())
@@ -70,12 +71,10 @@ func resourceBackupScheduleCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceBackupScheduleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error reading backup schedule"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, backupv1.NewBackupServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := backupv1.NewBackupServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -87,9 +86,13 @@ func resourceBackupScheduleRead(ctx context.Context, d *schema.ResourceData, m i
 		ClusterId:        d.Get(backupScheduleClusterIDFieldName).(string),
 		BackupScheduleId: d.Id(),
 	}, grpc.Trailer(&trailer))
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 
 	flattened := flattenBackupSchedule(resp.GetBackupSchedule())
@@ -104,12 +107,10 @@ func resourceBackupScheduleRead(ctx context.Context, d *schema.ResourceData, m i
 
 func resourceBackupScheduleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error updating backup schedule"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, backupv1.NewBackupServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := backupv1.NewBackupServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -123,9 +124,12 @@ func resourceBackupScheduleUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := client.UpdateBackupSchedule(clientCtx, &backupv1.UpdateBackupScheduleRequest{
 			BackupSchedule: schedule,
 		}, grpc.Trailer(&trailer))
-		errorPrefix += getRequestID(trailer)
+		reqID := getRequestID(trailer)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+			if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+				return diag.Errorf("Invalid argument for backup schedule update%s: %s", reqID, st.Message())
+			}
+			return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 		}
 	}
 
@@ -134,12 +138,10 @@ func resourceBackupScheduleUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceBackupScheduleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting backup schedule"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, backupv1.NewBackupServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := backupv1.NewBackupServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))

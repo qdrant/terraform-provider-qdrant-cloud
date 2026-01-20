@@ -58,14 +58,10 @@ func resourceAccountsHybridCloudEnvironment() *schema.Resource {
 func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating hybrid cloud environment"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qch.NewHybridCloudServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qch.NewHybridCloudServiceClient(apiClientConn)
-
 	// Expand the hybrid cloud environment
 	env, err := expandHCEnv(d, getDefaultAccountID(m))
 	if err != nil {
@@ -79,10 +75,12 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 		&qch.CreateHybridCloudEnvironmentRequest{HybridCloudEnvironment: env},
 		grpc.Trailer(&trailer),
 	)
-	// enrich prefix with request ID
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for hybrid cloud environment creation%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 
 	created := resp.GetHybridCloudEnvironment()
@@ -125,14 +123,10 @@ func resourceHCEnvCreate(ctx context.Context, d *schema.ResourceData, m interfac
 func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error reading hybrid cloud environment"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qch.NewHybridCloudServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qch.NewHybridCloudServiceClient(apiClientConn)
-
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -190,6 +184,7 @@ func resourceHCEnvRead(ctx context.Context, d *schema.ResourceData, m interface{
 // m: The interface where the configured client is passed.
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	errorPrefix := "error updating hybrid cloud environment"
 	changedConfigOrName := d.HasChange(hcEnvNameFieldName) || d.HasChange(hcEnvConfigurationFieldName)
 	changedVersion := d.HasChange(hcEnvBootstrapCommandsVersionFieldName)
 
@@ -198,15 +193,13 @@ func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 		return resourceHCEnvRead(ctx, d, m)
 	}
 
+	client, clientCtx, diags := getServiceClient(ctx, m, qch.NewHybridCloudServiceClient)
+	if diags.HasError() {
+		return diags
+	}
+
 	// 1) Apply config/name changes (if any)
 	if changedConfigOrName {
-		errorPrefix := "error updating hybrid cloud environment"
-		apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
-		if diags.HasError() {
-			return diags
-		}
-		client := qch.NewHybridCloudServiceClient(apiClientConn)
-
 		env, err := expandHCEnv(d, getDefaultAccountID(m))
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -218,20 +211,17 @@ func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 			&qch.UpdateHybridCloudEnvironmentRequest{HybridCloudEnvironment: env},
 			grpc.Trailer(&trailer),
 		)
-		errorPrefix += getRequestID(trailer)
+		reqID := getRequestID(trailer)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+			if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+				return diag.Errorf("Invalid argument for hybrid cloud environment update%s: %s", reqID, st.Message())
+			}
+			return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 		}
 	}
 
 	// 2) If version changed, rotate/clear explicitly — this is the ONLY place we generate.
 	if changedVersion {
-		apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
-		if diags.HasError() {
-			return diags
-		}
-		client := qch.NewHybridCloudServiceClient(apiClientConn)
-
 		newV := d.Get(hcEnvBootstrapCommandsVersionFieldName).(int)
 		switch {
 		case newV > 0:
@@ -256,13 +246,10 @@ func resourceHCEnvUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceHCEnvDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting hybrid cloud environment"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qch.NewHybridCloudServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qch.NewHybridCloudServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {

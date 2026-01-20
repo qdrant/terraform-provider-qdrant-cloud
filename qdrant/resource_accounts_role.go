@@ -38,14 +38,10 @@ func resourceAccountsRole() *schema.Resource {
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error creating role"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qci.NewIAMServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qci.NewIAMServiceClient(apiClientConn)
-
 	// Expand the role from Terraform configuration (no ID required for creation)
 	role, err := expandRole(d, getDefaultAccountID(m), false)
 	if err != nil {
@@ -59,9 +55,12 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 		&qci.CreateRoleRequest{Role: role},
 		grpc.Trailer(&trailer),
 	)
-	// Enrich prefix with request ID
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s%s: %w", op, getRequestID(trailer), err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for role creation%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", op, reqID, err))
 	}
 
 	// Inspect the results
@@ -87,14 +86,10 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error reading role"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qci.NewIAMServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qci.NewIAMServiceClient(apiClientConn)
-
 	// Get the account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -144,14 +139,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error updating role"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qci.NewIAMServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qci.NewIAMServiceClient(apiClientConn)
-
 	// Get the account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -171,9 +162,12 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		&qci.UpdateRoleRequest{Role: role},
 		grpc.Trailer(&trailer),
 	)
-	// Enrich prefix with request ID
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s%s: %w", op, getRequestID(trailer), err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for role update%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", op, reqID, err))
 	}
 
 	// Inspect the results
@@ -199,14 +193,10 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error deleting role"
 
-	// Get a client connection and context
-	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
+	client, clientCtx, diags := getServiceClient(ctx, m, qci.NewIAMServiceClient)
 	if diags.HasError() {
 		return diags
 	}
-	// Get a client
-	client := qci.NewIAMServiceClient(apiClientConn)
-
 	// Get the account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {

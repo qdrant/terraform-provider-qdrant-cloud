@@ -11,6 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
+	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
 )
 
@@ -41,6 +43,20 @@ func TestFlattenHCEnv(t *testing.T) {
 				require.NoError(t, err)
 				return s
 			}(),
+			NodeSelector: []*commonv1.KeyValue{
+				{Key: "key1", Value: "value1"},
+			},
+			Tolerations: []*qcCluster.Toleration{
+				{
+					Key:      newPointer("key1"),
+					Operator: newPointer(qcCluster.TolerationOperator_TOLERATION_OPERATOR_EQUAL),
+					Value:    newPointer("value1"),
+					Effect:   newPointer(qcCluster.TolerationEffect_TOLERATION_EFFECT_NO_SCHEDULE),
+				},
+			},
+			ControlPlaneLabels: []*commonv1.KeyValue{
+				{Key: "label2", Value: "value2"},
+			},
 		},
 	}
 	got := flattenHCEnv(env)
@@ -71,6 +87,20 @@ func TestFlattenHCEnv(t *testing.T) {
 					require.NoError(t, err)
 					return string(b)
 				}(),
+				hcEnvCfgNodeSelectorFieldName: []interface{}{
+					map[string]interface{}{"key": "key1", "value": "value1"},
+				},
+				hcEnvCfgTolerationsFieldName: []interface{}{
+					map[string]interface{}{
+						tolerationKeyFieldName:      "key1",
+						tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL",
+						tolerationValueFieldName:    "value1",
+						tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
+					},
+				},
+				hcEnvCfgControlPlaneLabelsFieldName: []interface{}{
+					map[string]interface{}{"key": "label2", "value": "value2"},
+				},
 			},
 		},
 		hcEnvStatusFieldName: []interface{}{},
@@ -101,6 +131,20 @@ func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: "vol-snap-storage",
 		hcEnvCfgLogLevelFieldName:                   "HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO",
 		hcEnvCfgAdvancedOperatorSettingsFieldName:   "key: value\nnested:\n  num: 1\n",
+		hcEnvCfgNodeSelectorFieldName: []interface{}{
+			map[string]interface{}{"key": "key1", "value": "value1"},
+		},
+		hcEnvCfgTolerationsFieldName: []interface{}{
+			map[string]interface{}{
+				tolerationKeyFieldName:      "key1",
+				tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL",
+				tolerationValueFieldName:    "value1",
+				tolerationEffectFieldName:   "TOLERATION_EFFECT_NO_SCHEDULE",
+			},
+		},
+		hcEnvCfgControlPlaneLabelsFieldName: []interface{}{
+			map[string]interface{}{"key": "label2", "value": "value2"},
+		},
 	}
 
 	d := schema.TestResourceDataRaw(t, accountsHybridCloudEnvironmentSchema(), map[string]interface{}{
