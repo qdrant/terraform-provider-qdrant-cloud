@@ -40,13 +40,10 @@ func dataSourceAccountsCluster() *schema.Resource {
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error listing clusters"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, qcCluster.NewClusterServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	// Get a client
-	client := qcCluster.NewClusterServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -81,13 +78,10 @@ func dataSourceAccountsClustersRead(ctx context.Context, d *schema.ResourceData,
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func dataSourceAccountsClusterRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error getting cluster"
-	// Get a client connection and context
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, qcCluster.NewClusterServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	// Get a client
-	client := qcCluster.NewClusterServiceClient(apiClientConn)
 	// Get The account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {

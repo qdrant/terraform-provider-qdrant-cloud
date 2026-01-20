@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	authv2 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v2"
 )
@@ -45,12 +47,10 @@ func resourceAccountsAuthKeyV2() *schema.Resource {
 // m: The interface where the configured client is passed.
 func resourceAPIKeyV2Read(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error getting API key (v2)"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, authv2.NewDatabaseApiKeyServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := authv2.NewDatabaseApiKeyServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -92,12 +92,10 @@ func resourceAPIKeyV2Read(ctx context.Context, d *schema.ResourceData, m interfa
 // Returns diagnostic information encapsulating any runtime issues encountered during the API call.
 func resourceAPIKeyV2Create(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error creating API Key (v2)"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, authv2.NewDatabaseApiKeyServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := authv2.NewDatabaseApiKeyServiceClient(apiClientConn)
-
 	apiKey, err := expandAuthKeyV2(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -107,9 +105,12 @@ func resourceAPIKeyV2Create(ctx context.Context, d *schema.ResourceData, m inter
 	resp, err := client.CreateDatabaseApiKey(clientCtx, &authv2.CreateDatabaseApiKeyRequest{
 		DatabaseApiKey: apiKey,
 	}, grpc.Trailer(&trailer))
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.InvalidArgument {
+			return diag.Errorf("Invalid argument for API key (v2) creation%s: %s", reqID, st.Message())
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 
 	for k, v := range flattenAuthKeyV2(resp.GetDatabaseApiKey(), true) {
@@ -128,12 +129,10 @@ func resourceAPIKeyV2Create(ctx context.Context, d *schema.ResourceData, m inter
 // m: The interface where the configured client is passed.
 func resourceAPIKeyV2Delete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error deleting API Key (v2)"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, authv2.NewDatabaseApiKeyServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := authv2.NewDatabaseApiKeyServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
@@ -147,9 +146,13 @@ func resourceAPIKeyV2Delete(ctx context.Context, d *schema.ResourceData, m inter
 		ClusterId:        clusterID,
 		DatabaseApiKeyId: apiKeyID,
 	}, grpc.Trailer(&trailer))
-	errorPrefix += getRequestID(trailer)
+	reqID := getRequestID(trailer)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 
 	d.SetId("")

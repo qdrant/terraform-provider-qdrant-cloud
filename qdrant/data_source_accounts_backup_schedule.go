@@ -22,12 +22,10 @@ func dataSourceAccountsBackupSchedule() *schema.Resource {
 
 func dataAccountsBackupScheduleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	errorPrefix := "error reading backup schedule"
-	apiClientConn, clientCtx, diagnostics := getClientConnection(ctx, m)
-	if diagnostics.HasError() {
-		return diagnostics
+	client, clientCtx, diags := getServiceClient(ctx, m, backupv1.NewBackupServiceClient)
+	if diags.HasError() {
+		return diags
 	}
-	client := backupv1.NewBackupServiceClient(apiClientConn)
-
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
