@@ -82,8 +82,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	if jwtRbac != nil {
-		// If jwtRbac is not nil, we need to add the value ("true" or "false") to the gRPC context with key "qc_jwt_rbac"
-		clientCtx = metadata.AppendToOutgoingContext(clientCtx, "qc_jwt_rbac", fmt.Sprintf("%t", *jwtRbac))
+		// If jwtRbac is not nil, we need to add the value ("true" or "false") to the gRPC context with key "qc-jwt-rbac"
+		clientCtx = metadata.AppendToOutgoingContext(clientCtx, "qc-jwt-rbac", fmt.Sprintf("%t", *jwtRbac))
 	}
 	// Create the cluster
 	var trailer metadata.MD
