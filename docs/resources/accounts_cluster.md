@@ -220,6 +220,7 @@ Optional:
 
 - `api_key` (Block List, Max: 1) Secret to use for the main API key. (see [below for nested schema](#nestedblock--configuration--database_configuration--service--api_key))
 - `enable_tls` (Boolean)
+- `force_include_jwt_rbac` (Boolean, Deprecated)
 - `jwt_rbac` (Boolean)
 - `read_only_api_key` (Block List, Max: 1) Secret to use for the read-only API key. (see [below for nested schema](#nestedblock--configuration--database_configuration--service--read_only_api_key))
 

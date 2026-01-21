@@ -94,6 +94,7 @@ const (
 	dbConfigServiceApiKeyFieldName                     = "api_key"
 	dbConfigServiceReadOnlyApiKeyFieldName             = "read_only_api_key"
 	dbConfigServiceJwtRbacFieldName                    = "jwt_rbac"
+	dbConfigServiceForceIncludeJwtRbacFieldName        = "force_include_jwt_rbac"
 	dbConfigServiceEnableTlsFieldName                  = "enable_tls"
 	dbConfigSecretKeyRefSecretNameFieldName            = "secret_name"
 	dbConfigSecretKeyRefSecretKeyFieldName             = "secret_key"
@@ -584,6 +585,12 @@ func databaseConfigurationServiceSchema(asDataSource bool) map[string]*schema.Sc
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
+		},
+		dbConfigServiceForceIncludeJwtRbacFieldName: {
+			Type:       schema.TypeBool,
+			Optional:   true,
+			Computed:   false,
+			Deprecated: "For test purposes only, do not use!",
 		},
 		dbConfigServiceEnableTlsFieldName: {
 			Type:     schema.TypeBool,
@@ -1343,10 +1350,7 @@ func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConf
 
 // expandDatabaseConfigurationService expands service configuration from Terraform data.
 // It returns the service configuration object and a separate boolean pointer for JWT RBAC.
-// The JWT RBAC flag is handled separately because enabling it is a distinct, one-way API call
-// (`EnableClusterJwtRbac`) and is not part of the standard cluster update payload.
-// The returned `jwtRbac` pointer will be `&true` if the user sets it to true, and `nil` otherwise,
-// signaling to the update logic whether to make the special API call.
+// The JWT RBAC flag is handled separately because handling it is a distinct operation.
 func expandDatabaseConfigurationService(v []interface{}) (*qcCluster.DatabaseConfigurationService, *bool) {
 	if len(v) == 0 || v[0] == nil {
 		return nil, nil
@@ -1360,10 +1364,12 @@ func expandDatabaseConfigurationService(v []interface{}) (*qcCluster.DatabaseCon
 	if v, ok := serviceItem[dbConfigServiceReadOnlyApiKeyFieldName]; ok {
 		serviceConfig.ReadOnlyApiKey = expandSecretKeyRef(v.([]interface{}))
 	}
-	// jwt_rbac is a special case. It's not part of the UpdateCluster payload.
-	// Instead, it signals whether to set a gRPC header or to make a separate call to EnableClusterJwtRbac.
+	// The JWT RBAC setting is handled specially because enabling or disabling it involves a distinct API operation.
 	if v, ok := serviceItem[dbConfigServiceJwtRbacFieldName]; ok {
-		jwtRbac = newPointer(v.(bool))
+		f, ok := serviceItem[dbConfigServiceForceIncludeJwtRbacFieldName]
+		if v.(bool) || ok && f.(bool) {
+			jwtRbac = newPointer(v.(bool))
+		}
 	}
 	if v, ok := serviceItem[dbConfigServiceEnableTlsFieldName]; ok {
 		serviceConfig.EnableTls = newPointer(v.(bool))
