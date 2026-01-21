@@ -77,9 +77,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 	// Expand the cluster
-	cluster, err := expandCluster(d, getDefaultAccountID(m))
+	cluster, jwtRbac, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+	if jwtRbac != nil {
+		// If jwtRbac is not nil, we need to add the value ("true" or "false") to the gRPC context with key "qc-jwt-rbac"
+		clientCtx = metadata.AppendToOutgoingContext(clientCtx, "qc-jwt-rbac", fmt.Sprintf("%t", *jwtRbac))
 	}
 	// Create the cluster
 	var trailer metadata.MD
@@ -111,7 +115,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		return diags
 	}
 	// Expand the cluster
-	cluster, err := expandCluster(d, getDefaultAccountID(m))
+	cluster, jwtRbac, err := expandCluster(d, getDefaultAccountID(m))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
@@ -128,6 +132,20 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			return diag.Errorf("Invalid argument for cluster update%s: %s", reqID, st.Message())
 		}
 		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
+	}
+	// Check if we need to enable JWT RBAC
+	if jwtRbac != nil && *jwtRbac && !cluster.GetState().GetJwtRbac() {
+		_, err := client.EnableClusterJwtRbac(clientCtx, &qcCluster.EnableClusterJwtRbacRequest{
+			AccountId: cluster.GetAccountId(),
+			ClusterId: cluster.GetId(),
+		}, grpc.Trailer(&trailer))
+		// enrich prefix with request ID
+		errorPrefix += getRequestID(trailer)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("%s (EnableJwtRbac): %w", errorPrefix, err))
+		}
+		// Update the cluster, so it's stored correctly in the state (flatten cluster)
+		cluster.State.JwtRbac = true
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(resp.GetCluster()) {

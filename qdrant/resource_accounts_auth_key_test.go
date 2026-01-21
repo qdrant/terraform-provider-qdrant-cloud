@@ -75,6 +75,7 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 		database_configuration {
 			service {
 				jwt_rbac = false
+				force_include_jwt_rbac = true
 			}
 		}
 	}

@@ -94,6 +94,7 @@ const (
 	dbConfigServiceApiKeyFieldName                     = "api_key"
 	dbConfigServiceReadOnlyApiKeyFieldName             = "read_only_api_key"
 	dbConfigServiceJwtRbacFieldName                    = "jwt_rbac"
+	dbConfigServiceForceIncludeJwtRbacFieldName        = "force_include_jwt_rbac"
 	dbConfigServiceEnableTlsFieldName                  = "enable_tls"
 	dbConfigSecretKeyRefSecretNameFieldName            = "secret_name"
 	dbConfigSecretKeyRefSecretKeyFieldName             = "secret_key"
@@ -585,6 +586,12 @@ func databaseConfigurationServiceSchema(asDataSource bool) map[string]*schema.Sc
 			Optional: true,
 			Computed: true,
 		},
+		dbConfigServiceForceIncludeJwtRbacFieldName: {
+			Type:       schema.TypeBool,
+			Optional:   true,
+			Computed:   false,
+			Deprecated: "For test purposes only, do not use!",
+		},
 		dbConfigServiceEnableTlsFieldName: {
 			Type:     schema.TypeBool,
 			Optional: true,
@@ -841,19 +848,20 @@ func clusterScalabilityInfoSchema() map[string]*schema.Schema {
 	}
 }
 
-func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster, error) {
+func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster, *bool, error) {
 	// Check if we need to override the default
 	if v, ok := d.GetOk(clusterAccountIDFieldName); ok {
 		accountID = v.(string)
 	}
 	if accountID == "" {
-		return nil, fmt.Errorf("account ID not specified")
+		return nil, nil, fmt.Errorf("account ID not specified")
 	}
 	id := d.Get(clusterIdentifierFieldName)
 	name := d.Get(clusterNameFieldName)
 	cloudProvider := d.Get(clusterCloudProviderFieldName)
 	cloudRegion := d.Get(clusterCloudRegionFieldName)
 
+	var jwtRbac *bool
 	cluster := &qcCluster.Cluster{
 		Id:                    id.(string),
 		Name:                  name.(string),
@@ -877,8 +885,9 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 		}
 	}
 	if v, ok := d.GetOk(configurationFieldName); ok {
-		configuration := expandClusterConfiguration(v.([]interface{}))
+		configuration, jwtRbacVal := expandClusterConfiguration(v.([]interface{}))
 		cluster.Configuration = configuration
+		jwtRbac = jwtRbacVal
 	}
 	if v, ok := d.GetOk(clusterURLFieldName); ok {
 		cluster.State = &qcCluster.ClusterState{
@@ -888,10 +897,11 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 		}
 	}
 	// The status is a read-only object, so no need to expand it.
-	return cluster, nil
+	return cluster, jwtRbac, nil
 }
 
-func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration {
+func expandClusterConfiguration(v []interface{}) (*qcCluster.ClusterConfiguration, *bool) {
+	var jwtRbac *bool
 	config := &qcCluster.ClusterConfiguration{}
 	for _, m := range v {
 		item := m.(map[string]interface{})
@@ -913,7 +923,9 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 			config.AdditionalResources = additionalResources
 		}
 		if v, ok := item[databaseConfigurationFieldName]; ok {
-			config.DatabaseConfiguration = expandDatabaseConfiguration(v.([]interface{}))
+			dbConfig, jwtRbacVal := expandDatabaseConfiguration(v.([]interface{}))
+			config.DatabaseConfiguration = dbConfig
+			jwtRbac = jwtRbacVal
 		}
 		if v, ok := item[nodeSelectorFieldName]; ok {
 			config.NodeSelector = expandKeyVal(v.([]interface{}))
@@ -976,7 +988,7 @@ func expandClusterConfiguration(v []interface{}) *qcCluster.ClusterConfiguration
 			}
 		}
 	}
-	return config
+	return config, jwtRbac
 }
 
 func expandNodeConfiguration(v []interface{}) (string, *qcCluster.AdditionalResources) {
@@ -1115,6 +1127,10 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 		// For backewards compatibility extract the region ID into separate field.
 		privateRegionIdStr = cluster.GetCloudProviderRegionId()
 	}
+	var jwtRbac *bool
+	if cluster.State != nil {
+		jwtRbac = &cluster.State.JwtRbac
+	}
 	return map[string]interface{}{
 		clusterIdentifierFieldName:          cluster.GetId(),
 		clusterCreatedAtFieldName:           formatTime(cluster.GetCreatedAt()),
@@ -1126,13 +1142,13 @@ func flattenCluster(cluster *qcCluster.Cluster) map[string]interface{} {
 		clusterPrivateRegionIDFieldName:     privateRegionIdStr,
 		clusterMarkedForDeletionAtFieldName: formatTime(cluster.GetDeletedAt()),
 		clusterURLFieldName:                 cluster.GetState().GetEndpoint().GetUrl(),
-		configurationFieldName:              flattenClusterConfiguration(cluster.GetConfiguration()),
+		configurationFieldName:              flattenClusterConfiguration(cluster.GetConfiguration(), jwtRbac),
 		clusterStatusFieldName:              flattenClusterState(cluster.GetState()),
 	}
 }
 
 // flattenClusterConfiguration creates a map from a cluster configuration for easy storage in Terraform.
-func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) []interface{} {
+func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration, jwtRbac *bool) []interface{} {
 	if clusterConfig == nil {
 		return []interface{}{}
 	}
@@ -1141,7 +1157,7 @@ func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration) 
 		clusterLastModifiedAtFieldName:     formatTime(clusterConfig.GetLastModifiedAt()),
 		numberOfNodesFieldName:             int(clusterConfig.GetNumberOfNodes()),
 		nodeConfigurationFieldName:         flattenNodeConfiguration(clusterConfig.GetPackageId(), clusterConfig.GetAdditionalResources()),
-		databaseConfigurationFieldName:     flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration()),
+		databaseConfigurationFieldName:     flattenDatabaseConfiguration(clusterConfig.GetDatabaseConfiguration(), jwtRbac),
 		nodeSelectorFieldName:              flattenKeyVal(clusterConfig.GetNodeSelector()),
 		tolerationsFieldName:               flattenTolerations(clusterConfig.GetTolerations()),
 		topologySpreadConstraintsFieldName: flattenTopologySpreadConstraints(clusterConfig.GetTopologySpreadConstraints()),
@@ -1246,10 +1262,11 @@ func flattenTopologySpreadConstraints(constraints []*commonv1.TopologySpreadCons
 }
 
 // expandDatabaseConfiguration expands the Terraform resource data into a database configuration object.
-func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfiguration {
+func expandDatabaseConfiguration(v []interface{}) (*qcCluster.DatabaseConfiguration, *bool) {
 	if len(v) == 0 || v[0] == nil {
-		return nil
+		return nil, nil
 	}
+	var jwtRbac *bool
 	item := v[0].(map[string]interface{})
 	config := &qcCluster.DatabaseConfiguration{}
 
@@ -1260,7 +1277,9 @@ func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfigurati
 		config.Storage = expandDatabaseConfigurationStorage(val.([]interface{}))
 	}
 	if val, ok := item[dbConfigServiceFieldName]; ok {
-		config.Service = expandDatabaseConfigurationService(val.([]interface{}))
+		service, jwtRbacVal := expandDatabaseConfigurationService(val.([]interface{}))
+		config.Service = service
+		jwtRbac = jwtRbacVal
 	}
 	if val, ok := item[dbConfigLogLevelFieldName]; ok {
 		strVal := val.(string)
@@ -1275,7 +1294,7 @@ func expandDatabaseConfiguration(v []interface{}) *qcCluster.DatabaseConfigurati
 		config.Inference = expandDatabaseConfigurationInference(val.([]interface{}))
 	}
 
-	return config
+	return config, jwtRbac
 }
 
 // expandDatabaseConfigurationCollection expands collection configuration from Terraform data.
@@ -1330,10 +1349,13 @@ func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConf
 }
 
 // expandDatabaseConfigurationService expands service configuration from Terraform data.
-func expandDatabaseConfigurationService(v []interface{}) *qcCluster.DatabaseConfigurationService {
+// It returns the service configuration object and a separate boolean pointer for JWT RBAC.
+// The JWT RBAC flag is handled separately because handling it is a distinct operation.
+func expandDatabaseConfigurationService(v []interface{}) (*qcCluster.DatabaseConfigurationService, *bool) {
 	if len(v) == 0 || v[0] == nil {
-		return nil
+		return nil, nil
 	}
+	var jwtRbac *bool
 	serviceItem := v[0].(map[string]interface{})
 	serviceConfig := &qcCluster.DatabaseConfigurationService{}
 	if v, ok := serviceItem[dbConfigServiceApiKeyFieldName]; ok {
@@ -1342,13 +1364,17 @@ func expandDatabaseConfigurationService(v []interface{}) *qcCluster.DatabaseConf
 	if v, ok := serviceItem[dbConfigServiceReadOnlyApiKeyFieldName]; ok {
 		serviceConfig.ReadOnlyApiKey = expandSecretKeyRef(v.([]interface{}))
 	}
+	// The JWT RBAC setting is handled specially because enabling or disabling it involves a distinct API operation.
 	if v, ok := serviceItem[dbConfigServiceJwtRbacFieldName]; ok {
-		serviceConfig.JwtRbac = newPointer(v.(bool)) //nolint: staticcheck // deprecated
+		f, ok := serviceItem[dbConfigServiceForceIncludeJwtRbacFieldName]
+		if v.(bool) || ok && f.(bool) {
+			jwtRbac = newPointer(v.(bool))
+		}
 	}
 	if v, ok := serviceItem[dbConfigServiceEnableTlsFieldName]; ok {
 		serviceConfig.EnableTls = newPointer(v.(bool))
 	}
-	return serviceConfig
+	return serviceConfig, jwtRbac
 }
 
 // expandDatabaseConfigurationTls expands TLS configuration from Terraform data.
@@ -1392,7 +1418,7 @@ func expandSecretKeyRef(v []interface{}) *commonv1.SecretKeyRef {
 }
 
 // flattenDatabaseConfiguration flattens the database configuration for storage in Terraform.
-func flattenDatabaseConfiguration(config *qcCluster.DatabaseConfiguration) []interface{} {
+func flattenDatabaseConfiguration(config *qcCluster.DatabaseConfiguration, jwtRbac *bool) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1405,7 +1431,7 @@ func flattenDatabaseConfiguration(config *qcCluster.DatabaseConfiguration) []int
 	if v := flattenDatabaseConfigurationStorage(config.GetStorage()); v != nil {
 		m[dbConfigStorageFieldName] = v
 	}
-	if v := flattenDatabaseConfigurationService(config.GetService()); v != nil {
+	if v := flattenDatabaseConfigurationService(config.GetService(), jwtRbac); v != nil {
 		m[dbConfigServiceFieldName] = v
 	}
 	if v := flattenDatabaseConfigurationTls(config.GetTls()); v != nil {
@@ -1468,7 +1494,7 @@ func flattenDatabaseConfigurationStorage(storage *qcCluster.DatabaseConfiguratio
 }
 
 // flattenDatabaseConfigurationService flattens service configuration for storage in Terraform.
-func flattenDatabaseConfigurationService(service *qcCluster.DatabaseConfigurationService) []interface{} {
+func flattenDatabaseConfigurationService(service *qcCluster.DatabaseConfigurationService, jwtRbac *bool) []interface{} {
 	if service == nil {
 		return nil
 	}
@@ -1476,8 +1502,8 @@ func flattenDatabaseConfigurationService(service *qcCluster.DatabaseConfiguratio
 		dbConfigServiceApiKeyFieldName:         flattenSecretKeyRef(service.GetApiKey()),
 		dbConfigServiceReadOnlyApiKeyFieldName: flattenSecretKeyRef(service.GetReadOnlyApiKey()),
 	}
-	if v := service.JwtRbac; v != nil { //nolint: staticcheck // deprecated
-		serviceMap[dbConfigServiceJwtRbacFieldName] = *v
+	if jwtRbac != nil {
+		serviceMap[dbConfigServiceJwtRbacFieldName] = *jwtRbac
 	}
 	if v := service.EnableTls; v != nil {
 		serviceMap[dbConfigServiceEnableTlsFieldName] = *v

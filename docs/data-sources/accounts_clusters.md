@@ -149,6 +149,7 @@ Read-Only:
 
 - `api_key` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--service--api_key))
 - `enable_tls` (Boolean)
+- `force_include_jwt_rbac` (Boolean)
 - `jwt_rbac` (Boolean)
 - `read_only_api_key` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--service--read_only_api_key))
 
