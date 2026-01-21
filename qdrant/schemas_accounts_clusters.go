@@ -1361,13 +1361,9 @@ func expandDatabaseConfigurationService(v []interface{}) (*qcCluster.DatabaseCon
 		serviceConfig.ReadOnlyApiKey = expandSecretKeyRef(v.([]interface{}))
 	}
 	// jwt_rbac is a special case. It's not part of the UpdateCluster payload.
-	// Instead, it signals whether to make a separate call to EnableClusterJwtRbac.
-	// This is a one-way operation. We only care if the user wants to set it to `true`.
-	// If it's false or unset, we do nothing, so we return a nil pointer.
+	// Instead, it signals whether to set a gRPC header or to make a separate call to EnableClusterJwtRbac.
 	if v, ok := serviceItem[dbConfigServiceJwtRbacFieldName]; ok {
-		if v.(bool) {
-			jwtRbac = newPointer(true)
-		}
+		jwtRbac = newPointer(v.(bool))
 	}
 	if v, ok := serviceItem[dbConfigServiceEnableTlsFieldName]; ok {
 		serviceConfig.EnableTls = newPointer(v.(bool))
