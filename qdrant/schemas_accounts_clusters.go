@@ -1166,9 +1166,17 @@ func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration, 
 		serviceTypeFieldName:               clusterConfig.GetServiceType().String(),
 		serviceAnnotationsFieldName:        flattenKeyVal(clusterConfig.GetServiceAnnotations()),
 		podLabelsFieldName:                 flattenKeyVal(clusterConfig.GetPodLabels()),
-		dbConfigGpuTypeFieldName:           clusterConfig.GetGpuType().String(),
-		dbConfigRestartPolicyFieldName:     clusterConfig.GetRestartPolicy().String(),
-		dbConfigRebalanceStrategyFieldName: clusterConfig.GetRebalanceStrategy().String(),
+	}
+
+	// Only set enum fields when they are not UNSPECIFIED to avoid perpetual diffs
+	if gpuType := clusterConfig.GetGpuType(); gpuType != qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED {
+		config[dbConfigGpuTypeFieldName] = gpuType.String()
+	}
+	if restartPolicy := clusterConfig.GetRestartPolicy(); restartPolicy != qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED {
+		config[dbConfigRestartPolicyFieldName] = restartPolicy.String()
+	}
+	if rebalanceStrategy := clusterConfig.GetRebalanceStrategy(); rebalanceStrategy != qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED {
+		config[dbConfigRebalanceStrategyFieldName] = rebalanceStrategy.String()
 	}
 
 	if clusterConfig.ReservedCpuPercentage != nil {
