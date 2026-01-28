@@ -438,3 +438,51 @@ func TestExpandCluster(t *testing.T) {
 	assert.Equal(t, expected, result)
 	assert.Nil(t, jwtRbac)
 }
+
+// TestFlattenClusterConfigurationUnspecifiedEnums verifies that UNSPECIFIED enum values
+// are NOT included in the flattened configuration, preventing perpetual Terraform diffs.
+func TestFlattenClusterConfigurationUnspecifiedEnums(t *testing.T) {
+	// Create a minimal cluster configuration with UNSPECIFIED enum values (or nil)
+	clusterConfig := &qcCluster.ClusterConfiguration{
+		NumberOfNodes: 1,
+		PackageId:     "test-package-id",
+	}
+
+	flattened := flattenClusterConfiguration(clusterConfig, nil)
+
+	require.Len(t, flattened, 1)
+	configMap := flattened[0].(map[string]interface{})
+
+	// Verify that UNSPECIFIED enum fields are NOT present in the output
+	_, hasGpuType := configMap[dbConfigGpuTypeFieldName]
+	_, hasRestartPolicy := configMap[dbConfigRestartPolicyFieldName]
+	_, hasRebalanceStrategy := configMap[dbConfigRebalanceStrategyFieldName]
+
+	assert.False(t, hasGpuType, "gpu_type should not be present when UNSPECIFIED")
+	assert.False(t, hasRestartPolicy, "restart_policy should not be present when UNSPECIFIED")
+	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should not be present when UNSPECIFIED")
+
+	assert.Equal(t, 1, configMap[numberOfNodesFieldName])
+}
+
+// TestFlattenClusterConfigurationSpecifiedEnums verifies that specified enum values
+// ARE included in the flattened configuration.
+func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {
+	clusterConfig := &qcCluster.ClusterConfiguration{
+		NumberOfNodes:     1,
+		PackageId:         "test-package-id",
+		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
+		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
+		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
+	}
+
+	flattened := flattenClusterConfiguration(clusterConfig, nil)
+
+	require.Len(t, flattened, 1)
+	configMap := flattened[0].(map[string]interface{})
+
+	// Verify that specified enum fields ARE present with correct values
+	assert.Equal(t, "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA", configMap[dbConfigGpuTypeFieldName])
+	assert.Equal(t, "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING", configMap[dbConfigRestartPolicyFieldName])
+	assert.Equal(t, "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT", configMap[dbConfigRebalanceStrategyFieldName])
+}
