@@ -32,11 +32,6 @@ resource "qdrant-cloud_accounts_cluster" "example" {
   cloud_region   = data.qdrant-cloud_booking_packages.all_packages.cloud_region
   configuration {
     number_of_nodes = 1
-    database_configuration {
-      service {
-        jwt_rbac = true
-      }
-    }
     node_configuration {
       package_id = local.desired_package[0].id
     }
