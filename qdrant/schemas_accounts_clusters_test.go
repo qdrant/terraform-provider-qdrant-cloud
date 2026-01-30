@@ -70,7 +70,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 				{
 					MaxSkew:           newPointer(int32(1)),
 					TopologyKey:       "topology.kubernetes.io/zone",
-					WhenUnsatisfiable: newPointer("DoNotSchedule"),
+					WhenUnsatisfiable: newPointer(commonv1.TopologySpreadConstraintWhenUnsatisfiable_TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_DO_NOT_SCHEDULE),
 				},
 			},
 			Annotations: []*commonv1.KeyValue{
@@ -263,7 +263,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 					map[string]interface{}{
 						topologySpreadConstraintMaxSkewFieldName:           1,
 						topologySpreadConstraintTopologyKeyFieldName:       "topology.kubernetes.io/zone",
-						topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+						topologySpreadConstraintWhenUnsatisfiableFieldName: "TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_DO_NOT_SCHEDULE",
 					},
 				},
 				annotationsFieldName: []interface{}{
@@ -336,7 +336,7 @@ func TestExpandCluster(t *testing.T) {
 				{
 					MaxSkew:           newPointer(int32(1)),
 					TopologyKey:       "topology.kubernetes.io/zone",
-					WhenUnsatisfiable: newPointer("DoNotSchedule"),
+					WhenUnsatisfiable: newPointer(commonv1.TopologySpreadConstraintWhenUnsatisfiable_TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_DO_NOT_SCHEDULE),
 				},
 			},
 			ServiceType: newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
@@ -424,7 +424,7 @@ func TestExpandCluster(t *testing.T) {
 					map[string]interface{}{
 						topologySpreadConstraintMaxSkewFieldName:           1,
 						topologySpreadConstraintTopologyKeyFieldName:       "topology.kubernetes.io/zone",
-						topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+						topologySpreadConstraintWhenUnsatisfiableFieldName: "TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_DO_NOT_SCHEDULE",
 					},
 				},
 				serviceTypeFieldName:     "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
