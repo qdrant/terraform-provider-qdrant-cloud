@@ -1104,7 +1104,10 @@ func expandTopologySpreadConstraints(v []interface{}) []*commonv1.TopologySpread
 			constraint.TopologyKey = v.(string)
 		}
 		if v, ok := item[topologySpreadConstraintWhenUnsatisfiableFieldName]; ok {
-			constraint.WhenUnsatisfiable = newPointer(v.(string))
+			vVal, vOk := commonv1.TopologySpreadConstraintWhenUnsatisfiable_value[v.(string)]
+			if vOk {
+				constraint.WhenUnsatisfiable = newPointer(commonv1.TopologySpreadConstraintWhenUnsatisfiable(vVal))
+			}
 		}
 		result = append(result, constraint)
 	}
@@ -1262,7 +1265,7 @@ func flattenTopologySpreadConstraints(constraints []*commonv1.TopologySpreadCons
 			constraintMap[topologySpreadConstraintTopologyKeyFieldName] = c.GetTopologyKey()
 		}
 		if c.WhenUnsatisfiable != nil {
-			constraintMap[topologySpreadConstraintWhenUnsatisfiableFieldName] = c.GetWhenUnsatisfiable()
+			constraintMap[topologySpreadConstraintWhenUnsatisfiableFieldName] = c.GetWhenUnsatisfiable().String()
 		}
 		result = append(result, constraintMap)
 	}
