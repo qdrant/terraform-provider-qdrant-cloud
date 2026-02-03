@@ -969,21 +969,22 @@ func expandClusterConfiguration(v []interface{}) (*qcCluster.ClusterConfiguratio
 				config.ReservedMemoryPercentage = newPointer(uint32(percent))
 			}
 		}
+		// Only set enum fields when they are not UNSPECIFIED to avoid sending invalid values
 		if v, ok := item[dbConfigGpuTypeFieldName]; ok {
 			gt, gtOK := qcCluster.ClusterConfigurationGpuType_value[v.(string)]
-			if gtOK {
+			if gtOK && gt != int32(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED) {
 				config.GpuType = newPointer(qcCluster.ClusterConfigurationGpuType(gt))
 			}
 		}
 		if v, ok := item[dbConfigRestartPolicyFieldName]; ok {
 			rp, rpOK := qcCluster.ClusterConfigurationRestartPolicy_value[v.(string)]
-			if rpOK {
+			if rpOK && rp != int32(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED) {
 				config.RestartPolicy = newPointer(qcCluster.ClusterConfigurationRestartPolicy(rp))
 			}
 		}
 		if v, ok := item[dbConfigRebalanceStrategyFieldName]; ok {
 			rs, rsOK := qcCluster.ClusterConfigurationRebalanceStrategy_value[v.(string)]
-			if rsOK {
+			if rsOK && rs != int32(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED) {
 				config.RebalanceStrategy = newPointer(qcCluster.ClusterConfigurationRebalanceStrategy(rs))
 			}
 		}
