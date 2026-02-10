@@ -30,7 +30,7 @@ jobs:
       - name: Golang CI Lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.7.2 # Specify the golangci-lint version, so we are stable
+          version: v2.8.0 # Specify the golangci-lint version, so we are stable
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
