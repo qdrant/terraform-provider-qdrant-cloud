@@ -134,7 +134,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
 	// Check if we need to enable JWT RBAC
-	if jwtRbac != nil && *jwtRbac && !cluster.GetState().GetJwtRbac() {
+	if jwtRbac != nil && *jwtRbac && !resp.GetCluster().GetState().GetJwtRbac() {
 		_, err := client.EnableClusterJwtRbac(clientCtx, &qcCluster.EnableClusterJwtRbacRequest{
 			AccountId: cluster.GetAccountId(),
 			ClusterId: cluster.GetId(),
