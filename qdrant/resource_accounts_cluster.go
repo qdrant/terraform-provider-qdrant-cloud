@@ -145,7 +145,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interf
 			return diag.FromErr(fmt.Errorf("%s (EnableJwtRbac): %w", errorPrefix, err))
 		}
 		// Update the cluster, so it's stored correctly in the state (flatten cluster)
-		cluster.State.JwtRbac = true
+		resp.Cluster.State.JwtRbac = true
 	}
 	// Flatten cluster and store in Terraform state
 	for k, v := range flattenCluster(resp.GetCluster()) {
