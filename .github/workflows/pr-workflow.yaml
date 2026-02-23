@@ -43,7 +43,7 @@ jobs:
           make generate-help
 
       - name: Ensure that make generate-help did not result in changes
-        uses: CatChen/check-git-status-action@v1
+        uses: CatChen/check-git-status-action@v2
         with:
           fail-if-not-clean: true
 
