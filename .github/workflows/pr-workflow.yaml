@@ -33,7 +33,7 @@ jobs:
           version: v2.8.0 # Specify the golangci-lint version, so we are stable
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
             terraform_version: "^1.5.5"
             terraform_wrapper: false
@@ -64,7 +64,7 @@ jobs:
           cache: false
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "^1.13.2"
           terraform_wrapper: false
