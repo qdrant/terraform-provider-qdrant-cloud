@@ -454,10 +454,12 @@ func TestFlattenClusterConfigurationUnspecifiedEnums(t *testing.T) {
 	configMap := flattened[0].(map[string]interface{})
 
 	// Verify that UNSPECIFIED enum fields are NOT present in the output
+	_, hasServiceType := configMap[serviceTypeFieldName]
 	_, hasGpuType := configMap[dbConfigGpuTypeFieldName]
 	_, hasRestartPolicy := configMap[dbConfigRestartPolicyFieldName]
 	_, hasRebalanceStrategy := configMap[dbConfigRebalanceStrategyFieldName]
 
+	assert.False(t, hasServiceType, "service_type should not be present when UNSPECIFIED")
 	assert.False(t, hasGpuType, "gpu_type should not be present when UNSPECIFIED")
 	assert.False(t, hasRestartPolicy, "restart_policy should not be present when UNSPECIFIED")
 	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should not be present when UNSPECIFIED")
@@ -471,6 +473,7 @@ func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {
 	clusterConfig := &qcCluster.ClusterConfiguration{
 		NumberOfNodes:     1,
 		PackageId:         "test-package-id",
+		ServiceType:       newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
 		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
 		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
 		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
@@ -482,6 +485,7 @@ func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {
 	configMap := flattened[0].(map[string]interface{})
 
 	// Verify that specified enum fields ARE present with correct values
+	assert.Equal(t, "CLUSTER_SERVICE_TYPE_LOAD_BALANCER", configMap[serviceTypeFieldName])
 	assert.Equal(t, "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA", configMap[dbConfigGpuTypeFieldName])
 	assert.Equal(t, "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING", configMap[dbConfigRestartPolicyFieldName])
 	assert.Equal(t, "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT", configMap[dbConfigRebalanceStrategyFieldName])
