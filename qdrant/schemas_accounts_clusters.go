@@ -949,7 +949,7 @@ func expandClusterConfiguration(v []interface{}) (*qcCluster.ClusterConfiguratio
 		}
 		if v, ok := item[serviceTypeFieldName]; ok {
 			st, stOK := qcCluster.ClusterServiceType_value[v.(string)]
-			if stOK {
+			if stOK && st != int32(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_UNSPECIFIED) {
 				config.ServiceType = newPointer(qcCluster.ClusterServiceType(st))
 			}
 		}
@@ -1167,12 +1167,14 @@ func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration, 
 		topologySpreadConstraintsFieldName: flattenTopologySpreadConstraints(clusterConfig.GetTopologySpreadConstraints()),
 		annotationsFieldName:               flattenKeyVal(clusterConfig.GetAnnotations()),
 		allowedIpSourceRangesFieldName:     clusterConfig.GetAllowedIpSourceRanges(),
-		serviceTypeFieldName:               clusterConfig.GetServiceType().String(),
 		serviceAnnotationsFieldName:        flattenKeyVal(clusterConfig.GetServiceAnnotations()),
 		podLabelsFieldName:                 flattenKeyVal(clusterConfig.GetPodLabels()),
 	}
 
 	// Only set enum fields when they are not UNSPECIFIED to avoid perpetual diffs
+	if serviceType := clusterConfig.GetServiceType(); serviceType != qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_UNSPECIFIED {
+		config[serviceTypeFieldName] = serviceType.String()
+	}
 	if gpuType := clusterConfig.GetGpuType(); gpuType != qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED {
 		config[dbConfigGpuTypeFieldName] = gpuType.String()
 	}
