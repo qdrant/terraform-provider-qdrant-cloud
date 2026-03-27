@@ -377,15 +377,15 @@ output "advanced_reserved_memory" {
 }
 
 output "advanced_allowed_ip" {
-  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].allowed_ip_source_ranges[0]
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].allowed_ip_source_ranges.tolist()[0]
 }
 
 output "advanced_service_annotation" {
-  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].service_annotations[0].value
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].service_annotations.tolist()[0].value
 }
 
 output "advanced_pod_label" {
-  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].pod_labels[0].value
+  value = qdrant-cloud_accounts_cluster.advanced.configuration[0].pod_labels.tolist()[0].value
 }
 `, cloudProvider, cloudRegion, accountID, cloudRegion, cloudProvider)
 
