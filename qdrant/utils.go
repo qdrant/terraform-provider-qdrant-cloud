@@ -1,6 +1,7 @@
 package qdrant
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -179,6 +180,9 @@ func setToStringSlice(v interface{}) []string {
 	switch t := v.(type) {
 	case *schema.Set:
 		raw := t.List()
+		if len(raw) == 0 {
+			return nil
+		}
 		out := make([]string, 0, len(raw))
 		for _, x := range raw {
 			if x == nil {
@@ -214,4 +218,75 @@ func intersectStrings(a, b []string) []string {
 		}
 	}
 	return out
+}
+
+// getInterfaceSliceFromSchemaValue converts a Terraform schema value (which can be a *schema.Set or []interface{})
+// into a []interface{}. This is useful when a schema field can be either TypeList or TypeSet, and the expand
+// function expects a []interface{}.
+func getInterfaceSliceFromSchemaValue(v interface{}) []interface{} {
+	if v == nil {
+		return nil
+	}
+	if s, ok := v.(*schema.Set); ok {
+		return s.List()
+	}
+	if l, ok := v.([]interface{}); ok {
+		return l
+	}
+	return nil // Should not happen if schema types are correctly defined
+}
+
+// keyValHashFunc generates a hash for a key-value pair.
+func keyValHashFunc(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	fmt.Fprintf(&buf, "%s-", m["key"].(string))
+	buf.WriteString(m["value"].(string))
+	return schema.HashString(buf.String())
+}
+
+// tolerationHashFunc generates a hash for a toleration.
+func tolerationHashFunc(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	// Concatenate all fields, handling optional ones gracefully
+	if key, ok := m[tolerationKeyFieldName].(string); ok {
+		buf.WriteString(key)
+	}
+	buf.WriteString("-")
+	if op, ok := m[tolerationOperatorFieldName].(string); ok {
+		buf.WriteString(op)
+	}
+	buf.WriteString("-")
+	if val, ok := m[tolerationValueFieldName].(string); ok {
+		buf.WriteString(val)
+	}
+	buf.WriteString("-")
+	if effect, ok := m[tolerationEffectFieldName].(string); ok {
+		buf.WriteString(effect)
+	}
+	buf.WriteString("-")
+	if seconds, ok := m[tolerationSecondsFieldName].(int); ok {
+		fmt.Fprintf(&buf, "%d", seconds)
+	}
+	return schema.HashString(buf.String())
+}
+
+// topologySpreadConstraintHashFunc generates a hash for a topology spread constraint.
+func topologySpreadConstraintHashFunc(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	fmt.Fprintf(&buf, "%d-", m[topologySpreadConstraintMaxSkewFieldName].(int))
+	fmt.Fprintf(&buf, "%s-", m[topologySpreadConstraintTopologyKeyFieldName].(string))
+	buf.WriteString(m[topologySpreadConstraintWhenUnsatisfiableFieldName].(string))
+	return schema.HashString(buf.String())
+}
+
+// permissionHashFunc generates a hash for a permission.
+func permissionHashFunc(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(m["value"].(string)) // Only 'value' is user-configurable and unique for hashing
+	return schema.HashString(buf.String())
 }

@@ -467,6 +467,86 @@ func TestFlattenClusterConfigurationUnspecifiedEnums(t *testing.T) {
 	assert.Equal(t, 1, configMap[numberOfNodesFieldName])
 }
 
+// TestExpandKeyVal_EmptyInputReturnsNil verifies that expandKeyVal returns nil for empty input.
+func TestExpandKeyVal_EmptyInputReturnsNil(t *testing.T) {
+	t.Run("empty slice", func(t *testing.T) {
+		result := expandKeyVal([]interface{}{})
+		assert.Nil(t, result)
+	})
+
+	t.Run("nil slice", func(t *testing.T) {
+		result := expandKeyVal(nil)
+		assert.Nil(t, result)
+	})
+}
+
+// TestExpandTolerations_EmptyInputReturnsNil verifies that expandTolerations returns nil for empty input.
+func TestExpandTolerations_EmptyInputReturnsNil(t *testing.T) {
+	t.Run("empty slice", func(t *testing.T) {
+		result := expandTolerations([]interface{}{})
+		assert.Nil(t, result)
+	})
+
+	t.Run("nil slice", func(t *testing.T) {
+		result := expandTolerations(nil)
+		assert.Nil(t, result)
+	})
+}
+
+// TestExpandTopologySpreadConstraints_EmptyInputReturnsNil verifies that expandTopologySpreadConstraints returns nil for empty input.
+func TestExpandTopologySpreadConstraints_EmptyInputReturnsNil(t *testing.T) {
+	t.Run("empty slice", func(t *testing.T) {
+		result := expandTopologySpreadConstraints([]interface{}{})
+		assert.Nil(t, result)
+	})
+
+	t.Run("nil slice", func(t *testing.T) {
+		result := expandTopologySpreadConstraints(nil)
+		assert.Nil(t, result)
+	})
+}
+
+// TestExpandClusterConfiguration_EmptyAllowedIpSourceRangesReturnsNil verifies that
+// AllowedIpSourceRanges is nil when not provided or empty in Terraform config.
+func TestExpandClusterConfiguration_EmptyAllowedIpSourceRangesReturnsNil(t *testing.T) {
+	t.Run("allowed_ip_source_ranges omitted", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
+			configurationFieldName: []interface{}{
+				map[string]interface{}{
+					numberOfNodesFieldName: 1,
+					packageIDFieldName:     "some-package-id",
+				},
+			},
+		})
+
+		// Extract the configuration block for expandClusterConfiguration
+		configBlock := d.Get(configurationFieldName).([]interface{})
+		config, _ := expandClusterConfiguration(configBlock)
+
+		require.NotNil(t, config)
+		assert.Nil(t, config.AllowedIpSourceRanges)
+	})
+
+	t.Run("allowed_ip_source_ranges explicitly empty", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
+			configurationFieldName: []interface{}{
+				map[string]interface{}{
+					numberOfNodesFieldName:         1,
+					packageIDFieldName:             "some-package-id",
+					allowedIpSourceRangesFieldName: []interface{}{}, // Explicitly empty list
+				},
+			},
+		})
+
+		// Extract the configuration block for expandClusterConfiguration
+		configBlock := d.Get(configurationFieldName).([]interface{})
+		config, _ := expandClusterConfiguration(configBlock)
+
+		require.NotNil(t, config)
+		assert.Nil(t, config.AllowedIpSourceRanges)
+	})
+}
+
 // TestFlattenClusterConfigurationSpecifiedEnums verifies that specified enum values
 // ARE included in the flattened configuration.
 func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {

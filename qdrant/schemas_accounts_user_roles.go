@@ -38,7 +38,10 @@ func accountsUserRolesSchema() map[string]*schema.Schema {
 			Description: "Authoritative set of role IDs assigned to this user (unordered).",
 			Type:        schema.TypeSet,
 			Required:    true,
-			Elem:        &schema.Schema{Type: schema.TypeString},
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+			Set: schema.HashString,
 		},
 		userRolesKeepOnDestroyName: {
 			Description: "If true, the provider will not revoke roles on destroy.",
