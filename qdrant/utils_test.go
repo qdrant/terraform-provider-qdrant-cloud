@@ -254,6 +254,142 @@ func TestIntersectStrings_Basic(t *testing.T) {
 	assert.Equal(t, []string{"c", "a"}, got)
 }
 
+// TestGetInterfaceSliceFromSchemaValue tests the getInterfaceSliceFromSchemaValue function.
+func TestGetInterfaceSliceFromSchemaValue(t *testing.T) {
+	t.Run("nil input", func(t *testing.T) {
+		result := getInterfaceSliceFromSchemaValue(nil)
+		assert.Nil(t, result)
+	})
+
+	t.Run("schema.Set input", func(t *testing.T) {
+		s := schema.NewSet(schema.HashString, []interface{}{"item1", "item2"})
+		result := getInterfaceSliceFromSchemaValue(s)
+		assert.ElementsMatch(t, []interface{}{"item1", "item2"}, result)
+	})
+
+	t.Run("[]interface{} input", func(t *testing.T) {
+		l := []interface{}{"itemA", "itemB"}
+		result := getInterfaceSliceFromSchemaValue(l)
+		assert.Equal(t, l, result)
+	})
+
+	t.Run("unsupported input type", func(t *testing.T) {
+		result := getInterfaceSliceFromSchemaValue("just a string")
+		assert.Nil(t, result)
+	})
+}
+
+// TestKeyValHashFunc tests the keyValHashFunc function.
+func TestKeyValHashFunc(t *testing.T) {
+	t.Run("basic key-value pair", func(t *testing.T) {
+		kv1 := map[string]interface{}{"key": "name", "value": "test"}
+		kv2 := map[string]interface{}{"value": "test", "key": "name"} // different order
+		kv3 := map[string]interface{}{"key": "other", "value": "value"}
+
+		hash1 := keyValHashFunc(kv1)
+		hash2 := keyValHashFunc(kv2)
+		hash3 := keyValHashFunc(kv3)
+
+		assert.Equal(t, hash1, hash2, "identical key-value pairs should have same hash")
+		assert.NotEqual(t, hash1, hash3, "different key-value pairs should have different hashes")
+	})
+
+	t.Run("empty values", func(t *testing.T) {
+		kv1 := map[string]interface{}{"key": "empty", "value": ""}
+		kv2 := map[string]interface{}{"key": "empty", "value": ""}
+		hash1 := keyValHashFunc(kv1)
+		hash2 := keyValHashFunc(kv2)
+		assert.Equal(t, hash1, hash2)
+	})
+}
+
+// TestTolerationHashFunc tests the tolerationHashFunc function.
+func TestTolerationHashFunc(t *testing.T) {
+	t.Run("toleration with all fields", func(t *testing.T) {
+		tol1 := map[string]interface{}{
+			tolerationKeyFieldName:      "key1",
+			tolerationOperatorFieldName: "Equal",
+			tolerationValueFieldName:    "value1",
+			tolerationEffectFieldName:   "NoSchedule",
+			tolerationSecondsFieldName:  300,
+		}
+		tol2 := map[string]interface{}{
+			tolerationKeyFieldName:      "key1",
+			tolerationOperatorFieldName: "Equal",
+			tolerationValueFieldName:    "value1",
+			tolerationEffectFieldName:   "NoSchedule",
+			tolerationSecondsFieldName:  300,
+		}
+		tol3 := map[string]interface{}{
+			tolerationKeyFieldName:      "key2",
+			tolerationOperatorFieldName: "Exists",
+			tolerationEffectFieldName:   "NoExecute",
+		}
+
+		hash1 := tolerationHashFunc(tol1)
+		hash2 := tolerationHashFunc(tol2)
+		hash3 := tolerationHashFunc(tol3)
+
+		assert.Equal(t, hash1, hash2, "identical tolerations should have same hash")
+		assert.NotEqual(t, hash1, hash3, "different tolerations should have different hashes")
+	})
+
+	t.Run("toleration with partial fields", func(t *testing.T) {
+		tol1 := map[string]interface{}{tolerationKeyFieldName: "key1", tolerationEffectFieldName: "NoSchedule"}
+		tol2 := map[string]interface{}{tolerationKeyFieldName: "key1", tolerationEffectFieldName: "NoSchedule"}
+		hash1 := tolerationHashFunc(tol1)
+		hash2 := tolerationHashFunc(tol2)
+		assert.Equal(t, hash1, hash2)
+	})
+}
+
+// TestTopologySpreadConstraintHashFunc tests the topologySpreadConstraintHashFunc function.
+func TestTopologySpreadConstraintHashFunc(t *testing.T) {
+	tsc1 := map[string]interface{}{
+		topologySpreadConstraintMaxSkewFieldName:           1,
+		topologySpreadConstraintTopologyKeyFieldName:       "zone",
+		topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+	}
+	tsc2 := map[string]interface{}{
+		topologySpreadConstraintWhenUnsatisfiableFieldName: "DoNotSchedule",
+		topologySpreadConstraintTopologyKeyFieldName:       "zone",
+		topologySpreadConstraintMaxSkewFieldName:           1,
+	}
+	tsc3 := map[string]interface{}{
+		topologySpreadConstraintMaxSkewFieldName:           2,
+		topologySpreadConstraintTopologyKeyFieldName:       "node",
+		topologySpreadConstraintWhenUnsatisfiableFieldName: "ScheduleAnyway",
+	}
+
+	hash1 := topologySpreadConstraintHashFunc(tsc1)
+	hash2 := topologySpreadConstraintHashFunc(tsc2)
+	hash3 := topologySpreadConstraintHashFunc(tsc3)
+
+	assert.Equal(t, hash1, hash2, "identical constraints should have same hash")
+	assert.NotEqual(t, hash1, hash3, "different constraints should have different hashes")
+}
+
+// TestPermissionHashFunc tests the permissionHashFunc function.
+func TestPermissionHashFunc(t *testing.T) {
+	perm1 := map[string]interface{}{"value": "read:clusters"}
+	perm2 := map[string]interface{}{"value": "read:clusters"}
+	perm3 := map[string]interface{}{"value": "write:clusters"}
+
+	hash1 := permissionHashFunc(perm1)
+	hash2 := permissionHashFunc(perm2)
+	hash3 := permissionHashFunc(perm3)
+
+	assert.Equal(t, hash1, hash2, "identical permissions should have same hash")
+	assert.NotEqual(t, hash1, hash3, "different permissions should have different hashes")
+}
+
+func TestIntersectStrings_Overlap(t *testing.T) {
+	a := []string{"a", "b", "c"}
+	b := []string{"c", "d", "e"}
+
+	got := intersectStrings(a, b)
+	assert.Equal(t, []string{"c"}, got)
+}
 func TestIntersectStrings_NoOverlap(t *testing.T) {
 	a := []string{"a", "b"}
 	b := []string{"c", "d"}

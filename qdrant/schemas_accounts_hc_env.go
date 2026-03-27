@@ -558,13 +558,13 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 		}
 	}
 	if val, ok := m[hcEnvCfgNodeSelectorFieldName]; ok {
-		config.NodeSelector = expandKeyVal(val.([]interface{}))
+		config.NodeSelector = expandKeyVal(getInterfaceSliceFromSchemaValue(val))
 	}
 	if val, ok := m[hcEnvCfgTolerationsFieldName]; ok {
-		config.Tolerations = expandTolerations(val.([]interface{}))
+		config.Tolerations = expandTolerations(getInterfaceSliceFromSchemaValue(val))
 	}
 	if val, ok := m[hcEnvCfgControlPlaneLabelsFieldName]; ok {
-		config.ControlPlaneLabels = expandKeyVal(val.([]interface{}))
+		config.ControlPlaneLabels = expandKeyVal(getInterfaceSliceFromSchemaValue(val))
 	}
 
 	return config

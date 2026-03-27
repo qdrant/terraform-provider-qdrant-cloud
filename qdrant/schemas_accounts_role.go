@@ -74,6 +74,7 @@ func accountsRoleSchema() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: permissionsNestedSchema(),
 			},
+			Set: permissionHashFunc,
 		},
 
 		// Read-only
@@ -112,7 +113,7 @@ func expandRole(d *schema.ResourceData, accountID string, includeID bool) (*qci.
 		Name:        d.Get(roleNameFieldName).(string),
 		Description: d.Get(roleDescriptionFieldName).(string),
 		RoleType:    qci.RoleType_ROLE_TYPE_CUSTOM,
-		Permissions: expandPermissions(d.Get(rolePermissionsFieldName)),
+		Permissions: expandPermissions(getInterfaceSliceFromSchemaValue(d.Get(rolePermissionsFieldName))),
 	}
 
 	if includeID {
@@ -123,22 +124,7 @@ func expandRole(d *schema.ResourceData, accountID string, includeID bool) (*qci.
 }
 
 // expandPermissions converts the Terraform permissions attribute into []*qci.Permission.
-func expandPermissions(v interface{}) []*qci.Permission {
-	var items []interface{}
-
-	switch t := v.(type) {
-	case *schema.Set:
-		items = t.List()
-	case []interface{}:
-		items = t
-	default:
-		return nil
-	}
-
-	if len(items) == 0 {
-		return nil
-	}
-
+func expandPermissions(items []interface{}) []*qci.Permission {
 	out := make([]*qci.Permission, 0, len(items))
 	for _, it := range items {
 		if it == nil {

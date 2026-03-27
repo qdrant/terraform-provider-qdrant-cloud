@@ -166,12 +166,13 @@ func accountsClusterSchema(asDataSource bool) map[string]*schema.Schema {
 		},
 		clusterLabelsFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "List of labels associated with the cluster"),
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
+			Set: keyValHashFunc,
 		},
 		clusterCloudProviderFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, `Cloud provider where the cluster is hosted.
@@ -272,48 +273,53 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 		},
 		nodeSelectorFieldName: {
 			Description: "The node selector for this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
+			Set: keyValHashFunc,
 		},
 		tolerationsFieldName: {
 			Description: "List of tolerations for this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: tolerationSchema(asDataSource),
 			},
+			Set: tolerationHashFunc,
 		},
 		topologySpreadConstraintsFieldName: {
 			Description: "List of topology spread constraints for this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: topologySpreadConstraintSchema(asDataSource),
 			},
+			Set: topologySpreadConstraintHashFunc,
 		},
 		annotationsFieldName: {
 			Description: "List of annotations for this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
+			Set: keyValHashFunc,
 		},
 		allowedIpSourceRangesFieldName: {
 			Description: "List of allowed IP source ranges for this cluster.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
+			Set: schema.HashString,
 		},
 		serviceTypeFieldName: {
 			Description: "The type of service to use for this cluster in a hybrid cloud environment.",
@@ -323,21 +329,23 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 		},
 		serviceAnnotationsFieldName: {
 			Description: "List of annotations applied to the service of this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
+			Set: keyValHashFunc,
 		},
 		podLabelsFieldName: {
 			Description: "List of labels applied to the pods of this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    asDataSource,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
+			Set: keyValHashFunc,
 		},
 		databaseConfigurationFieldName: {
 			Description: "Configuration for the Qdrant database engine, primarily for hybrid cloud setups.",
@@ -869,8 +877,8 @@ func expandCluster(d *schema.ResourceData, accountID string) (*qcCluster.Cluster
 		CloudProviderRegionId: cloudRegion.(string),
 		AccountId:             accountID,
 	}
-	if v, ok := d.GetOk(clusterLabelsFieldName); ok {
-		cluster.Labels = expandKeyVal(v.([]interface{}))
+	if v, ok := d.GetOk(clusterLabelsFieldName); ok && v != nil {
+		cluster.Labels = expandKeyVal(getInterfaceSliceFromSchemaValue(v))
 	}
 	if v, ok := d.GetOk(clusterMarkedForDeletionAtFieldName); ok {
 		cluster.DeletedAt = parseTime(v.(string))
@@ -923,29 +931,24 @@ func expandClusterConfiguration(v []interface{}) (*qcCluster.ClusterConfiguratio
 			config.AdditionalResources = additionalResources
 		}
 		if v, ok := item[databaseConfigurationFieldName]; ok {
-			dbConfig, jwtRbacVal := expandDatabaseConfiguration(v.([]interface{}))
+			dbConfig, jwtRbacVal := expandDatabaseConfiguration(getInterfaceSliceFromSchemaValue(v))
 			config.DatabaseConfiguration = dbConfig
 			jwtRbac = jwtRbacVal
 		}
 		if v, ok := item[nodeSelectorFieldName]; ok {
-			config.NodeSelector = expandKeyVal(v.([]interface{}))
+			config.NodeSelector = expandKeyVal(getInterfaceSliceFromSchemaValue(v))
 		}
 		if v, ok := item[tolerationsFieldName]; ok {
-			config.Tolerations = expandTolerations(v.([]interface{}))
+			config.Tolerations = expandTolerations(getInterfaceSliceFromSchemaValue(v))
 		}
 		if v, ok := item[topologySpreadConstraintsFieldName]; ok {
-			config.TopologySpreadConstraints = expandTopologySpreadConstraints(v.([]interface{}))
+			config.TopologySpreadConstraints = expandTopologySpreadConstraints(getInterfaceSliceFromSchemaValue(v))
 		}
 		if v, ok := item[annotationsFieldName]; ok {
-			config.Annotations = expandKeyVal(v.([]interface{}))
+			config.Annotations = expandKeyVal(getInterfaceSliceFromSchemaValue(v))
 		}
 		if v, ok := item[allowedIpSourceRangesFieldName]; ok {
-			if ranges, ok := v.([]interface{}); ok && len(ranges) > 0 {
-				config.AllowedIpSourceRanges = make([]string, len(ranges))
-				for i, r := range ranges {
-					config.AllowedIpSourceRanges[i] = r.(string)
-				}
-			}
+			config.AllowedIpSourceRanges = setToStringSlice(v)
 		}
 		if v, ok := item[serviceTypeFieldName]; ok {
 			st, stOK := qcCluster.ClusterServiceType_value[v.(string)]
@@ -953,11 +956,11 @@ func expandClusterConfiguration(v []interface{}) (*qcCluster.ClusterConfiguratio
 				config.ServiceType = newPointer(qcCluster.ClusterServiceType(st))
 			}
 		}
-		if v, ok := item[serviceAnnotationsFieldName]; ok {
-			config.ServiceAnnotations = expandKeyVal(v.([]interface{}))
+		if v, ok := item[serviceAnnotationsFieldName]; ok && v != nil {
+			config.ServiceAnnotations = expandKeyVal(getInterfaceSliceFromSchemaValue(v))
 		}
-		if v, ok := item[podLabelsFieldName]; ok {
-			config.PodLabels = expandKeyVal(v.([]interface{}))
+		if v, ok := item[podLabelsFieldName]; ok && v != nil {
+			config.PodLabels = expandKeyVal(getInterfaceSliceFromSchemaValue(v))
 		}
 		if v, ok := item[dbConfigReservedCpuPercentageFieldName]; ok {
 			if percent := v.(int); percent != 0 {
@@ -1045,6 +1048,7 @@ func expandClusterNodeResourceConfigurationsToAdditionalResources(v []interface{
 }
 
 // expandKeyVal expands a key-value pair from Terraform data.
+// It expects a slice of interfaces, typically from a TypeList or a converted TypeSet.
 func expandKeyVal(v []interface{}) []*commonv1.KeyValue {
 	var result []*commonv1.KeyValue
 	for _, m := range v {
@@ -1058,6 +1062,7 @@ func expandKeyVal(v []interface{}) []*commonv1.KeyValue {
 }
 
 // expandTolerations expands tolerations from Terraform data.
+// It expects a slice of interfaces, typically from a TypeList or a converted TypeSet.
 func expandTolerations(v []interface{}) []*qcCluster.Toleration {
 	var result []*qcCluster.Toleration
 	for _, m := range v {
@@ -1094,7 +1099,6 @@ func expandTolerations(v []interface{}) []*qcCluster.Toleration {
 // expandTopologySpreadConstraints expands topology spread constraints from Terraform data.
 func expandTopologySpreadConstraints(v []interface{}) []*commonv1.TopologySpreadConstraint {
 	var result []*commonv1.TopologySpreadConstraint
-
 	for _, m := range v {
 		item := m.(map[string]interface{})
 		constraint := &commonv1.TopologySpreadConstraint{}
