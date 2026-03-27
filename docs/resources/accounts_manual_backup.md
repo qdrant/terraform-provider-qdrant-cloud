@@ -119,23 +119,23 @@ Read-Only:
 
 Read-Only:
 
-- `allowed_ip_source_ranges` (List of String)
-- `annotations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--annotations))
+- `allowed_ip_source_ranges` (Set of String)
+- `annotations` (Set of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--annotations))
 - `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--database_configuration))
 - `gpu_type` (String)
 - `last_modified_at` (String)
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--node_configuration))
-- `node_selector` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--node_selector))
+- `node_selector` (Set of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--node_selector))
 - `number_of_nodes` (Number)
-- `pod_labels` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--pod_labels))
+- `pod_labels` (Set of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--pod_labels))
 - `rebalance_strategy` (String)
 - `reserved_cpu_percentage` (Number)
 - `reserved_memory_percentage` (Number)
 - `restart_policy` (String)
-- `service_annotations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--service_annotations))
+- `service_annotations` (Set of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--service_annotations))
 - `service_type` (String)
-- `tolerations` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--tolerations))
-- `topology_spread_constraints` (List of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--topology_spread_constraints))
+- `tolerations` (Set of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--tolerations))
+- `topology_spread_constraints` (Set of Object) (see [below for nested schema](#nestedobjatt--cluster_info--configuration--topology_spread_constraints))
 - `version` (String)
 
 <a id="nestedobjatt--cluster_info--configuration--annotations"></a>

@@ -98,7 +98,7 @@ For hybrid this should be the hybrid cloud environment ID. field
 
 - `account_id` (String) Cluster Schema Identifier of the account field
 - `delete_backups_on_destroy` (Boolean) Whether to delete backups when the cluster is destroyed.
-- `labels` (Block List) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedblock--labels))
+- `labels` (Block Set) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedblock--labels))
 - `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
 
 ### Read-Only
@@ -119,20 +119,20 @@ Required:
 
 Optional:
 
-- `allowed_ip_source_ranges` (List of String) List of allowed IP source ranges for this cluster.
-- `annotations` (Block List) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
+- `allowed_ip_source_ranges` (Set of String) List of allowed IP source ranges for this cluster.
+- `annotations` (Block Set) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
 - `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))
 - `gpu_type` (String) The GPU type that should be used for the database.
-- `node_selector` (Block List) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
-- `pod_labels` (Block List) List of labels applied to the pods of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--pod_labels))
+- `node_selector` (Block Set) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
+- `pod_labels` (Block Set) List of labels applied to the pods of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--pod_labels))
 - `rebalance_strategy` (String) The automatic shard rebalancing strategy for the database.
 - `reserved_cpu_percentage` (Number) The percentage of CPU resources reserved for system components.
 - `reserved_memory_percentage` (Number) The percentage of RAM resources reserved for system components.
 - `restart_policy` (String) The restart policy for the database.
-- `service_annotations` (Block List) List of annotations applied to the service of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--service_annotations))
+- `service_annotations` (Block Set) List of annotations applied to the service of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--service_annotations))
 - `service_type` (String) The type of service to use for this cluster in a hybrid cloud environment.
-- `tolerations` (Block List) List of tolerations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--tolerations))
-- `topology_spread_constraints` (Block List) List of topology spread constraints for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints))
+- `tolerations` (Block Set) List of tolerations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--tolerations))
+- `topology_spread_constraints` (Block Set) List of topology spread constraints for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints))
 - `version` (String) Cluster Schema Version of the Qdrant cluster field
 
 Read-Only:

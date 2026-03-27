@@ -61,7 +61,7 @@ Must match one of the region IDs returned by the "qdrant.cloud.platform.v1.Platf
 For hybrid this should be the hybrid cloud environment ID. field
 - `configuration` (List of Object) Cluster Schema The configuration options of a cluster field (see [below for nested schema](#nestedatt--configuration))
 - `created_at` (String) Cluster Schema Timestamp when the cluster is created field
-- `labels` (List of Object) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedatt--labels))
+- `labels` (Set of Object) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedatt--labels))
 - `marked_for_deletion_at` (String) Cluster Schema Timestamp when this cluster was marked for deletion field
 - `name` (String) Cluster Schema Name of the cluster field
 - `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
@@ -73,23 +73,23 @@ For hybrid this should be the hybrid cloud environment ID. field
 
 Read-Only:
 
-- `allowed_ip_source_ranges` (List of String)
-- `annotations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--annotations))
+- `allowed_ip_source_ranges` (Set of String)
+- `annotations` (Set of Object) (see [below for nested schema](#nestedobjatt--configuration--annotations))
 - `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--database_configuration))
 - `gpu_type` (String)
 - `last_modified_at` (String)
 - `node_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_configuration))
-- `node_selector` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--node_selector))
+- `node_selector` (Set of Object) (see [below for nested schema](#nestedobjatt--configuration--node_selector))
 - `number_of_nodes` (Number)
-- `pod_labels` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--pod_labels))
+- `pod_labels` (Set of Object) (see [below for nested schema](#nestedobjatt--configuration--pod_labels))
 - `rebalance_strategy` (String)
 - `reserved_cpu_percentage` (Number)
 - `reserved_memory_percentage` (Number)
 - `restart_policy` (String)
-- `service_annotations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--service_annotations))
+- `service_annotations` (Set of Object) (see [below for nested schema](#nestedobjatt--configuration--service_annotations))
 - `service_type` (String)
-- `tolerations` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--tolerations))
-- `topology_spread_constraints` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--topology_spread_constraints))
+- `tolerations` (Set of Object) (see [below for nested schema](#nestedobjatt--configuration--tolerations))
+- `topology_spread_constraints` (Set of Object) (see [below for nested schema](#nestedobjatt--configuration--topology_spread_constraints))
 - `version` (String)
 
 <a id="nestedobjatt--configuration--annotations"></a>
