@@ -109,12 +109,24 @@ Read-Only:
 
 Read-Only:
 
+- `audit_logging` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--audit_logging))
 - `collection` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--collection))
 - `inference` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--inference))
 - `log_level` (String)
 - `service` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--service))
 - `storage` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--storage))
 - `tls` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration--tls))
+
+<a id="nestedobjatt--clusters--configuration--database_configuration--audit_logging"></a>
+### Nested Schema for `clusters.configuration.database_configuration.audit_logging`
+
+Read-Only:
+
+- `enabled` (Boolean)
+- `max_log_files` (Number)
+- `rotation` (String)
+- `trust_forwarded_headers` (Boolean)
+
 
 <a id="nestedobjatt--clusters--configuration--database_configuration--collection"></a>
 ### Nested Schema for `clusters.configuration.database_configuration.collection`
