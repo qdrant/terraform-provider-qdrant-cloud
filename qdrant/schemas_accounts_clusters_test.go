@@ -51,6 +51,12 @@ func TestResourceClusterFlatten(t *testing.T) {
 					Key:  &commonv1.SecretKeyRef{Name: "key-secret", Key: "key.pem"},
 				},
 				Inference: &qcCluster.DatabaseConfigurationInference{Enabled: true},
+				AuditLogging: &qcCluster.DatabaseConfigurationAuditLogging{
+					Enabled:               true,
+					Rotation:              newPointer(qcCluster.AuditLogRotation_AUDIT_LOG_ROTATION_DAILY),
+					MaxLogFiles:           newPointer(uint32(7)),
+					TrustForwardedHeaders: newPointer(true),
+				},
 			},
 			AdditionalResources: &qcCluster.AdditionalResources{
 				Disk: 8,
@@ -246,6 +252,14 @@ func TestResourceClusterFlatten(t *testing.T) {
 								dbConfigInferenceEnabledFieldName: true,
 							},
 						},
+						dbConfigAuditLoggingFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigAuditLoggingEnabledFieldName:               true,
+								dbConfigAuditLoggingRotationFieldName:              "AUDIT_LOG_ROTATION_DAILY",
+								dbConfigAuditLoggingMaxLogFilesFieldName:           7,
+								dbConfigAuditLoggingTrustForwardedHeadersFieldName: true,
+							},
+						},
 					},
 				},
 				nodeSelectorFieldName: []interface{}{
@@ -319,6 +333,12 @@ func TestExpandCluster(t *testing.T) {
 					EnableTls: newPointer(false)},
 				Tls: &qcCluster.DatabaseConfigurationTls{
 					Cert: &commonv1.SecretKeyRef{Name: "cert-secret-expand", Key: "cert.pem-expand"},
+				},
+				AuditLogging: &qcCluster.DatabaseConfigurationAuditLogging{
+					Enabled:               true,
+					Rotation:              newPointer(qcCluster.AuditLogRotation_AUDIT_LOG_ROTATION_HOURLY),
+					MaxLogFiles:           newPointer(uint32(14)),
+					TrustForwardedHeaders: newPointer(false),
 				},
 			},
 			NodeSelector: []*commonv1.KeyValue{
@@ -405,6 +425,14 @@ func TestExpandCluster(t *testing.T) {
 										dbConfigSecretKeyRefSecretKeyFieldName:  "cert.pem-expand",
 									},
 								},
+							},
+						},
+						dbConfigAuditLoggingFieldName: []interface{}{
+							map[string]interface{}{
+								dbConfigAuditLoggingEnabledFieldName:               true,
+								dbConfigAuditLoggingRotationFieldName:              "AUDIT_LOG_ROTATION_HOURLY",
+								dbConfigAuditLoggingMaxLogFilesFieldName:           14,
+								dbConfigAuditLoggingTrustForwardedHeadersFieldName: false,
 							},
 						},
 					},

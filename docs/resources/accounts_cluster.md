@@ -175,12 +175,24 @@ Required:
 
 Optional:
 
+- `audit_logging` (Block List, Max: 1) Audit logging configuration for the Qdrant database. (see [below for nested schema](#nestedblock--configuration--database_configuration--audit_logging))
 - `collection` (Block List, Max: 1) Default collection parameters. (see [below for nested schema](#nestedblock--configuration--database_configuration--collection))
 - `inference` (Block List, Max: 1) Inference service configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--inference))
 - `log_level` (String) Logging level for the database.
 - `service` (Block List, Max: 1) Service-related configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--service))
 - `storage` (Block List, Max: 1) Storage-related configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--storage))
 - `tls` (Block List, Max: 1) TLS configuration for the database. (see [below for nested schema](#nestedblock--configuration--database_configuration--tls))
+
+<a id="nestedblock--configuration--database_configuration--audit_logging"></a>
+### Nested Schema for `configuration.database_configuration.audit_logging`
+
+Optional:
+
+- `enabled` (Boolean) If true, the cluster is configured to use audit logging.
+- `max_log_files` (Number) Maximum number of rotated audit log files to keep. Default is 7.
+- `rotation` (String) Rotation interval for audit logs. Possible values: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.
+- `trust_forwarded_headers` (Boolean) Whether to use the X-Forwarded-For header to determine the client address in audit log entries. Relevant for hybrid cloud clusters only.
+
 
 <a id="nestedblock--configuration--database_configuration--collection"></a>
 ### Nested Schema for `configuration.database_configuration.collection`

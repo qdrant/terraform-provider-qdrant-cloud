@@ -101,6 +101,11 @@ const (
 	dbConfigTlsCertFieldName                           = "cert"
 	dbConfigTlsKeyFieldName                            = "key"
 	dbConfigInferenceEnabledFieldName                  = "enabled"
+	dbConfigAuditLoggingFieldName                      = "audit_logging"
+	dbConfigAuditLoggingEnabledFieldName               = "enabled"
+	dbConfigAuditLoggingRotationFieldName              = "rotation"
+	dbConfigAuditLoggingMaxLogFilesFieldName           = "max_log_files"
+	dbConfigAuditLoggingTrustForwardedHeadersFieldName = "trust_forwarded_headers"
 
 	// Backward compatibility.
 	fieldAmount       = "amount"
@@ -498,6 +503,16 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 				Schema: databaseConfigurationInferenceSchema(),
 			},
 		},
+		dbConfigAuditLoggingFieldName: {
+			Description: "Audit logging configuration for the Qdrant database.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: databaseConfigurationAuditLoggingSchema(asDataSource),
+			},
+		},
 	}
 }
 
@@ -641,6 +656,36 @@ func databaseConfigurationInferenceSchema() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
+		},
+	}
+}
+
+// databaseConfigurationAuditLoggingSchema defines the schema for audit logging configuration.
+func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		dbConfigAuditLoggingEnabledFieldName: {
+			Description: "If true, the cluster is configured to use audit logging.",
+			Type:        schema.TypeBool,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigAuditLoggingRotationFieldName: {
+			Description: "Rotation interval for audit logs. Possible values: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigAuditLoggingMaxLogFilesFieldName: {
+			Description: "Maximum number of rotated audit log files to keep. Default is 7.",
+			Type:        schema.TypeInt,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
+		},
+		dbConfigAuditLoggingTrustForwardedHeadersFieldName: {
+			Description: "Whether to use the X-Forwarded-For header to determine the client address in audit log entries. Relevant for hybrid cloud clusters only.",
+			Type:        schema.TypeBool,
+			Optional:    !asDataSource,
+			Computed:    asDataSource,
 		},
 	}
 }
@@ -1311,6 +1356,9 @@ func expandDatabaseConfiguration(v []interface{}) (*qcCluster.DatabaseConfigurat
 	if val, ok := item[dbConfigInferenceFieldName]; ok {
 		config.Inference = expandDatabaseConfigurationInference(val.([]interface{}))
 	}
+	if val, ok := item[dbConfigAuditLoggingFieldName]; ok {
+		config.AuditLogging = expandDatabaseConfigurationAuditLogging(val.([]interface{}))
+	}
 
 	return config, jwtRbac
 }
@@ -1423,6 +1471,36 @@ func expandDatabaseConfigurationInference(v []interface{}) *qcCluster.DatabaseCo
 	return nil
 }
 
+// expandDatabaseConfigurationAuditLogging expands audit logging configuration from Terraform data.
+func expandDatabaseConfigurationAuditLogging(v []interface{}) *qcCluster.DatabaseConfigurationAuditLogging {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	item := v[0].(map[string]interface{})
+	auditConfig := &qcCluster.DatabaseConfigurationAuditLogging{}
+	if enabled, ok := item[dbConfigAuditLoggingEnabledFieldName]; ok {
+		auditConfig.Enabled = enabled.(bool)
+	}
+	if rotation, ok := item[dbConfigAuditLoggingRotationFieldName]; ok {
+		strVal := rotation.(string)
+		if strVal != "" {
+			r, rOK := qcCluster.AuditLogRotation_value[strVal]
+			if rOK && r != int32(qcCluster.AuditLogRotation_AUDIT_LOG_ROTATION_UNSPECIFIED) {
+				auditConfig.Rotation = newPointer(qcCluster.AuditLogRotation(r))
+			}
+		}
+	}
+	if maxFiles, ok := item[dbConfigAuditLoggingMaxLogFilesFieldName]; ok {
+		if val := uint32(maxFiles.(int)); val > 0 {
+			auditConfig.MaxLogFiles = &val
+		}
+	}
+	if trust, ok := item[dbConfigAuditLoggingTrustForwardedHeadersFieldName]; ok {
+		auditConfig.TrustForwardedHeaders = newPointer(trust.(bool))
+	}
+	return auditConfig
+}
+
 // expandSecretKeyRef expands a secret key reference from Terraform data.
 func expandSecretKeyRef(v []interface{}) *commonv1.SecretKeyRef {
 	if len(v) == 0 || v[0] == nil {
@@ -1460,6 +1538,9 @@ func flattenDatabaseConfiguration(config *qcCluster.DatabaseConfiguration, jwtRb
 	}
 	if v := flattenDatabaseConfigurationInference(config.GetInference()); v != nil {
 		m[dbConfigInferenceFieldName] = v
+	}
+	if v := flattenDatabaseConfigurationAuditLogging(config.GetAuditLogging()); v != nil {
+		m[dbConfigAuditLoggingFieldName] = v
 	}
 
 	return []interface{}{m}
@@ -1552,6 +1633,29 @@ func flattenDatabaseConfigurationInference(inference *qcCluster.DatabaseConfigur
 			dbConfigInferenceEnabledFieldName: inference.GetEnabled(),
 		},
 	}
+}
+
+// flattenDatabaseConfigurationAuditLogging flattens audit logging configuration for storage in Terraform.
+func flattenDatabaseConfigurationAuditLogging(auditLogging *qcCluster.DatabaseConfigurationAuditLogging) []interface{} {
+	if auditLogging == nil {
+		return nil
+	}
+	m := map[string]interface{}{
+		dbConfigAuditLoggingEnabledFieldName: auditLogging.GetEnabled(),
+	}
+	if auditLogging.Rotation != nil {
+		rotation := auditLogging.GetRotation()
+		if rotation != qcCluster.AuditLogRotation_AUDIT_LOG_ROTATION_UNSPECIFIED {
+			m[dbConfigAuditLoggingRotationFieldName] = rotation.String()
+		}
+	}
+	if auditLogging.MaxLogFiles != nil {
+		m[dbConfigAuditLoggingMaxLogFilesFieldName] = int(auditLogging.GetMaxLogFiles())
+	}
+	if auditLogging.TrustForwardedHeaders != nil {
+		m[dbConfigAuditLoggingTrustForwardedHeadersFieldName] = auditLogging.GetTrustForwardedHeaders()
+	}
+	return []interface{}{m}
 }
 
 // flattenSecretKeyRef flattens a secret key reference for storage in Terraform.
