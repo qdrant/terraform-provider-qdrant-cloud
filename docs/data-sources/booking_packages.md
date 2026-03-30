@@ -69,8 +69,10 @@ locals {
 Read-Only:
 
 - `available_additional_resources` (List of Object) (see [below for nested schema](#nestedobjatt--packages--available_additional_resources))
+- `available_storage_tier_configurations` (List of Object) (see [below for nested schema](#nestedobjatt--packages--available_storage_tier_configurations))
 - `currency` (String)
 - `id` (String)
+- `multi_az` (Boolean)
 - `name` (String)
 - `resource_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--packages--resource_configuration))
 - `status` (String)
@@ -86,6 +88,15 @@ Read-Only:
 - `disk_price_per_hour` (Number)
 
 
+<a id="nestedobjatt--packages--available_storage_tier_configurations"></a>
+### Nested Schema for `packages.available_storage_tier_configurations`
+
+Read-Only:
+
+- `price_per_hour` (Number)
+- `storage_tier_type` (String)
+
+
 <a id="nestedobjatt--packages--resource_configuration"></a>
 ### Nested Schema for `packages.resource_configuration`
 
@@ -93,4 +104,5 @@ Read-Only:
 
 - `cpu` (String)
 - `disk` (String)
+- `gpu` (String)
 - `ram` (String)

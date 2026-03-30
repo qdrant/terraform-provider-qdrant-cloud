@@ -11,36 +11,46 @@ import (
 // Constant keys and descriptions for schema fields.
 const (
 	// Field keys.
-	fieldPackages              = "packages"
-	fieldID                    = "id"
-	fieldName                  = "name"
-	fieldType                  = "type"
-	fieldCurrency              = "currency"
-	fieldUnitIntPricePerHour   = "unit_int_price_per_hour"
-	fieldStatus                = "status"
-	fieldTier                  = "tier"
-	fieldAvailableAddResources = "available_additional_resources"
-	fieldDiskPricePerHour      = "disk_price_per_hour"
-	fieldResourceConfiguration = "resource_configuration"
-	fieldResourceRam           = "ram"
-	fieldResourceCpu           = "cpu"
-	fieldResourceDisk          = "disk"
+	fieldPackages                           = "packages"
+	fieldID                                 = "id"
+	fieldName                               = "name"
+	fieldType                               = "type"
+	fieldCurrency                           = "currency"
+	fieldUnitIntPricePerHour                = "unit_int_price_per_hour"
+	fieldStatus                             = "status"
+	fieldTier                               = "tier"
+	fieldAvailableAddResources              = "available_additional_resources"
+	fieldDiskPricePerHour                   = "disk_price_per_hour"
+	fieldMultiAz                            = "multi_az"
+	fieldAvailableStorageTierConfigurations = "available_storage_tier_configurations"
+	fieldStorageTierType                    = "storage_tier_type"
+	fieldPricePerHour                       = "price_per_hour"
+	fieldResourceConfiguration              = "resource_configuration"
+	fieldResourceRam                        = "ram"
+	fieldResourceCpu                        = "cpu"
+	fieldResourceDisk                       = "disk"
+	fieldResourceGpu                        = "gpu"
 
 	// Descriptions.
-	descriptionPackages              = "List of packages"
-	descriptionID                    = "The ID of the package"
-	descriptionName                  = "The name of the package"
-	descriptionType                  = "The type of the package"
-	descriptionCurrency              = "The currency of the package prices"
-	descriptionUnitIntPricePerHour   = "The unit price per hour in integer format"
-	descriptionStatus                = "The status of the package"
-	descriptionTier                  = "The tier of the package"
-	descriptionAvailableAddResources = "Optional additional resources that can be added to the cluster"
-	descriptionDiskPricePerHour      = "The unit price per hour for additional disk in integer format"
-	descriptionResourceConfiguration = "The resource configuration of the package"
-	descriptionResourceRam           = "The amount of RAM (e.g., '1GiB')"
-	descriptionResourceCpu           = "The amount of CPU (e.g., '1000m' (1 vCPU))"
-	descriptionResourceDisk          = "The amount of disk (e.g., '100GiB')"
+	descriptionPackages                           = "List of packages"
+	descriptionID                                 = "The ID of the package"
+	descriptionName                               = "The name of the package"
+	descriptionType                               = "The type of the package"
+	descriptionCurrency                           = "The currency of the package prices"
+	descriptionUnitIntPricePerHour                = "The unit price per hour in integer format"
+	descriptionStatus                             = "The status of the package"
+	descriptionTier                               = "The tier of the package"
+	descriptionAvailableAddResources              = "Optional additional resources that can be added to the cluster"
+	descriptionDiskPricePerHour                   = "The unit price per hour for additional disk in integer format"
+	descriptionMultiAz                            = "Whether this package supports multi-availability zone deployment"
+	descriptionAvailableStorageTierConfigurations = "Available storage tier configurations and prices"
+	descriptionStorageTierType                    = "Represents performance tier type"
+	descriptionPricePerHour                       = "Represents additional cost per hour in millicents for given region/provider and pricing tier"
+	descriptionResourceConfiguration              = "The resource configuration of the package"
+	descriptionResourceRam                        = "The amount of RAM (e.g., '1GiB')"
+	descriptionResourceCpu                        = "The amount of CPU (e.g., '1000m' (1 vCPU))"
+	descriptionResourceDisk                       = "The amount of disk (e.g., '100GiB')"
+	descriptionResourceGpu                        = "The amount of GPU (e.g., '1000m' (1 vGPU))"
 )
 
 // packagesSchema defines the schema structure for a packages within the Terraform provider.
@@ -123,6 +133,19 @@ func packageSchema() map[string]*schema.Schema {
 				Schema: availableAdditionalResourcesSchema(),
 			},
 		},
+		fieldMultiAz: {
+			Description: descriptionMultiAz,
+			Type:        schema.TypeBool,
+			Computed:    true,
+		},
+		fieldAvailableStorageTierConfigurations: {
+			Description: descriptionAvailableStorageTierConfigurations,
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: availableStorageTierConfigurationsSchema(),
+			},
+		},
 	}
 }
 
@@ -131,6 +154,22 @@ func availableAdditionalResourcesSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		fieldDiskPricePerHour: {
 			Description: descriptionDiskPricePerHour,
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+	}
+}
+
+// availableStorageTierConfigurationsSchema defines the schema for available storage tier configurations.
+func availableStorageTierConfigurationsSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		fieldStorageTierType: {
+			Description: descriptionStorageTierType,
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		fieldPricePerHour: {
+			Description: descriptionPricePerHour,
 			Type:        schema.TypeInt,
 			Computed:    true,
 		},
@@ -158,6 +197,12 @@ func resourceConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Required:    !asDataSource,
 			Computed:    asDataSource,
 		},
+		fieldResourceGpu: {
+			Description: descriptionResourceGpu,
+			Type:        schema.TypeString,
+			Required:    !asDataSource,
+			Computed:    asDataSource,
+		},
 	}
 }
 
@@ -174,9 +219,13 @@ func flattenPackages(packages []*qcBooking.Package) []interface{} {
 			fieldResourceConfiguration: flattenResourceConfiguration(p.GetResourceConfiguration()),
 			fieldStatus:                p.GetStatus().String(),
 			fieldTier:                  p.GetTier().String(),
+			fieldMultiAz:               p.GetMultiAz(),
 		}
 		if addRes := p.GetAvailableAdditionalResources(); addRes != nil {
 			pkgMap[fieldAvailableAddResources] = flattenAvailableAdditionalResources(addRes)
+		}
+		if storageConfigs := p.GetAvailableStorageTierConfigurations(); len(storageConfigs) > 0 {
+			pkgMap[fieldAvailableStorageTierConfigurations] = flattenAvailableStorageTierConfigurations(storageConfigs)
 		}
 		flattenedPackages = append(flattenedPackages, pkgMap)
 	}
@@ -190,8 +239,24 @@ func flattenResourceConfiguration(rc *qcBooking.ResourceConfiguration) []interfa
 			fieldResourceRam:  rc.GetRam(),
 			fieldResourceCpu:  rc.GetCpu(),
 			fieldResourceDisk: rc.GetDisk(),
+			fieldResourceGpu:  rc.GetGpu(),
 		},
 	}
+}
+
+// flattenAvailableStorageTierConfigurations flattens the available storage tier configurations data.
+func flattenAvailableStorageTierConfigurations(configs []*qcBooking.AvailableStoragePerformanceTierConfigurations) []interface{} {
+	if len(configs) == 0 {
+		return nil
+	}
+	flattenedConfigs := make([]interface{}, len(configs))
+	for i, c := range configs {
+		flattenedConfigs[i] = map[string]interface{}{
+			fieldStorageTierType: c.GetStorageTierType().String(),
+			fieldPricePerHour:    int(c.GetPricePerHour()),
+		}
+	}
+	return flattenedConfigs
 }
 
 // flattenAvailableAdditionalResources flattens the available additional resources data into a format that Terraform can understand.
