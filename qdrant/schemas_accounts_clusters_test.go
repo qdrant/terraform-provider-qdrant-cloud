@@ -547,6 +547,325 @@ func TestExpandClusterConfiguration_EmptyAllowedIpSourceRangesReturnsNil(t *test
 	})
 }
 
+// TestClusterConfigSchemaEnumFieldsAreOptionalAndComputed verifies that enum and
+// backend-managed fields are both Optional and Computed in resource mode.
+// This prevents perpetual diffs when the backend returns UNSPECIFIED or default values
+// for fields the user didn't set.
+func TestClusterConfigSchemaEnumFieldsAreOptionalAndComputed(t *testing.T) {
+	schemaMap := accountsClusterConfigurationSchema(false) // resource mode
+	fieldsToCheck := []string{
+		serviceTypeFieldName,
+		dbConfigGpuTypeFieldName,
+		dbConfigRestartPolicyFieldName,
+		dbConfigRebalanceStrategyFieldName,
+		dbConfigReservedCpuPercentageFieldName,
+		dbConfigReservedMemoryPercentageFieldName,
+	}
+	for _, field := range fieldsToCheck {
+		t.Run(field, func(t *testing.T) {
+			s, ok := schemaMap[field]
+			require.True(t, ok, "field %s should exist in schema", field)
+			assert.True(t, s.Optional, "field %s should be Optional", field)
+			assert.True(t, s.Computed, "field %s should be Computed to prevent perpetual diffs with UNSPECIFIED backend values", field)
+		})
+	}
+}
+
+// TestClusterConfigSchemaDataSourceFieldsAreComputed verifies that the same fields
+// are Computed (and not Optional) in data source mode.
+func TestClusterConfigSchemaDataSourceFieldsAreComputed(t *testing.T) {
+	schemaMap := accountsClusterConfigurationSchema(true) // data source mode
+	fieldsToCheck := []string{
+		serviceTypeFieldName,
+		dbConfigGpuTypeFieldName,
+		dbConfigRestartPolicyFieldName,
+		dbConfigRebalanceStrategyFieldName,
+		dbConfigReservedCpuPercentageFieldName,
+		dbConfigReservedMemoryPercentageFieldName,
+	}
+	for _, field := range fieldsToCheck {
+		t.Run(field, func(t *testing.T) {
+			s, ok := schemaMap[field]
+			require.True(t, ok, "field %s should exist in schema", field)
+			assert.False(t, s.Optional, "field %s should not be Optional in data source mode", field)
+			assert.True(t, s.Computed, "field %s should be Computed in data source mode", field)
+		})
+	}
+}
+
+// TestFlattenClusterConfigurationExplicitUnspecifiedPointers verifies that even when
+// the backend explicitly sends UNSPECIFIED enum pointers (not just nil), they are
+// excluded from the flattened output.
+func TestFlattenClusterConfigurationExplicitUnspecifiedPointers(t *testing.T) {
+	clusterConfig := &qcCluster.ClusterConfiguration{
+		NumberOfNodes:     1,
+		PackageId:         "test-package-id",
+		ServiceType:       newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_UNSPECIFIED),
+		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED),
+		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED),
+		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED),
+	}
+
+	flattened := flattenClusterConfiguration(clusterConfig, nil)
+
+	require.Len(t, flattened, 1)
+	configMap := flattened[0].(map[string]interface{})
+
+	_, hasServiceType := configMap[serviceTypeFieldName]
+	_, hasGpuType := configMap[dbConfigGpuTypeFieldName]
+	_, hasRestartPolicy := configMap[dbConfigRestartPolicyFieldName]
+	_, hasRebalanceStrategy := configMap[dbConfigRebalanceStrategyFieldName]
+
+	assert.False(t, hasServiceType, "service_type should not be present when explicitly UNSPECIFIED")
+	assert.False(t, hasGpuType, "gpu_type should not be present when explicitly UNSPECIFIED")
+	assert.False(t, hasRestartPolicy, "restart_policy should not be present when explicitly UNSPECIFIED")
+	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should not be present when explicitly UNSPECIFIED")
+}
+
+// TestFlattenClusterConfigurationAllEnumValues verifies that every non-UNSPECIFIED
+// enum value for each field is correctly included in the flattened output.
+func TestFlattenClusterConfigurationAllEnumValues(t *testing.T) {
+	t.Run("all ServiceType values", func(t *testing.T) {
+		for val, name := range qcCluster.ClusterServiceType_name {
+			if val == 0 {
+				continue // skip UNSPECIFIED
+			}
+			t.Run(name, func(t *testing.T) {
+				cfg := &qcCluster.ClusterConfiguration{
+					ServiceType: newPointer(qcCluster.ClusterServiceType(val)),
+				}
+				flattened := flattenClusterConfiguration(cfg, nil)
+				configMap := flattened[0].(map[string]interface{})
+				assert.Equal(t, name, configMap[serviceTypeFieldName])
+			})
+		}
+	})
+
+	t.Run("all GpuType values", func(t *testing.T) {
+		for val, name := range qcCluster.ClusterConfigurationGpuType_name {
+			if val == 0 {
+				continue
+			}
+			t.Run(name, func(t *testing.T) {
+				cfg := &qcCluster.ClusterConfiguration{
+					GpuType: newPointer(qcCluster.ClusterConfigurationGpuType(val)),
+				}
+				flattened := flattenClusterConfiguration(cfg, nil)
+				configMap := flattened[0].(map[string]interface{})
+				assert.Equal(t, name, configMap[dbConfigGpuTypeFieldName])
+			})
+		}
+	})
+
+	t.Run("all RestartPolicy values", func(t *testing.T) {
+		for val, name := range qcCluster.ClusterConfigurationRestartPolicy_name {
+			if val == 0 {
+				continue
+			}
+			t.Run(name, func(t *testing.T) {
+				cfg := &qcCluster.ClusterConfiguration{
+					RestartPolicy: newPointer(qcCluster.ClusterConfigurationRestartPolicy(val)),
+				}
+				flattened := flattenClusterConfiguration(cfg, nil)
+				configMap := flattened[0].(map[string]interface{})
+				assert.Equal(t, name, configMap[dbConfigRestartPolicyFieldName])
+			})
+		}
+	})
+
+	t.Run("all RebalanceStrategy values", func(t *testing.T) {
+		for val, name := range qcCluster.ClusterConfigurationRebalanceStrategy_name {
+			if val == 0 {
+				continue
+			}
+			t.Run(name, func(t *testing.T) {
+				cfg := &qcCluster.ClusterConfiguration{
+					RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy(val)),
+				}
+				flattened := flattenClusterConfiguration(cfg, nil)
+				configMap := flattened[0].(map[string]interface{})
+				assert.Equal(t, name, configMap[dbConfigRebalanceStrategyFieldName])
+			})
+		}
+	})
+}
+
+// TestExpandClusterConfigurationUnspecifiedEnumStrings verifies that if UNSPECIFIED
+// string values somehow end up in the Terraform state, expand correctly ignores them
+// and does not send them to the API.
+func TestExpandClusterConfigurationUnspecifiedEnumStrings(t *testing.T) {
+	configBlock := []interface{}{
+		map[string]interface{}{
+			numberOfNodesFieldName:            1,
+			serviceTypeFieldName:              "CLUSTER_SERVICE_TYPE_UNSPECIFIED",
+			dbConfigGpuTypeFieldName:          "CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED",
+			dbConfigRestartPolicyFieldName:    "CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED",
+			dbConfigRebalanceStrategyFieldName: "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED",
+		},
+	}
+	config, _ := expandClusterConfiguration(configBlock)
+
+	require.NotNil(t, config)
+	assert.Nil(t, config.ServiceType, "ServiceType should be nil when UNSPECIFIED string is provided")
+	assert.Nil(t, config.GpuType, "GpuType should be nil when UNSPECIFIED string is provided")
+	assert.Nil(t, config.RestartPolicy, "RestartPolicy should be nil when UNSPECIFIED string is provided")
+	assert.Nil(t, config.RebalanceStrategy, "RebalanceStrategy should be nil when UNSPECIFIED string is provided")
+}
+
+// TestExpandClusterConfigurationValidEnumStrings verifies that expand correctly
+// converts valid enum string values to their protobuf counterparts.
+func TestExpandClusterConfigurationValidEnumStrings(t *testing.T) {
+	configBlock := []interface{}{
+		map[string]interface{}{
+			numberOfNodesFieldName:            1,
+			serviceTypeFieldName:              "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
+			dbConfigGpuTypeFieldName:          "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
+			dbConfigRestartPolicyFieldName:    "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING",
+			dbConfigRebalanceStrategyFieldName: "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT",
+		},
+	}
+	config, _ := expandClusterConfiguration(configBlock)
+
+	require.NotNil(t, config)
+	assert.Equal(t, qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER, config.GetServiceType())
+	assert.Equal(t, qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA, config.GetGpuType())
+	assert.Equal(t, qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING, config.GetRestartPolicy())
+	assert.Equal(t, qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT, config.GetRebalanceStrategy())
+}
+
+// TestExpandClusterConfigurationEmptyEnumStrings verifies that empty string values
+// for enum fields (the Terraform zero value) do not get sent to the API.
+func TestExpandClusterConfigurationEmptyEnumStrings(t *testing.T) {
+	configBlock := []interface{}{
+		map[string]interface{}{
+			numberOfNodesFieldName:            1,
+			serviceTypeFieldName:              "",
+			dbConfigGpuTypeFieldName:          "",
+			dbConfigRestartPolicyFieldName:    "",
+			dbConfigRebalanceStrategyFieldName: "",
+		},
+	}
+	config, _ := expandClusterConfiguration(configBlock)
+
+	require.NotNil(t, config)
+	assert.Nil(t, config.ServiceType, "ServiceType should be nil for empty string")
+	assert.Nil(t, config.GpuType, "GpuType should be nil for empty string")
+	assert.Nil(t, config.RestartPolicy, "RestartPolicy should be nil for empty string")
+	assert.Nil(t, config.RebalanceStrategy, "RebalanceStrategy should be nil for empty string")
+}
+
+// TestFlattenClusterConfigurationNilReservedPercentages verifies that nil pointer
+// values for reserved percentage fields are not included in the flattened output.
+func TestFlattenClusterConfigurationNilReservedPercentages(t *testing.T) {
+	clusterConfig := &qcCluster.ClusterConfiguration{
+		NumberOfNodes:            1,
+		PackageId:                "test-package-id",
+		ReservedCpuPercentage:    nil,
+		ReservedMemoryPercentage: nil,
+	}
+
+	flattened := flattenClusterConfiguration(clusterConfig, nil)
+
+	require.Len(t, flattened, 1)
+	configMap := flattened[0].(map[string]interface{})
+
+	_, hasCpu := configMap[dbConfigReservedCpuPercentageFieldName]
+	_, hasMem := configMap[dbConfigReservedMemoryPercentageFieldName]
+
+	assert.False(t, hasCpu, "reserved_cpu_percentage should not be present when nil")
+	assert.False(t, hasMem, "reserved_memory_percentage should not be present when nil")
+}
+
+// TestFlattenClusterConfigurationWithReservedPercentages verifies that actual
+// reserved percentage values are correctly included in the flattened output.
+func TestFlattenClusterConfigurationWithReservedPercentages(t *testing.T) {
+	clusterConfig := &qcCluster.ClusterConfiguration{
+		NumberOfNodes:            1,
+		PackageId:                "test-package-id",
+		ReservedCpuPercentage:    newPointer(uint32(10)),
+		ReservedMemoryPercentage: newPointer(uint32(20)),
+	}
+
+	flattened := flattenClusterConfiguration(clusterConfig, nil)
+
+	require.Len(t, flattened, 1)
+	configMap := flattened[0].(map[string]interface{})
+
+	assert.Equal(t, 10, configMap[dbConfigReservedCpuPercentageFieldName])
+	assert.Equal(t, 20, configMap[dbConfigReservedMemoryPercentageFieldName])
+}
+
+// TestFlattenExpandRoundTripEnumFields verifies that flatten → expand → flatten
+// produces consistent results for enum fields, ensuring no data is lost or corrupted.
+func TestFlattenExpandRoundTripEnumFields(t *testing.T) {
+	original := &qcCluster.ClusterConfiguration{
+		NumberOfNodes:     3,
+		PackageId:         "test-package-id",
+		ServiceType:       newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
+		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
+		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
+		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
+	}
+
+	// First flatten
+	flattened1 := flattenClusterConfiguration(original, nil)
+	require.Len(t, flattened1, 1)
+
+	// Expand back
+	expanded, _ := expandClusterConfiguration(flattened1)
+	require.NotNil(t, expanded)
+
+	// Second flatten
+	flattened2 := flattenClusterConfiguration(expanded, nil)
+	require.Len(t, flattened2, 1)
+
+	// Compare enum fields between first and second flatten
+	map1 := flattened1[0].(map[string]interface{})
+	map2 := flattened2[0].(map[string]interface{})
+
+	assert.Equal(t, map1[serviceTypeFieldName], map2[serviceTypeFieldName], "service_type should be consistent across round-trip")
+	assert.Equal(t, map1[dbConfigGpuTypeFieldName], map2[dbConfigGpuTypeFieldName], "gpu_type should be consistent across round-trip")
+	assert.Equal(t, map1[dbConfigRestartPolicyFieldName], map2[dbConfigRestartPolicyFieldName], "restart_policy should be consistent across round-trip")
+	assert.Equal(t, map1[dbConfigRebalanceStrategyFieldName], map2[dbConfigRebalanceStrategyFieldName], "rebalance_strategy should be consistent across round-trip")
+}
+
+// TestFlattenExpandRoundTripUnspecifiedEnumFields verifies that the round-trip
+// for UNSPECIFIED values is also consistent — they should remain absent.
+func TestFlattenExpandRoundTripUnspecifiedEnumFields(t *testing.T) {
+	original := &qcCluster.ClusterConfiguration{
+		NumberOfNodes: 1,
+		PackageId:     "test-package-id",
+		// All enum fields default to UNSPECIFIED (nil pointers)
+	}
+
+	// First flatten — UNSPECIFIED values should be absent
+	flattened1 := flattenClusterConfiguration(original, nil)
+	require.Len(t, flattened1, 1)
+
+	// Expand back — should produce nil enum pointers
+	expanded, _ := expandClusterConfiguration(flattened1)
+	require.NotNil(t, expanded)
+	assert.Nil(t, expanded.ServiceType)
+	assert.Nil(t, expanded.GpuType)
+	assert.Nil(t, expanded.RestartPolicy)
+	assert.Nil(t, expanded.RebalanceStrategy)
+
+	// Second flatten — should still be absent
+	flattened2 := flattenClusterConfiguration(expanded, nil)
+	require.Len(t, flattened2, 1)
+	map2 := flattened2[0].(map[string]interface{})
+
+	_, hasServiceType := map2[serviceTypeFieldName]
+	_, hasGpuType := map2[dbConfigGpuTypeFieldName]
+	_, hasRestartPolicy := map2[dbConfigRestartPolicyFieldName]
+	_, hasRebalanceStrategy := map2[dbConfigRebalanceStrategyFieldName]
+
+	assert.False(t, hasServiceType, "service_type should remain absent across round-trip")
+	assert.False(t, hasGpuType, "gpu_type should remain absent across round-trip")
+	assert.False(t, hasRestartPolicy, "restart_policy should remain absent across round-trip")
+	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should remain absent across round-trip")
+}
+
 // TestFlattenClusterConfigurationSpecifiedEnums verifies that specified enum values
 // ARE included in the flattened configuration.
 func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {

@@ -325,7 +325,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "The type of service to use for this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		serviceAnnotationsFieldName: {
 			Description: "List of annotations applied to the service of this cluster in a hybrid cloud environment.",
@@ -361,31 +361,31 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "The percentage of CPU resources reserved for system components.",
 			Type:        schema.TypeInt,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigReservedMemoryPercentageFieldName: {
 			Description: "The percentage of RAM resources reserved for system components.",
 			Type:        schema.TypeInt,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigGpuTypeFieldName: {
 			Description: "The GPU type that should be used for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigRestartPolicyFieldName: {
 			Description: "The restart policy for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigRebalanceStrategyFieldName: {
 			Description: "The automatic shard rebalancing strategy for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 	}
 }

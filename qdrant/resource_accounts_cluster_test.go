@@ -44,10 +44,6 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 
 	lifecycle {
 	  ignore_changes = [
-	    configuration[0].gpu_type,
-	    configuration[0].rebalance_strategy,
-	    configuration[0].restart_policy,
-	    configuration[0].service_type,
 	    configuration[0].allowed_ip_source_ranges,
 	    configuration[0].database_configuration,
 	  ]
@@ -172,10 +168,6 @@ resource "qdrant-cloud_accounts_cluster" "test" {
 
   lifecycle {
     ignore_changes = [
-      configuration[0].gpu_type,
-      configuration[0].rebalance_strategy,
-      configuration[0].restart_policy,
-      configuration[0].service_type,
       configuration[0].allowed_ip_source_ranges,
       configuration[0].database_configuration,
     ]
@@ -337,10 +329,6 @@ resource "qdrant-cloud_accounts_cluster" "advanced" {
 
   lifecycle {
     ignore_changes = [
-      configuration[0].gpu_type,
-      configuration[0].rebalance_strategy,
-      configuration[0].restart_policy,
-      configuration[0].service_type,
       configuration[0].allowed_ip_source_ranges,
       configuration[0].database_configuration,
     ]
