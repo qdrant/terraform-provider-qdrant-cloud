@@ -696,10 +696,10 @@ func TestFlattenClusterConfigurationAllEnumValues(t *testing.T) {
 func TestExpandClusterConfigurationUnspecifiedEnumStrings(t *testing.T) {
 	configBlock := []interface{}{
 		map[string]interface{}{
-			numberOfNodesFieldName:            1,
-			serviceTypeFieldName:              "CLUSTER_SERVICE_TYPE_UNSPECIFIED",
-			dbConfigGpuTypeFieldName:          "CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED",
-			dbConfigRestartPolicyFieldName:    "CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED",
+			numberOfNodesFieldName:             1,
+			serviceTypeFieldName:               "CLUSTER_SERVICE_TYPE_UNSPECIFIED",
+			dbConfigGpuTypeFieldName:           "CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED",
+			dbConfigRestartPolicyFieldName:     "CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED",
 			dbConfigRebalanceStrategyFieldName: "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED",
 		},
 	}
@@ -717,10 +717,10 @@ func TestExpandClusterConfigurationUnspecifiedEnumStrings(t *testing.T) {
 func TestExpandClusterConfigurationValidEnumStrings(t *testing.T) {
 	configBlock := []interface{}{
 		map[string]interface{}{
-			numberOfNodesFieldName:            1,
-			serviceTypeFieldName:              "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
-			dbConfigGpuTypeFieldName:          "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
-			dbConfigRestartPolicyFieldName:    "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING",
+			numberOfNodesFieldName:             1,
+			serviceTypeFieldName:               "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
+			dbConfigGpuTypeFieldName:           "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
+			dbConfigRestartPolicyFieldName:     "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING",
 			dbConfigRebalanceStrategyFieldName: "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT",
 		},
 	}
@@ -738,10 +738,10 @@ func TestExpandClusterConfigurationValidEnumStrings(t *testing.T) {
 func TestExpandClusterConfigurationEmptyEnumStrings(t *testing.T) {
 	configBlock := []interface{}{
 		map[string]interface{}{
-			numberOfNodesFieldName:            1,
-			serviceTypeFieldName:              "",
-			dbConfigGpuTypeFieldName:          "",
-			dbConfigRestartPolicyFieldName:    "",
+			numberOfNodesFieldName:             1,
+			serviceTypeFieldName:               "",
+			dbConfigGpuTypeFieldName:           "",
+			dbConfigRestartPolicyFieldName:     "",
 			dbConfigRebalanceStrategyFieldName: "",
 		},
 	}
