@@ -280,7 +280,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "The node selector for this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
@@ -290,7 +290,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "List of tolerations for this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: tolerationSchema(asDataSource),
 			},
@@ -300,7 +300,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "List of topology spread constraints for this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: topologySpreadConstraintSchema(asDataSource),
 			},
@@ -310,7 +310,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "List of annotations for this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
@@ -320,7 +320,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "List of allowed IP source ranges for this cluster.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
@@ -330,13 +330,13 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "The type of service to use for this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		serviceAnnotationsFieldName: {
 			Description: "List of annotations applied to the service of this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
@@ -346,7 +346,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "List of labels applied to the pods of this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(asDataSource),
 			},
@@ -356,7 +356,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "Configuration for the Qdrant database engine, primarily for hybrid cloud setups.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationSchema(asDataSource),
@@ -366,31 +366,31 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "The percentage of CPU resources reserved for system components.",
 			Type:        schema.TypeInt,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigReservedMemoryPercentageFieldName: {
 			Description: "The percentage of RAM resources reserved for system components.",
 			Type:        schema.TypeInt,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigGpuTypeFieldName: {
 			Description: "The GPU type that should be used for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigRestartPolicyFieldName: {
 			Description: "The restart policy for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigRebalanceStrategyFieldName: {
 			Description: "The automatic shard rebalancing strategy for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 	}
 }
@@ -451,7 +451,7 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Description: "Default collection parameters.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationCollectionSchema(asDataSource),
@@ -461,7 +461,7 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Description: "Storage-related configuration.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationStorageSchema(asDataSource),
@@ -471,7 +471,7 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Description: "Service-related configuration.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationServiceSchema(asDataSource),
@@ -481,13 +481,13 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Description: "Logging level for the database.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigTlsFieldName: {
 			Description: "TLS configuration for the database.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationTlsSchema(asDataSource),
@@ -507,7 +507,7 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 			Description: "Audit logging configuration for the Qdrant database.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{
 				Schema: databaseConfigurationAuditLoggingSchema(asDataSource),
@@ -526,24 +526,24 @@ func databaseConfigurationCollectionSchema(asDataSource bool) map[string]*schema
 		dbConfigCollectionReplicationFactor: {
 			Type:     schema.TypeInt,
 			Optional: !asDataSource,
-			Computed: asDataSource,
+			Computed: true,
 		},
 		dbConfigCollectionWriteConsistencyFactor: {
 			Type:     schema.TypeInt,
 			Optional: !asDataSource,
-			Computed: asDataSource,
+			Computed: true,
 		},
 		dbConfigCollectionVectorsFieldName: {
 			Type:     schema.TypeList,
 			Optional: !asDataSource,
-			Computed: asDataSource,
+			Computed: true,
 			MaxItems: maxItems,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					dbConfigCollectionVectorsOnDiskFieldName: {
 						Type:     schema.TypeBool,
 						Optional: !asDataSource,
-						Computed: asDataSource,
+						Computed: true,
 					},
 				},
 			},
@@ -561,19 +561,19 @@ func databaseConfigurationStorageSchema(asDataSource bool) map[string]*schema.Sc
 		dbConfigStoragePerformanceFieldName: {
 			Type:     schema.TypeList,
 			Optional: !asDataSource,
-			Computed: asDataSource,
+			Computed: true,
 			MaxItems: maxItems,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					dbConfigStoragePerfOptimizerCpuBudget: {
 						Type:     schema.TypeInt,
 						Optional: !asDataSource,
-						Computed: asDataSource,
+						Computed: true,
 					},
 					dbConfigStoragePerfAsyncScorer: {
 						Type:     schema.TypeBool,
 						Optional: !asDataSource,
-						Computed: asDataSource,
+						Computed: true,
 					},
 				},
 			},
@@ -600,7 +600,7 @@ func databaseConfigurationServiceSchema(asDataSource bool) map[string]*schema.Sc
 			Description: "Secret to use for the read-only API key.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem:        secretKeyRefSchema(asDataSource),
 		},
@@ -634,7 +634,7 @@ func databaseConfigurationTlsSchema(asDataSource bool) map[string]*schema.Schema
 			Description: "Secret to use for the certificate.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem:        secretKeyRefSchema(asDataSource),
 		},
@@ -642,7 +642,7 @@ func databaseConfigurationTlsSchema(asDataSource bool) map[string]*schema.Schema
 			Description: "Secret to use for the private key.",
 			Type:        schema.TypeList,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 			MaxItems:    maxItems,
 			Elem:        secretKeyRefSchema(asDataSource),
 		},
@@ -667,25 +667,25 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 			Description: "If true, the cluster is configured to use audit logging.",
 			Type:        schema.TypeBool,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigAuditLoggingRotationFieldName: {
 			Description: "Rotation interval for audit logs. Possible values: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.",
 			Type:        schema.TypeString,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigAuditLoggingMaxLogFilesFieldName: {
 			Description: "Maximum number of rotated audit log files to keep. Default is 7.",
 			Type:        schema.TypeInt,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 		dbConfigAuditLoggingTrustForwardedHeadersFieldName: {
 			Description: "Whether to use the X-Forwarded-For header to determine the client address in audit log entries. Relevant for hybrid cloud clusters only.",
 			Type:        schema.TypeBool,
 			Optional:    !asDataSource,
-			Computed:    asDataSource,
+			Computed:    true,
 		},
 	}
 }
