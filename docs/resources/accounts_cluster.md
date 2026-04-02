@@ -100,6 +100,7 @@ For hybrid this should be the hybrid cloud environment ID. field
 - `delete_backups_on_destroy` (Boolean) Whether to delete backups when the cluster is destroyed.
 - `labels` (Block Set) Cluster Schema List of labels associated with the cluster field (see [below for nested schema](#nestedblock--labels))
 - `private_region_id` (String, Deprecated) Cluster Schema Identifier of the Hybrid cloud region field
+- `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 ### Read-Only
 
@@ -352,6 +353,14 @@ Required:
 
 - `key` (String)
 - `value` (String)
+
+
+<a id="nestedblock--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String)
 
 
 <a id="nestedatt--status"></a>

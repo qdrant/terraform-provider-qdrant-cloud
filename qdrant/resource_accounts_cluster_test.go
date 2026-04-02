@@ -111,6 +111,7 @@ output "cluster_cfg_num_nodes" {
 						Destroy: false,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckOutput("cluster_name", "test-cluster"),
+							resource.TestCheckResourceAttrSet("qdrant-cloud_accounts_cluster.test", "url"),
 						),
 					},
 					{

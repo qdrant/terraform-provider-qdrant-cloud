@@ -3,8 +3,11 @@ package qdrant
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -12,6 +15,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
+)
+
+const (
+	clusterCreatePollInterval = 10 * time.Second
+	clusterCreateTimeout      = 20 * time.Minute
 )
 
 // resourceAccountsCluster constructs a Terraform resource for
@@ -27,6 +35,9 @@ func resourceAccountsCluster() *schema.Resource {
 		Schema:        accountsClusterSchema(false),
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(clusterCreateTimeout),
 		},
 	}
 }
@@ -97,15 +108,77 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, m interf
 		}
 		return diag.FromErr(fmt.Errorf("%s%s: %w", errorPrefix, reqID, err))
 	}
-	// Flatten cluster and store in Terraform state
-	for k, v := range flattenCluster(resp.GetCluster()) {
+
+	createdCluster := resp.GetCluster()
+	d.SetId(createdCluster.GetId())
+
+	accountUUID, err := getAccountUUID(d, m)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			clusterWaitPending,
+		},
+		Target: []string{
+			clusterWaitReady,
+		},
+		Refresh:      clusterEndpointRefreshFunc(client, clientCtx, accountUUID.String(), createdCluster.GetId()),
+		Timeout:      d.Timeout(schema.TimeoutCreate),
+		PollInterval: clusterCreatePollInterval,
+	}
+
+	result, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+
+	readyCluster := result.(*qcCluster.Cluster)
+	for k, v := range flattenCluster(readyCluster) {
 		if err := d.Set(k, v); err != nil {
 			return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 		}
 	}
-	// Set the ID
-	d.SetId(resp.GetCluster().GetId())
 	return nil
+}
+
+const (
+	clusterWaitPending = "waiting"
+	clusterWaitReady   = "ready"
+)
+
+// clusterEndpointRefreshFunc returns a StateRefreshFunc that polls GetCluster
+// until the endpoint URL is populated or creation fails.
+func clusterEndpointRefreshFunc(
+	client qcCluster.ClusterServiceClient,
+	ctx context.Context,
+	accountID, clusterID string,
+) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := client.GetCluster(ctx, &qcCluster.GetClusterRequest{
+			AccountId: accountID,
+			ClusterId: clusterID,
+		})
+		if err != nil {
+			return nil, "", err
+		}
+
+		cluster := resp.GetCluster()
+		phase := cluster.GetState().GetPhase()
+
+		if phase == qcCluster.ClusterPhase_CLUSTER_PHASE_FAILED_TO_CREATE {
+			return nil, "", fmt.Errorf("cluster creation failed (phase=%q reason=%q)",
+				phase.String(), cluster.GetState().GetReason())
+		}
+
+		url := strings.TrimSpace(cluster.GetState().GetEndpoint().GetUrl())
+		if url != "" {
+			return cluster, clusterWaitReady, nil
+		}
+
+		return cluster, clusterWaitPending, nil
+	}
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
