@@ -705,7 +705,7 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 
 // clusterStorageConfigurationSchema defines the schema for cluster storage configuration.
 func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
-	fieldSchema := &schema.Schema{
+	storageTierType := &schema.Schema{
 		Description: "The storage performance tier for the cluster.",
 		Type:        schema.TypeString,
 		Optional:    !asDataSource,
@@ -714,14 +714,14 @@ func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Sch
 	// Only add ValidateFunc for resource mode (when field is Optional)
 	// Data sources are Computed-only and don't need validation
 	if !asDataSource {
-		fieldSchema.ValidateFunc = validation.StringInSlice([]string{
+		storageTierType.ValidateFunc = validation.StringInSlice([]string{
 			"STORAGE_TIER_TYPE_COST_OPTIMISED",
 			"STORAGE_TIER_TYPE_BALANCED",
 			"STORAGE_TIER_TYPE_PERFORMANCE",
 		}, false)
 	}
 	return map[string]*schema.Schema{
-		clusterStorageTierTypeFieldName: fieldSchema,
+		clusterStorageTierTypeFieldName: storageTierType,
 	}
 }
 

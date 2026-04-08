@@ -59,4 +59,3 @@ output "curl_command" {
   value       = "curl \\\n    -X GET '${qdrant-cloud_accounts_cluster.example.url}' \\\n    --header 'api-key: ${qdrant-cloud_accounts_database_api_key_v2.example-key.key}'"
   description = "Generating a curl command test cluster access using the API key."
 }
-
