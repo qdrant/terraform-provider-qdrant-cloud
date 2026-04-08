@@ -11,7 +11,7 @@ import (
 //go:generate terraform fmt -recursive ./examples/
 
 // Terraform plugin tool for documentation generation
-//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+//go:generate go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name terraform-provider-qdrant-cloud
 
 func main() {
 	plugin.Serve(&plugin.ServeOpts{
