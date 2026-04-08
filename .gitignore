@@ -36,3 +36,5 @@ website/vendor
 
 .env
 terraform-provider-qdrant-cloud
+# Ignore AI specific folders/files
+.opencode/

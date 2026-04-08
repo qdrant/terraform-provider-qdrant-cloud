@@ -95,6 +95,9 @@ func TestResourceClusterFlatten(t *testing.T) {
 			GpuType:                  newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
 			RestartPolicy:            newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
 			RebalanceStrategy:        newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
+			ClusterStorageConfiguration: &qcCluster.ClusterStorageConfiguration{
+				StorageTierType: commonv1.StorageTierType_STORAGE_TIER_TYPE_BALANCED,
+			},
 		},
 		State: &qcCluster.ClusterState{
 			Version:     "v1.1.1",
@@ -296,6 +299,11 @@ func TestResourceClusterFlatten(t *testing.T) {
 				dbConfigGpuTypeFieldName:                  "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
 				dbConfigRestartPolicyFieldName:            "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING",
 				dbConfigRebalanceStrategyFieldName:        "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT",
+				clusterStorageConfigurationFieldName: []interface{}{
+					map[string]interface{}{
+						clusterStorageTierTypeFieldName: "STORAGE_TIER_TYPE_BALANCED",
+					},
+				},
 			},
 		},
 	}
@@ -361,6 +369,9 @@ func TestExpandCluster(t *testing.T) {
 			},
 			ServiceType: newPointer(qcCluster.ClusterServiceType_CLUSTER_SERVICE_TYPE_LOAD_BALANCER),
 			GpuType:     newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
+			ClusterStorageConfiguration: &qcCluster.ClusterStorageConfiguration{
+				StorageTierType: commonv1.StorageTierType_STORAGE_TIER_TYPE_PERFORMANCE,
+			},
 		},
 		State: &qcCluster.ClusterState{
 			Endpoint: &qcCluster.ClusterEndpoint{
@@ -457,6 +468,11 @@ func TestExpandCluster(t *testing.T) {
 				},
 				serviceTypeFieldName:     "CLUSTER_SERVICE_TYPE_LOAD_BALANCER",
 				dbConfigGpuTypeFieldName: "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
+				clusterStorageConfigurationFieldName: []interface{}{
+					map[string]interface{}{
+						clusterStorageTierTypeFieldName: "STORAGE_TIER_TYPE_PERFORMANCE",
+					},
+				},
 			},
 		},
 	})
@@ -491,6 +507,9 @@ func TestFlattenClusterConfigurationUnspecifiedEnums(t *testing.T) {
 	assert.False(t, hasGpuType, "gpu_type should not be present when UNSPECIFIED")
 	assert.False(t, hasRestartPolicy, "restart_policy should not be present when UNSPECIFIED")
 	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should not be present when UNSPECIFIED")
+
+	_, hasClusterStorageConfig := configMap[clusterStorageConfigurationFieldName]
+	assert.False(t, hasClusterStorageConfig, "cluster_storage_configuration should not be present when UNSPECIFIED")
 
 	assert.Equal(t, 1, configMap[numberOfNodesFieldName])
 }
@@ -586,6 +605,7 @@ func TestClusterConfigSchemaEnumFieldsAreOptionalAndComputed(t *testing.T) {
 		dbConfigGpuTypeFieldName,
 		dbConfigRestartPolicyFieldName,
 		dbConfigRebalanceStrategyFieldName,
+		clusterStorageConfigurationFieldName,
 		dbConfigReservedCpuPercentageFieldName,
 		dbConfigReservedMemoryPercentageFieldName,
 		databaseConfigurationFieldName,
@@ -628,13 +648,14 @@ func TestDatabaseConfigSchemaFieldsAreOptionalAndComputed(t *testing.T) {
 // This test prevents regressions when new Optional fields are added.
 func TestOptionalFieldsMustBeComputed(t *testing.T) {
 	schemas := map[string]map[string]*schema.Schema{
-		"clusterConfiguration":  accountsClusterConfigurationSchema(false),
-		"databaseConfiguration": databaseConfigurationSchema(false),
-		"databaseCollection":    databaseConfigurationCollectionSchema(false),
-		"databaseStorage":       databaseConfigurationStorageSchema(false),
-		"databaseService":       databaseConfigurationServiceSchema(false),
-		"databaseTls":           databaseConfigurationTlsSchema(false),
-		"databaseAuditLogging":  databaseConfigurationAuditLoggingSchema(false),
+		"clusterConfiguration":        accountsClusterConfigurationSchema(false),
+		"clusterStorageConfiguration": clusterStorageConfigurationSchema(false),
+		"databaseConfiguration":       databaseConfigurationSchema(false),
+		"databaseCollection":          databaseConfigurationCollectionSchema(false),
+		"databaseStorage":             databaseConfigurationStorageSchema(false),
+		"databaseService":             databaseConfigurationServiceSchema(false),
+		"databaseTls":                 databaseConfigurationTlsSchema(false),
+		"databaseAuditLogging":        databaseConfigurationAuditLoggingSchema(false),
 	}
 
 	for schemaName, schemaMap := range schemas {
@@ -658,6 +679,7 @@ func TestClusterConfigSchemaDataSourceFieldsAreComputed(t *testing.T) {
 		dbConfigGpuTypeFieldName,
 		dbConfigRestartPolicyFieldName,
 		dbConfigRebalanceStrategyFieldName,
+		clusterStorageConfigurationFieldName,
 		dbConfigReservedCpuPercentageFieldName,
 		dbConfigReservedMemoryPercentageFieldName,
 	}
@@ -682,6 +704,9 @@ func TestFlattenClusterConfigurationExplicitUnspecifiedPointers(t *testing.T) {
 		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED),
 		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED),
 		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED),
+		ClusterStorageConfiguration: &qcCluster.ClusterStorageConfiguration{
+			StorageTierType: commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED,
+		},
 	}
 
 	flattened := flattenClusterConfiguration(clusterConfig, nil)
@@ -698,6 +723,9 @@ func TestFlattenClusterConfigurationExplicitUnspecifiedPointers(t *testing.T) {
 	assert.False(t, hasGpuType, "gpu_type should not be present when explicitly UNSPECIFIED")
 	assert.False(t, hasRestartPolicy, "restart_policy should not be present when explicitly UNSPECIFIED")
 	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should not be present when explicitly UNSPECIFIED")
+
+	_, hasClusterStorageConfig := configMap[clusterStorageConfigurationFieldName]
+	assert.False(t, hasClusterStorageConfig, "cluster_storage_configuration should not be present when explicitly UNSPECIFIED")
 }
 
 // TestFlattenClusterConfigurationAllEnumValues verifies that every non-UNSPECIFIED
@@ -766,6 +794,28 @@ func TestFlattenClusterConfigurationAllEnumValues(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("all StorageTierType values", func(t *testing.T) {
+		for val, name := range commonv1.StorageTierType_name {
+			if val == 0 {
+				continue // skip UNSPECIFIED
+			}
+			t.Run(name, func(t *testing.T) {
+				cfg := &qcCluster.ClusterConfiguration{
+					ClusterStorageConfiguration: &qcCluster.ClusterStorageConfiguration{
+						StorageTierType: commonv1.StorageTierType(val),
+					},
+				}
+				flattened := flattenClusterConfiguration(cfg, nil)
+				configMap := flattened[0].(map[string]interface{})
+				clusterStorageConfigList, ok := configMap[clusterStorageConfigurationFieldName].([]interface{})
+				require.True(t, ok, "cluster_storage_configuration should be present")
+				require.Len(t, clusterStorageConfigList, 1)
+				clusterStorageConfig := clusterStorageConfigList[0].(map[string]interface{})
+				assert.Equal(t, name, clusterStorageConfig[clusterStorageTierTypeFieldName])
+			})
+		}
+	})
 }
 
 // TestExpandClusterConfigurationUnspecifiedEnumStrings verifies that if UNSPECIFIED
@@ -779,6 +829,11 @@ func TestExpandClusterConfigurationUnspecifiedEnumStrings(t *testing.T) {
 			dbConfigGpuTypeFieldName:           "CLUSTER_CONFIGURATION_GPU_TYPE_UNSPECIFIED",
 			dbConfigRestartPolicyFieldName:     "CLUSTER_CONFIGURATION_RESTART_POLICY_UNSPECIFIED",
 			dbConfigRebalanceStrategyFieldName: "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED",
+			clusterStorageConfigurationFieldName: []interface{}{
+				map[string]interface{}{
+					clusterStorageTierTypeFieldName: "STORAGE_TIER_TYPE_UNSPECIFIED",
+				},
+			},
 		},
 	}
 	config, _ := expandClusterConfiguration(configBlock)
@@ -788,6 +843,7 @@ func TestExpandClusterConfigurationUnspecifiedEnumStrings(t *testing.T) {
 	assert.Nil(t, config.GpuType, "GpuType should be nil when UNSPECIFIED string is provided")
 	assert.Nil(t, config.RestartPolicy, "RestartPolicy should be nil when UNSPECIFIED string is provided")
 	assert.Nil(t, config.RebalanceStrategy, "RebalanceStrategy should be nil when UNSPECIFIED string is provided")
+	assert.Nil(t, config.ClusterStorageConfiguration, "ClusterStorageConfiguration should be nil when UNSPECIFIED string is provided")
 }
 
 // TestExpandClusterConfigurationValidEnumStrings verifies that expand correctly
@@ -800,6 +856,11 @@ func TestExpandClusterConfigurationValidEnumStrings(t *testing.T) {
 			dbConfigGpuTypeFieldName:           "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA",
 			dbConfigRestartPolicyFieldName:     "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING",
 			dbConfigRebalanceStrategyFieldName: "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT",
+			clusterStorageConfigurationFieldName: []interface{}{
+				map[string]interface{}{
+					clusterStorageTierTypeFieldName: "STORAGE_TIER_TYPE_PERFORMANCE",
+				},
+			},
 		},
 	}
 	config, _ := expandClusterConfiguration(configBlock)
@@ -809,6 +870,7 @@ func TestExpandClusterConfigurationValidEnumStrings(t *testing.T) {
 	assert.Equal(t, qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA, config.GetGpuType())
 	assert.Equal(t, qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING, config.GetRestartPolicy())
 	assert.Equal(t, qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT, config.GetRebalanceStrategy())
+	assert.Equal(t, commonv1.StorageTierType_STORAGE_TIER_TYPE_PERFORMANCE, config.GetClusterStorageConfiguration().GetStorageTierType())
 }
 
 // TestExpandClusterConfigurationEmptyEnumStrings verifies that empty string values
@@ -821,6 +883,11 @@ func TestExpandClusterConfigurationEmptyEnumStrings(t *testing.T) {
 			dbConfigGpuTypeFieldName:           "",
 			dbConfigRestartPolicyFieldName:     "",
 			dbConfigRebalanceStrategyFieldName: "",
+			clusterStorageConfigurationFieldName: []interface{}{
+				map[string]interface{}{
+					clusterStorageTierTypeFieldName: "",
+				},
+			},
 		},
 	}
 	config, _ := expandClusterConfiguration(configBlock)
@@ -830,6 +897,7 @@ func TestExpandClusterConfigurationEmptyEnumStrings(t *testing.T) {
 	assert.Nil(t, config.GpuType, "GpuType should be nil for empty string")
 	assert.Nil(t, config.RestartPolicy, "RestartPolicy should be nil for empty string")
 	assert.Nil(t, config.RebalanceStrategy, "RebalanceStrategy should be nil for empty string")
+	assert.Nil(t, config.ClusterStorageConfiguration, "ClusterStorageConfiguration should be nil for empty string")
 }
 
 // TestFlattenClusterConfigurationNilReservedPercentages verifies that nil pointer
@@ -883,6 +951,9 @@ func TestFlattenExpandRoundTripEnumFields(t *testing.T) {
 		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
 		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
 		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
+		ClusterStorageConfiguration: &qcCluster.ClusterStorageConfiguration{
+			StorageTierType: commonv1.StorageTierType_STORAGE_TIER_TYPE_BALANCED,
+		},
 	}
 
 	// First flatten
@@ -905,6 +976,17 @@ func TestFlattenExpandRoundTripEnumFields(t *testing.T) {
 	assert.Equal(t, map1[dbConfigGpuTypeFieldName], map2[dbConfigGpuTypeFieldName], "gpu_type should be consistent across round-trip")
 	assert.Equal(t, map1[dbConfigRestartPolicyFieldName], map2[dbConfigRestartPolicyFieldName], "restart_policy should be consistent across round-trip")
 	assert.Equal(t, map1[dbConfigRebalanceStrategyFieldName], map2[dbConfigRebalanceStrategyFieldName], "rebalance_strategy should be consistent across round-trip")
+
+	// Check cluster_storage_configuration nested structure
+	clusterStorageConfig1, ok1 := map1[clusterStorageConfigurationFieldName].([]interface{})
+	clusterStorageConfig2, ok2 := map2[clusterStorageConfigurationFieldName].([]interface{})
+	require.True(t, ok1, "cluster_storage_configuration should be present in first flatten")
+	require.True(t, ok2, "cluster_storage_configuration should be present in second flatten")
+	require.Len(t, clusterStorageConfig1, 1)
+	require.Len(t, clusterStorageConfig2, 1)
+	clusterStorageMap1 := clusterStorageConfig1[0].(map[string]interface{})
+	clusterStorageMap2 := clusterStorageConfig2[0].(map[string]interface{})
+	assert.Equal(t, clusterStorageMap1[clusterStorageTierTypeFieldName], clusterStorageMap2[clusterStorageTierTypeFieldName], "storage_tier_type should be consistent across round-trip")
 }
 
 // TestFlattenExpandRoundTripUnspecifiedEnumFields verifies that the round-trip
@@ -927,6 +1009,7 @@ func TestFlattenExpandRoundTripUnspecifiedEnumFields(t *testing.T) {
 	assert.Nil(t, expanded.GpuType)
 	assert.Nil(t, expanded.RestartPolicy)
 	assert.Nil(t, expanded.RebalanceStrategy)
+	assert.Nil(t, expanded.ClusterStorageConfiguration, "ClusterStorageConfiguration should be nil when no storage_tier_type is provided")
 
 	// Second flatten — should still be absent
 	flattened2 := flattenClusterConfiguration(expanded, nil)
@@ -942,6 +1025,9 @@ func TestFlattenExpandRoundTripUnspecifiedEnumFields(t *testing.T) {
 	assert.False(t, hasGpuType, "gpu_type should remain absent across round-trip")
 	assert.False(t, hasRestartPolicy, "restart_policy should remain absent across round-trip")
 	assert.False(t, hasRebalanceStrategy, "rebalance_strategy should remain absent across round-trip")
+
+	_, hasClusterStorageConfig := map2[clusterStorageConfigurationFieldName]
+	assert.False(t, hasClusterStorageConfig, "cluster_storage_configuration should remain absent across round-trip")
 }
 
 // TestFlattenClusterConfigurationSpecifiedEnums verifies that specified enum values
@@ -954,6 +1040,9 @@ func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {
 		GpuType:           newPointer(qcCluster.ClusterConfigurationGpuType_CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA),
 		RestartPolicy:     newPointer(qcCluster.ClusterConfigurationRestartPolicy_CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING),
 		RebalanceStrategy: newPointer(qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT),
+		ClusterStorageConfiguration: &qcCluster.ClusterStorageConfiguration{
+			StorageTierType: commonv1.StorageTierType_STORAGE_TIER_TYPE_BALANCED,
+		},
 	}
 
 	flattened := flattenClusterConfiguration(clusterConfig, nil)
@@ -966,4 +1055,11 @@ func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {
 	assert.Equal(t, "CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA", configMap[dbConfigGpuTypeFieldName])
 	assert.Equal(t, "CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING", configMap[dbConfigRestartPolicyFieldName])
 	assert.Equal(t, "CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT", configMap[dbConfigRebalanceStrategyFieldName])
+
+	// Verify cluster_storage_configuration nested structure
+	clusterStorageConfigList, ok := configMap[clusterStorageConfigurationFieldName].([]interface{})
+	require.True(t, ok, "cluster_storage_configuration should be present")
+	require.Len(t, clusterStorageConfigList, 1)
+	clusterStorageConfig := clusterStorageConfigList[0].(map[string]interface{})
+	assert.Equal(t, "STORAGE_TIER_TYPE_BALANCED", clusterStorageConfig[clusterStorageTierTypeFieldName])
 }
