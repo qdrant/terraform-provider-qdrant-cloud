@@ -122,6 +122,7 @@ Optional:
 
 - `allowed_ip_source_ranges` (Set of String) List of allowed IP source ranges for this cluster.
 - `annotations` (Block Set) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
+- `cluster_storage_configuration` (Block List, Max: 1) Configuration for cluster storage settings. (see [below for nested schema](#nestedblock--configuration--cluster_storage_configuration))
 - `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))
 - `gpu_type` (String) The GPU type that should be used for the database.
 - `node_selector` (Block Set) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
@@ -169,6 +170,14 @@ Required:
 
 - `key` (String)
 - `value` (String)
+
+
+<a id="nestedblock--configuration--cluster_storage_configuration"></a>
+### Nested Schema for `configuration.cluster_storage_configuration`
+
+Optional:
+
+- `storage_tier_type` (String) The storage performance tier for the cluster.
 
 
 <a id="nestedblock--configuration--database_configuration"></a>

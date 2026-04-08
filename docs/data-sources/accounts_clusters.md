@@ -78,6 +78,7 @@ Read-Only:
 
 - `allowed_ip_source_ranges` (Set of String)
 - `annotations` (Set of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--annotations))
+- `cluster_storage_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--cluster_storage_configuration))
 - `database_configuration` (List of Object) (see [below for nested schema](#nestedobjatt--clusters--configuration--database_configuration))
 - `gpu_type` (String)
 - `last_modified_at` (String)
@@ -102,6 +103,14 @@ Read-Only:
 
 - `key` (String)
 - `value` (String)
+
+
+<a id="nestedobjatt--clusters--configuration--cluster_storage_configuration"></a>
+### Nested Schema for `clusters.configuration.cluster_storage_configuration`
+
+Read-Only:
+
+- `storage_tier_type` (String)
 
 
 <a id="nestedobjatt--clusters--configuration--database_configuration"></a>
