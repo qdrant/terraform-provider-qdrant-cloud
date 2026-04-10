@@ -52,6 +52,14 @@ resource "qdrant-cloud_accounts_cluster" "example" {
     node_configuration {
       package_id = local.desired_package[0].id
     }
+    # You can configure storage performance tier. It will give you more disk IOPS and throughput.
+    # Options:
+    # - STORAGE_TIER_TYPE_COST_COSTPTIMIZED: This is default disk performance tier. No extra cost.
+    # - STORAGE_TIER_TYPE_COST_BALANCED: Gives more disk IOPS and throughput. Rquires at least 32Gi disk.
+    # - STORAGE_TIER_TYPE_COST_PERFORMANCE: Gives highest disk IOPS and throughput. Requires at least 32Gi disk.
+    cluster_storage_configuration {
+      storage_tier_type = "STORAGE_TIER_TYPE_COST_BALANCED"
+    }
   }
 }
 
@@ -177,7 +185,7 @@ Required:
 
 Optional:
 
-- `storage_tier_type` (String) The storage performance tier for the cluster.
+- `storage_tier_type` (String) The storage performance tier for the cluster. Should be one of STORAGE_TIER_TYPE_COST_OPTIMISED,STORAGE_TIER_TYPE_BALANCED,STORAGE_TIER_TYPE_PERFORMANCE.
 
 
 <a id="nestedblock--configuration--database_configuration"></a>

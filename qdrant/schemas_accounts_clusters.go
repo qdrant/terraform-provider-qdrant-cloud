@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -705,8 +706,13 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 
 // clusterStorageConfigurationSchema defines the schema for cluster storage configuration.
 func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	validStorageTiers := []string{
+		"STORAGE_TIER_TYPE_COST_OPTIMISED",
+		"STORAGE_TIER_TYPE_BALANCED",
+		"STORAGE_TIER_TYPE_PERFORMANCE",
+	}
 	storageTierType := &schema.Schema{
-		Description: "The storage performance tier for the cluster.",
+		Description: fmt.Sprintf("The storage performance tier for the cluster. Should be one of %s.", strings.Join(validStorageTiers, ",")),
 		Type:        schema.TypeString,
 		Optional:    !asDataSource,
 		Computed:    true,
@@ -714,11 +720,7 @@ func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Sch
 	// Only add ValidateFunc for resource mode (when field is Optional)
 	// Data sources are Computed-only and don't need validation
 	if !asDataSource {
-		storageTierType.ValidateFunc = validation.StringInSlice([]string{
-			"STORAGE_TIER_TYPE_COST_OPTIMISED",
-			"STORAGE_TIER_TYPE_BALANCED",
-			"STORAGE_TIER_TYPE_PERFORMANCE",
-		}, false)
+		storageTierType.ValidateFunc = validation.StringInSlice(validStorageTiers, false)
 	}
 	return map[string]*schema.Schema{
 		clusterStorageTierTypeFieldName: storageTierType,
