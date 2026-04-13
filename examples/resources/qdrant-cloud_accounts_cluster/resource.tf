@@ -43,7 +43,7 @@ resource "qdrant-cloud_accounts_cluster" "example" {
     # - STORAGE_TIER_TYPE_BALANCED: Gives more disk IOPS and throughput. Requires at least 32Gi disk.
     # - STORAGE_TIER_TYPE_PERFORMANCE: Gives highest disk IOPS and throughput. Requires at least 32Gi disk.
     cluster_storage_configuration {
-      storage_tier_type = "STORAGE_TIER_TYPE_COST_BALANCED"
+      storage_tier_type = "STORAGE_TIER_TYPE_BALANCED"
     }
   }
 }
