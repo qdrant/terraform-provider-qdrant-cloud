@@ -52,6 +52,14 @@ resource "qdrant-cloud_accounts_cluster" "example" {
     node_configuration {
       package_id = local.desired_package[0].id
     }
+    # You can configure storage performance tier. It will give you more disk IOPS and throughput.
+    # Options:
+    # - STORAGE_TIER_TYPE_COST_OPTIMIZED: This is default disk performance tier. No extra cost.
+    # - STORAGE_TIER_TYPE_BALANCED: Gives more disk IOPS and throughput. Requires at least 32Gi disk.
+    # - STORAGE_TIER_TYPE_PERFORMANCE: Gives highest disk IOPS and throughput. Requires at least 32Gi disk.
+    cluster_storage_configuration {
+      storage_tier_type = "STORAGE_TIER_TYPE_BALANCED"
+    }
   }
 }
 
@@ -122,6 +130,7 @@ Optional:
 
 - `allowed_ip_source_ranges` (Set of String) List of allowed IP source ranges for this cluster.
 - `annotations` (Block Set) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
+- `cluster_storage_configuration` (Block List, Max: 1) Configuration for cluster storage settings. (see [below for nested schema](#nestedblock--configuration--cluster_storage_configuration))
 - `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))
 - `gpu_type` (String) The GPU type that should be used for the database.
 - `node_selector` (Block Set) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
@@ -169,6 +178,14 @@ Required:
 
 - `key` (String)
 - `value` (String)
+
+
+<a id="nestedblock--configuration--cluster_storage_configuration"></a>
+### Nested Schema for `configuration.cluster_storage_configuration`
+
+Optional:
+
+- `storage_tier_type` (String) The storage performance tier for the cluster. Should be one of STORAGE_TIER_TYPE_COST_OPTIMISED,STORAGE_TIER_TYPE_BALANCED,STORAGE_TIER_TYPE_PERFORMANCE.
 
 
 <a id="nestedblock--configuration--database_configuration"></a>

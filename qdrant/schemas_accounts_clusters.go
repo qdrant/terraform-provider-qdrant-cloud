@@ -2,8 +2,10 @@ package qdrant
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	qcCluster "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/v1"
 	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
@@ -72,6 +74,8 @@ const (
 	serviceTypeFieldName                               = "service_type"
 	serviceAnnotationsFieldName                        = "service_annotations"
 	podLabelsFieldName                                 = "pod_labels"
+	clusterStorageConfigurationFieldName               = "cluster_storage_configuration"
+	clusterStorageTierTypeFieldName                    = "storage_tier_type"
 	databaseConfigurationFieldName                     = "database_configuration"
 	dbConfigCollectionFieldName                        = "collection"
 	dbConfigStorageFieldName                           = "storage"
@@ -392,6 +396,16 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Optional:    !asDataSource,
 			Computed:    true,
 		},
+		clusterStorageConfigurationFieldName: {
+			Description: "Configuration for cluster storage settings.",
+			Type:        schema.TypeList,
+			Optional:    !asDataSource,
+			Computed:    true,
+			MaxItems:    maxItems,
+			Elem: &schema.Resource{
+				Schema: clusterStorageConfigurationSchema(asDataSource),
+			},
+		},
 	}
 }
 
@@ -687,6 +701,29 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 			Optional:    !asDataSource,
 			Computed:    true,
 		},
+	}
+}
+
+// clusterStorageConfigurationSchema defines the schema for cluster storage configuration.
+func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	validStorageTiers := []string{
+		"STORAGE_TIER_TYPE_COST_OPTIMISED",
+		"STORAGE_TIER_TYPE_BALANCED",
+		"STORAGE_TIER_TYPE_PERFORMANCE",
+	}
+	storageTierType := &schema.Schema{
+		Description: fmt.Sprintf("The storage performance tier for the cluster. Should be one of %s.", strings.Join(validStorageTiers, ",")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	// Only add ValidateFunc for resource mode (when field is Optional)
+	// Data sources are Computed-only and don't need validation
+	if !asDataSource {
+		storageTierType.ValidateFunc = validation.StringInSlice(validStorageTiers, false)
+	}
+	return map[string]*schema.Schema{
+		clusterStorageTierTypeFieldName: storageTierType,
 	}
 }
 
@@ -1036,8 +1073,34 @@ func expandClusterConfiguration(v []interface{}) (*qcCluster.ClusterConfiguratio
 				config.RebalanceStrategy = newPointer(qcCluster.ClusterConfigurationRebalanceStrategy(rs))
 			}
 		}
+		if v, ok := item[clusterStorageConfigurationFieldName]; ok {
+			config.ClusterStorageConfiguration = expandClusterStorageConfiguration(v.([]interface{}))
+		}
 	}
 	return config, jwtRbac
+}
+
+// expandClusterStorageConfiguration expands the Terraform resource data into a cluster storage configuration object.
+func expandClusterStorageConfiguration(v []interface{}) *qcCluster.ClusterStorageConfiguration {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	item := v[0].(map[string]interface{})
+	config := &qcCluster.ClusterStorageConfiguration{}
+
+	if val, ok := item[clusterStorageTierTypeFieldName]; ok {
+		stt, sttOK := commonv1.StorageTierType_value[val.(string)]
+		if sttOK && stt != int32(commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED) {
+			config.StorageTierType = commonv1.StorageTierType(stt)
+		}
+	}
+
+	// If no fields were set (or only UNSPECIFIED values), return nil
+	if config.StorageTierType == commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED {
+		return nil
+	}
+
+	return config
 }
 
 func expandNodeConfiguration(v []interface{}) (string, *qcCluster.AdditionalResources) {
@@ -1233,6 +1296,9 @@ func flattenClusterConfiguration(clusterConfig *qcCluster.ClusterConfiguration, 
 	if rebalanceStrategy := clusterConfig.GetRebalanceStrategy(); rebalanceStrategy != qcCluster.ClusterConfigurationRebalanceStrategy_CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_UNSPECIFIED {
 		config[dbConfigRebalanceStrategyFieldName] = rebalanceStrategy.String()
 	}
+	if v := flattenClusterStorageConfiguration(clusterConfig.GetClusterStorageConfiguration()); v != nil {
+		config[clusterStorageConfigurationFieldName] = v
+	}
 
 	if clusterConfig.ReservedCpuPercentage != nil {
 		config[dbConfigReservedCpuPercentageFieldName] = int(clusterConfig.GetReservedCpuPercentage())
@@ -1322,6 +1388,27 @@ func flattenTopologySpreadConstraints(constraints []*commonv1.TopologySpreadCons
 		result = append(result, constraintMap)
 	}
 	return result
+}
+
+// flattenClusterStorageConfiguration flattens the cluster storage configuration for storage in Terraform.
+func flattenClusterStorageConfiguration(storageConfig *qcCluster.ClusterStorageConfiguration) []interface{} {
+	if storageConfig == nil {
+		return nil
+	}
+
+	m := make(map[string]interface{})
+
+	// Only set storage_tier_type when it's not UNSPECIFIED to avoid perpetual diffs
+	if storageTierType := storageConfig.GetStorageTierType(); storageTierType != commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED {
+		m[clusterStorageTierTypeFieldName] = storageTierType.String()
+	}
+
+	// If no fields were set (all UNSPECIFIED or nil), return nil
+	if len(m) == 0 {
+		return nil
+	}
+
+	return []interface{}{m}
 }
 
 // expandDatabaseConfiguration expands the Terraform resource data into a database configuration object.
