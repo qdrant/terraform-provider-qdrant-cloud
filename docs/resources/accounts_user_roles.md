@@ -3,7 +3,7 @@
 page_title: "qdrant-cloud_accounts_user_roles Resource - terraform-provider-qdrant-cloud"
 subcategory: ""
 description: |-
-  User Roles resource for Qdrant Cloud (non-authoritative add-only per user; user specified by email).
+  User Roles resource for Qdrant Cloud. Manages roles for a single user (by email). Detects drift: roles removed outside Terraform are re-added on apply. Roles added outside Terraform are ignored (non-authoritative).
 ---
 
 # qdrant-cloud_accounts_user_roles (Resource)
@@ -80,19 +80,24 @@ This resource manages **role assignments** for a single user (identified by emai
 
 ### Behavior
 
-- **Create**: Assigns the listed `role_ids` to the user (resolved by email).  
-- **Update**: Adds newly specified roles; does not revoke existing roles outside of Terraform’s management.  
-- **Delete**: Revokes only the roles listed in this resource (unless `keep_on_destroy = true`).  
+- **Create**: Assigns the listed `role_ids` to the user (resolved by email).
+- **Read**: Fetches actual role assignments from the API. Detects drift for managed roles (roles removed outside Terraform are re-added on next apply). Roles added outside Terraform are ignored.
+- **Update**: Adds newly specified roles and revokes roles that were previously managed but removed from config.
+- **Delete**: Revokes only the roles listed in this resource (unless `keep_on_destroy = true`).
 - **Import**: Not supported — reconciliation happens automatically during creation.
 
 ### Attributes
 
-- `user_id` — Resolved unique identifier (UUID) for the specified user.  
-- `role_ids` — Set of role IDs managed by this resource.  
-- `keep_on_destroy` — Prevents revocation of managed roles during destroy (boolean).  
+- `user_id` — Resolved unique identifier (UUID) for the specified user.
+- `role_ids` — Set of role IDs managed by this resource.
+- `keep_on_destroy` — Prevents revocation of managed roles during destroy (boolean).
+
+### Drift Detection
+
+The resource detects when managed roles are removed outside of Terraform (e.g., via the console). On the next `terraform plan`, the removed roles appear as a diff and are re-added on `apply`. Roles added outside of Terraform are not affected.
 
 ### Important Notes
 
-- This resource is **non-authoritative** — it only manages the roles explicitly listed in `role_ids`.  
-- The user must already exist in the account.  
+- This resource is **non-authoritative** — it only manages the roles explicitly listed in `role_ids`. Externally added roles are not removed.
+- The user must already exist in the account.
 - On destroy, roles in `role_ids` are revoked unless `keep_on_destroy` is set to `true`.

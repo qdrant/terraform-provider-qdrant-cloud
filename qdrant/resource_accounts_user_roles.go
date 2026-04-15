@@ -21,7 +21,7 @@ import (
 // On delete, it revokes only the roles managed by this resource unless keep_on_destroy is true.
 func resourceAccountsUserRoles() *schema.Resource {
 	return &schema.Resource{
-		Description:   "User Roles resource for Qdrant Cloud (non-authoritative add-only per user; user specified by email).",
+		Description:   "User Roles resource for Qdrant Cloud. Manages roles for a single user (by email). Detects drift: roles removed outside Terraform are re-added on apply. Roles added outside Terraform are ignored (non-authoritative).",
 		CreateContext: resourceUserRolesCreate,
 		ReadContext:   resourceUserRolesRead,
 		UpdateContext: resourceUserRolesUpdate,
