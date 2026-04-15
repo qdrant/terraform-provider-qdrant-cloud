@@ -21,7 +21,7 @@ import (
 // On delete, it revokes only the roles managed by this resource unless keep_on_destroy is true.
 func resourceAccountsUserRoles() *schema.Resource {
 	return &schema.Resource{
-		Description:   "User Roles resource for Qdrant Cloud (non-authoritative add-only per user; user specified by email).",
+		Description:   "User Roles resource for Qdrant Cloud. Manages roles for a single user (by email). Detects drift: roles removed outside Terraform are re-added on apply. Roles added outside Terraform are ignored (non-authoritative).",
 		CreateContext: resourceUserRolesCreate,
 		ReadContext:   resourceUserRolesRead,
 		UpdateContext: resourceUserRolesUpdate,
@@ -90,8 +90,11 @@ func resourceUserRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 	return resourceUserRolesRead(ctx, d, m)
 }
 
-// resourceUserRolesRead fetches the user identifier and ensures the canonical ID is set.
-// It intentionally does not write role_ids to avoid removing externally managed roles.
+// resourceUserRolesRead fetches the current role assignments from the API and
+// reconciles them with the desired state. It updates role_ids in state to the
+// intersection of desired and actual roles, so that externally removed roles
+// are detected as drift while externally added roles are ignored (preserving
+// non-authoritative behavior).
 // ctx: Context to carry deadlines, cancellation signals, and other request-scoped values across API calls.
 // d: Resource data which is used to manage the state of the resource.
 // m: The interface where the configured client is passed.
@@ -99,10 +102,15 @@ func resourceUserRolesCreate(ctx context.Context, d *schema.ResourceData, m inte
 func resourceUserRolesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	const op = "error reading user roles"
 
-	acctClient, clientCtx, diags := getServiceClient(ctx, m, qca.NewAccountServiceClient)
+	// Get a client connection and context
+	apiClientConn, clientCtx, diags := getClientConnection(ctx, m)
 	if diags.HasError() {
 		return diags
 	}
+	// Get clients
+	iamClient := qci.NewIAMServiceClient(apiClientConn)
+	acctClient := qca.NewAccountServiceClient(apiClientConn)
+
 	// Get account ID as UUID
 	accountUUID, err := getAccountUUID(d, m)
 	if err != nil {
@@ -129,6 +137,27 @@ func resourceUserRolesRead(ctx context.Context, d *schema.ResourceData, m interf
 		d.SetId("")
 		return nil
 	}
+
+	// Read actual roles from API
+	current, _, err := listUserRoleIDs(clientCtx, iamClient, accountID, userID)
+	if err != nil {
+		// If user no longer exists, clear state
+		if st, ok := status.FromError(err); ok && st.Code() == codes.NotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.FromErr(fmt.Errorf("%s: %w", op, err))
+	}
+
+	// Update role_ids in state to the intersection of desired and actual roles.
+	// - If a managed role was removed externally → it drops out of the intersection
+	//   → Terraform detects the diff and plans to re-add it.
+	// - If an unmanaged role was added externally → it is not in desired
+	//   → it is excluded from the intersection → state is unchanged → no diff.
+	// This preserves non-authoritative behavior while enabling drift detection.
+	desired := setToStringSlice(d.Get(userRolesRoleIdsFieldName))
+	managed := intersectStrings(current, desired)
+	_ = d.Set(userRolesRoleIdsFieldName, managed)
 
 	// Set canonical ID
 	d.SetId(fmt.Sprintf("%s/%s", accountID, userID))
