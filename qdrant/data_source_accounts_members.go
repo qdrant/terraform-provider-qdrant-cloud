@@ -50,65 +50,12 @@ func dataSourceAccountsMembersRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Flatten members and store in Terraform state.
-	if err := d.Set("members", flattenAccountMembers(resp.GetItems())); err != nil {
+	if err := d.Set(membersMembersFieldName, flattenAccountMembers(resp.GetItems())); err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+	if err := d.Set(membersAccountIDFieldName, accountUUID.String()); err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	d.SetId(time.Now().UTC().Format(time.RFC3339))
 	return nil
-}
-
-// flattenAccountMembers converts a list of AccountMember proto messages into a list of maps for Terraform state.
-func flattenAccountMembers(members []*qca.AccountMember) []interface{} {
-	var result []interface{}
-	for _, member := range members {
-		user := member.GetAccountMember()
-		result = append(result, map[string]interface{}{
-			"user_id":  user.GetId(),
-			"email":    user.GetEmail(),
-			"status":   user.GetStatus().String(),
-			"is_owner": member.GetIsOwner(),
-		})
-	}
-	return result
-}
-
-// accountsMembersDataSourceSchema defines the Terraform schema for the accounts_members data source.
-func accountsMembersDataSourceSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"account_id": {
-			Description: "The account ID (UUID). Defaults to the provider-level account_id.",
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-		},
-		"members": {
-			Description: "List of account members.",
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"user_id": {
-						Description: "Unique identifier for the user (UUID).",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"email": {
-						Description: "Email address of the user.",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"status": {
-						Description: "User status (USER_STATUS_ACTIVE, USER_STATUS_BLOCKED, USER_STATUS_DELETED).",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"is_owner": {
-						Description: "Whether the user is the account owner.",
-						Type:        schema.TypeBool,
-						Computed:    true,
-					},
-				},
-			},
-		},
-	}
 }

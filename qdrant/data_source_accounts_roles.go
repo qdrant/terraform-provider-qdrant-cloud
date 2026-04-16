@@ -50,77 +50,12 @@ func dataSourceAccountsRolesRead(ctx context.Context, d *schema.ResourceData, m 
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	// Flatten roles and store in Terraform state.
-	if err := d.Set("roles", flattenAccountRoles(resp.GetItems())); err != nil {
+	if err := d.Set(rolesRolesFieldName, flattenAccountRoles(resp.GetItems())); err != nil {
+		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
+	}
+	if err := d.Set(rolesAccountIDFieldName, accountUUID.String()); err != nil {
 		return diag.FromErr(fmt.Errorf("%s: %w", errorPrefix, err))
 	}
 	d.SetId(time.Now().UTC().Format(time.RFC3339))
 	return nil
-}
-
-// flattenAccountRoles converts a list of Role proto messages into a list of maps for Terraform state.
-func flattenAccountRoles(roles []*qci.Role) []interface{} {
-	var result []interface{}
-	for _, role := range roles {
-		permissions := make([]interface{}, 0, len(role.GetPermissions()))
-		for _, perm := range role.GetPermissions() {
-			permissions = append(permissions, perm.GetValue())
-		}
-		result = append(result, map[string]interface{}{
-			"id":          role.GetId(),
-			"name":        role.GetName(),
-			"description": role.GetDescription(),
-			"role_type":   role.GetRoleType().String(),
-			"permissions": permissions,
-		})
-	}
-	return result
-}
-
-// accountsRolesDataSourceSchema defines the Terraform schema for the accounts_roles data source.
-func accountsRolesDataSourceSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"account_id": {
-			Description: "The account ID (UUID). Defaults to the provider-level account_id.",
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-		},
-		"roles": {
-			Description: "List of account roles (system and custom).",
-			Type:        schema.TypeList,
-			Computed:    true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"id": {
-						Description: "Unique identifier for the role (UUID).",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"name": {
-						Description: "Name of the role.",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"description": {
-						Description: "Human-readable description of the role.",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"role_type": {
-						Description: "Role type (ROLE_TYPE_SYSTEM or ROLE_TYPE_CUSTOM).",
-						Type:        schema.TypeString,
-						Computed:    true,
-					},
-					"permissions": {
-						Description: "List of permission values (e.g., read:clusters, write:roles).",
-						Type:        schema.TypeList,
-						Computed:    true,
-						Elem: &schema.Schema{
-							Type: schema.TypeString,
-						},
-					},
-				},
-			},
-		},
-	}
 }
