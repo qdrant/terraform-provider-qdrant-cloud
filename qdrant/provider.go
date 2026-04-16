@@ -67,6 +67,8 @@ func Provider() *schema.Provider {
 			"qdrant-cloud_booking_packages":              dataSourceBookingPackages(),         // Data source for Qdrant booking packages.
 			"qdrant-cloud_accounts_backup_schedules":     dataSourceAccountsBackupSchedules(), // Data source for listing Qdrant Cloud backup schedules under an account and cluster.
 			"qdrant-cloud_accounts_backup_schedule":      dataSourceAccountsBackupSchedule(),  // Data source for retrieving Qdrant Cloud accounts' backup schedules (for a cluster).
+			"qdrant-cloud_accounts_members":              dataSourceAccountsMembers(),         // Data source for listing Qdrant Cloud account members.
+			"qdrant-cloud_accounts_roles":                dataSourceAccountsRoles(),           // Data source for listing Qdrant Cloud account roles (system and custom).
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,
