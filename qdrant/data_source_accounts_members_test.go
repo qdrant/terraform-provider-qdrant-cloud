@@ -1,0 +1,44 @@
+package qdrant
+
+import (
+	"fmt"
+	"os"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+func TestAccDataAccountsMembers(t *testing.T) {
+	provider := fmt.Sprintf(`
+provider "qdrant-cloud" {
+  api_key = "%s"
+}
+`, os.Getenv("QDRANT_CLOUD_API_KEY"))
+
+	config := provider + fmt.Sprintf(`
+data "qdrant-cloud_accounts_members" "test" {
+	account_id = "%s"
+}
+`, os.Getenv("QDRANT_CLOUD_ACCOUNT_ID"))
+
+	check := resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet("data.qdrant-cloud_accounts_members.test", "members.#"),
+	)
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: map[string]func() (*schema.Provider, error){
+			//nolint:unparam // Ignoring unparam as we know error will always be nil.
+			"qdrant-cloud": func() (*schema.Provider, error) {
+				return Provider(), nil
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config:  config,
+				Destroy: true,
+				Check:   check,
+			},
+		},
+	})
+}
