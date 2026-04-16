@@ -23,7 +23,7 @@ const (
 func accountsMembersDataSourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		membersAccountIDFieldName: {
-			Description: fmt.Sprintf(membersFieldTemplate, "Account ID"),
+			Description: "The account ID (UUID). Defaults to the provider-level account_id.",
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,

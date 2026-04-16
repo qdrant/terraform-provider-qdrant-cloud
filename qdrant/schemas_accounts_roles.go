@@ -24,7 +24,7 @@ const (
 func accountsRolesDataSourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		rolesAccountIDFieldName: {
-			Description: fmt.Sprintf(rolesFieldTemplate, "Account ID"),
+			Description: "The account ID (UUID). Defaults to the provider-level account_id.",
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
