@@ -795,6 +795,22 @@ func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
 }
 
 func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema {
+	validWhenUnsatisfiable := []string{
+		"TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_DO_NOT_SCHEDULE",
+		"TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_SCHEDULE_ANYWAY",
+	}
+
+	whenUnsatisfiableSchema := &schema.Schema{
+		Type:     schema.TypeString,
+		Required: !asDataSource,
+		Computed: asDataSource,
+	}
+
+	// Only add ValidateFunc for resource mode (when field is Optional)
+	// Data sources are Computed-only and don't need validation
+	if !asDataSource {
+		whenUnsatisfiableSchema.ValidateFunc = validation.StringInSlice(validWhenUnsatisfiable, false)
+	}
 	return map[string]*schema.Schema{
 		topologySpreadConstraintMaxSkewFieldName: {
 			Type:     schema.TypeInt,
@@ -806,11 +822,7 @@ func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema
 			Required: !asDataSource,
 			Computed: asDataSource,
 		},
-		topologySpreadConstraintWhenUnsatisfiableFieldName: {
-			Type:     schema.TypeString,
-			Required: !asDataSource,
-			Computed: asDataSource,
-		},
+		topologySpreadConstraintWhenUnsatisfiableFieldName: whenUnsatisfiableSchema,
 	}
 }
 
