@@ -825,7 +825,6 @@ func clusterCapabilitiesSchema() map[string]*schema.Schema {
 			Description: "Disk expansion capability.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: clusterCapabilityInfoSchema(),
 			},
@@ -834,7 +833,6 @@ func clusterCapabilitiesSchema() map[string]*schema.Schema {
 			Description: "Backup capability.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: clusterCapabilityInfoSchema(),
 			},
@@ -843,7 +841,6 @@ func clusterCapabilitiesSchema() map[string]*schema.Schema {
 			Description: "Scalability capability.",
 			Type:        schema.TypeList,
 			Computed:    true,
-			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: clusterScalabilityInfoSchema(),
 			},
