@@ -113,9 +113,25 @@ func TestResourceClusterFlatten(t *testing.T) {
 				Ram:  &qcCluster.ClusterNodeResources{Base: 8, Complimentary: 1, Additional: 0, Reserved: 0.5, Available: 8.5},
 				Cpu:  &qcCluster.ClusterNodeResources{Base: 4, Complimentary: 0, Additional: 0, Reserved: 0.2, Available: 3.8},
 			},
+			// ScalabilityInfo is deprecated, use Capabilities instead.
+			// Note: The old ScalabilityInfo is still populated by the API for backward compatibility.
 			ScalabilityInfo: &qcCluster.ClusterScalabilityInfo{
 				Status: qcCluster.ClusterScalabilityStatus_CLUSTER_SCALABILITY_STATUS_SCALABLE,
 				Reason: newPointer("Can be scaled"),
+			},
+			Capabilities: &qcCluster.ClusterCapabilities{
+				DiskExpansion: &qcCluster.ClusterDiskExpansionSupportInfo{
+					Status: qcCluster.ClusterDiskExpansionSupportStatus_CLUSTER_DISK_EXPANSION_SUPPORT_STATUS_SUPPORTED,
+					Reason: newPointer("Disk can be expanded"),
+				},
+				Backup: &qcCluster.ClusterBackupSupportInfo{
+					Status: qcCluster.ClusterBackupSupportStatus_CLUSTER_BACKUP_SUPPORT_STATUS_NOT_SUPPORTED,
+					Reason: newPointer("Backup not supported on this tier"),
+				},
+				ScalabilityInfo: &qcCluster.ClusterScalabilityInfo{
+					Status: qcCluster.ClusterScalabilityStatus_CLUSTER_SCALABILITY_STATUS_SCALABLE,
+					Reason: newPointer("Can be scaled"),
+				},
 			},
 		},
 	}
@@ -175,8 +191,30 @@ func TestResourceClusterFlatten(t *testing.T) {
 				},
 				clusterStatusScalabilityInfoFieldName: []interface{}{
 					map[string]interface{}{
-						clusterScalabilityInfoStatusFieldName: cluster.GetState().GetScalabilityInfo().GetStatus().String(),
-						clusterScalabilityInfoReasonFieldName: cluster.GetState().GetScalabilityInfo().GetReason(),
+						clusterScalabilityInfoStatusFieldName: cluster.GetState().GetCapabilities().GetScalabilityInfo().GetStatus().String(),
+						clusterScalabilityInfoReasonFieldName: cluster.GetState().GetCapabilities().GetScalabilityInfo().GetReason(),
+					},
+				},
+				clusterStatusCapabilitiesFieldName: []interface{}{
+					map[string]interface{}{
+						clusterCapabilitiesDiskExpansionFieldName: []interface{}{
+							map[string]interface{}{
+								clusterCapabilityStatusFieldName: cluster.GetState().GetCapabilities().GetDiskExpansion().GetStatus().String(),
+								clusterCapabilityReasonFieldName: cluster.GetState().GetCapabilities().GetDiskExpansion().GetReason(),
+							},
+						},
+						clusterCapabilitiesBackupFieldName: []interface{}{
+							map[string]interface{}{
+								clusterCapabilityStatusFieldName: cluster.GetState().GetCapabilities().GetBackup().GetStatus().String(),
+								clusterCapabilityReasonFieldName: cluster.GetState().GetCapabilities().GetBackup().GetReason(),
+							},
+						},
+						clusterStatusScalabilityInfoFieldName: []interface{}{
+							map[string]interface{}{
+								clusterScalabilityInfoStatusFieldName: cluster.GetState().GetCapabilities().GetScalabilityInfo().GetStatus().String(),
+								clusterScalabilityInfoReasonFieldName: cluster.GetState().GetCapabilities().GetScalabilityInfo().GetReason(),
+							},
+						},
 					},
 				},
 			},
