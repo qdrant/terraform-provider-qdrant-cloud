@@ -40,6 +40,11 @@ const (
 	clusterStatusReasonFieldName                       = "reason"
 	clusterStatusResourcesFieldName                    = "resources"
 	clusterStatusScalabilityInfoFieldName              = "scalability_info"
+	clusterStatusCapabilitiesFieldName                 = "capabilities"
+	clusterCapabilitiesDiskExpansionFieldName          = "disk_expansion"
+	clusterCapabilitiesBackupFieldName                 = "backup"
+	clusterCapabilityStatusFieldName                   = "status"
+	clusterCapabilityReasonFieldName                   = "reason"
 	clusterNodeResourcesSummaryDiskFieldName           = "disk"
 	clusterNodeResourcesSummaryRamFieldName            = "ram"
 	clusterNodeResourcesSummaryCpuFieldName            = "cpu"
@@ -814,6 +819,50 @@ func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema
 	}
 }
 
+func clusterCapabilitiesSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterCapabilitiesDiskExpansionFieldName: {
+			Description: "Disk expansion capability.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterCapabilityInfoSchema(),
+			},
+		},
+		clusterCapabilitiesBackupFieldName: {
+			Description: "Backup capability.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterCapabilityInfoSchema(),
+			},
+		},
+		clusterStatusScalabilityInfoFieldName: {
+			Description: "Scalability capability.",
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterScalabilityInfoSchema(),
+			},
+		},
+	}
+}
+
+func clusterCapabilityInfoSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		clusterCapabilityStatusFieldName: {
+			Description: "The status of the capability.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+		clusterCapabilityReasonFieldName: {
+			Description: "Optional human-readable reason providing more context about the capability status.",
+			Type:        schema.TypeString,
+			Computed:    true,
+		},
+	}
+}
+
 // accountsClusterStatusSchema defines the schema for a cluster status.
 func accountsClusterStatusSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
@@ -854,8 +903,17 @@ func accountsClusterStatusSchema() map[string]*schema.Schema {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Whether the cluster can be scaled up or down"),
 			Type:        schema.TypeList,
 			Computed:    true,
+			Deprecated:  "This field is deprecated and will be removed in a future version. Use `capabilities.0.scalability_info` instead.",
 			Elem: &schema.Resource{
 				Schema: clusterScalabilityInfoSchema(),
+			},
+		},
+		clusterStatusCapabilitiesFieldName: {
+			Description: fmt.Sprintf(clusterFieldTemplate, "The capabilities of the cluster"),
+			Type:        schema.TypeList,
+			Computed:    true,
+			Elem: &schema.Resource{
+				Schema: clusterCapabilitiesSchema(),
 			},
 		},
 	}
@@ -1771,7 +1829,8 @@ func flattenClusterState(state *qcCluster.ClusterState) []interface{} {
 			clusterStatusPhaseFieldName:           state.GetPhase().String(),
 			clusterStatusReasonFieldName:          state.GetReason(),
 			clusterStatusResourcesFieldName:       flattenClusterNodeResourcesSummary(state.GetResources()),
-			clusterStatusScalabilityInfoFieldName: flattenClusterScalabilityInfo(state.GetScalabilityInfo()),
+			clusterStatusScalabilityInfoFieldName: flattenClusterScalabilityInfo(state.GetCapabilities().GetScalabilityInfo()),
+			clusterStatusCapabilitiesFieldName:    flattenClusterCapabilities(state.GetCapabilities()),
 		},
 	}
 }
@@ -1802,6 +1861,44 @@ func flattenClusterNodeResources(resources *qcCluster.ClusterNodeResources) []in
 			clusterNodeResourcesAdditionalFieldName:    resources.GetAdditional(),
 			clusterNodeResourcesReservedFieldName:      resources.GetReserved(),
 			clusterNodeResourcesAvailableFieldName:     resources.GetAvailable(),
+		},
+	}
+}
+
+// flattenClusterCapabilities creates a map from a cluster capabilities for easy storage in Terraform.
+func flattenClusterCapabilities(capabilities *qcCluster.ClusterCapabilities) []interface{} {
+	if capabilities == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterCapabilitiesDiskExpansionFieldName: flattenDiskExpansionInfo(capabilities.GetDiskExpansion()),
+			clusterCapabilitiesBackupFieldName:        flattenBackupInfo(capabilities.GetBackup()),
+			clusterStatusScalabilityInfoFieldName:     flattenClusterScalabilityInfo(capabilities.GetScalabilityInfo()),
+		},
+	}
+}
+
+func flattenDiskExpansionInfo(info *qcCluster.ClusterDiskExpansionSupportInfo) []interface{} {
+	if info == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterCapabilityStatusFieldName: info.GetStatus().String(),
+			clusterCapabilityReasonFieldName: info.GetReason(),
+		},
+	}
+}
+
+func flattenBackupInfo(info *qcCluster.ClusterBackupSupportInfo) []interface{} {
+	if info == nil {
+		return []interface{}{}
+	}
+	return []interface{}{
+		map[string]interface{}{
+			clusterCapabilityStatusFieldName: info.GetStatus().String(),
+			clusterCapabilityReasonFieldName: info.GetReason(),
 		},
 	}
 }
