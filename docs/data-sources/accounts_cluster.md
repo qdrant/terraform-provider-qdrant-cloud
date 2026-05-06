@@ -318,6 +318,7 @@ Read-Only:
 
 Read-Only:
 
+- `capabilities` (List of Object) (see [below for nested schema](#nestedobjatt--status--capabilities))
 - `nodes_up` (Number)
 - `phase` (String)
 - `reason` (String)
@@ -325,6 +326,43 @@ Read-Only:
 - `restarted_at` (String)
 - `scalability_info` (List of Object) (see [below for nested schema](#nestedobjatt--status--scalability_info))
 - `version` (String)
+
+<a id="nestedobjatt--status--capabilities"></a>
+### Nested Schema for `status.capabilities`
+
+Read-Only:
+
+- `backup` (List of Object) (see [below for nested schema](#nestedobjatt--status--capabilities--backup))
+- `disk_expansion` (List of Object) (see [below for nested schema](#nestedobjatt--status--capabilities--disk_expansion))
+- `scalability_info` (List of Object) (see [below for nested schema](#nestedobjatt--status--capabilities--scalability_info))
+
+<a id="nestedobjatt--status--capabilities--backup"></a>
+### Nested Schema for `status.capabilities.backup`
+
+Read-Only:
+
+- `reason` (String)
+- `status` (String)
+
+
+<a id="nestedobjatt--status--capabilities--disk_expansion"></a>
+### Nested Schema for `status.capabilities.disk_expansion`
+
+Read-Only:
+
+- `reason` (String)
+- `status` (String)
+
+
+<a id="nestedobjatt--status--capabilities--scalability_info"></a>
+### Nested Schema for `status.capabilities.scalability_info`
+
+Read-Only:
+
+- `reason` (String)
+- `status` (String)
+
+
 
 <a id="nestedobjatt--status--resources"></a>
 ### Nested Schema for `status.resources`
