@@ -169,8 +169,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.2.3 h1:NP0eAhjcjImqslEwo/1hq7gpajME0fTLTezBKDqfXqo=
 github.com/posener/complete v1.2.3/go.mod h1:WZIdtGGp+qx0sLrYKtIRAruyNpv6hFCicSgv7Sy7s/s=
-github.com/qdrant/qdrant-cloud-public-api v0.122.0 h1:cPowhKa5RTk+M7Ng9GXswQJ7L57shXK25AFwqm765s8=
-github.com/qdrant/qdrant-cloud-public-api v0.122.0/go.mod h1:0aKMbHGwPKm2Zkxlaf7lw62PCbZxxS0XGjV0bm71/nk=
+github.com/qdrant/qdrant-cloud-public-api v0.129.0 h1:/SumM2rBk0V3pQs+SAs/FY3uPwI/z/7jCB/WL3c7cxU=
+github.com/qdrant/qdrant-cloud-public-api v0.129.0/go.mod h1:TxbqaF6OcqUtMPsgSXg13zG0R8qe/2iiwadrCr33w/I=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
 github.com/rogpeppe/go-internal v1.14.1/go.mod h1:MaRKkUm5W0goXpeCfT7UZI6fk/L7L7so1lCWt35ZSgc=
 github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 h1:n661drycOFuPLCN3Uc8sB6B/s6Z4t2xvBgU1htSHuq8=
