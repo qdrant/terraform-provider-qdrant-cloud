@@ -155,66 +155,86 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
+		// NOTE: every Optional field below is also Computed. With a gRPC/protobuf backend the
+		// server can populate any of these (defaults, zero-values, normalized values) even when
+		// the user didn't set them; without Computed those backend values read back as drift and
+		// cause perpetual diffs. This mirrors the cluster-resource fix in #186 (CP-393).
 		hcEnvCfgHttpProxyUrlFieldName: {
 			Description: "Optional HTTP proxy URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgHttpsProxyUrlFieldName: {
 			Description: "Optional HTTPS proxy URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgNoProxyConfigsFieldName: {
 			Description: "List of hosts that should not be proxied.",
 			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		hcEnvCfgContainerRegistryUrlFieldName: {
 			Description: "Container registry URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgChartRepositoryUrlFieldName: {
 			Description: "Chart registry URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgRegistrySecretNameFieldName: {
 			Description: "Kubernetes secret name containing registry credentials.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgCaCertificatesFieldName: {
 			Description: "CA certificates for custom certificate authorities.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgDatabaseStorageClassFieldName: {
 			Description: "Default database storage class.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgSnapshotStorageClassFieldName: {
 			Description: "Default snapshot storage class.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: {
 			Description: "Default volume snapshot storage class.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgLogLevelFieldName: {
 			Description: "Log level for deployed components.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgAdvancedOperatorSettingsFieldName: {
 			Description: "Advanced operator settings as a YAML string.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			// Computed: the backend returns operator settings (e.g. default storage classes)
+			// even when the user hasn't set any, so the read-back must not conflict with an
+			// unset config. Otherwise the value is re-derived into state every refresh and
+			// produces a perpetual "<value> -> null" diff.
+			Computed: true,
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				var oldData, newData interface{}
 				if err := yaml.Unmarshal([]byte(old), &oldData); err != nil {
@@ -244,24 +264,27 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 		},
 		hcEnvCfgNodeSelectorFieldName: {
 			Description: "Node selector labels for scheduling control plane components.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant; the backend stores these as an unordered map.
 			Optional:    true,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(false),
 			},
 		},
 		hcEnvCfgTolerationsFieldName: {
 			Description: "Tolerations for scheduling control plane components.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant.
 			Optional:    true,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: tolerationSchema(false),
 			},
 		},
 		hcEnvCfgControlPlaneLabelsFieldName: {
 			Description: "Additional labels to apply to control plane components.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant; the backend stores these as an unordered map.
 			Optional:    true,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(false),
 			},

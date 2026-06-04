@@ -324,3 +324,49 @@ func TestConvertMapKeysToStrings(t *testing.T) {
 		})
 	}
 }
+
+// TestHCEnvOptionalFieldsMustBeComputed mirrors TestOptionalFieldsMustBeComputed (added for the
+// cluster resource in #186 / CP-393) for the hybrid cloud environment resource. Every Optional,
+// non-deprecated field must also be Computed: with a gRPC/protobuf backend the server can populate
+// any field the user left unset, and without Computed those values read back as drift and produce
+// perpetual diffs. This test is the regression guard that was missing when the cluster-only fix
+// left the hybrid_cloud_environment resource exposed (the Discord report).
+func TestHCEnvOptionalFieldsMustBeComputed(t *testing.T) {
+	schemas := map[string]map[string]*schema.Schema{
+		"hybridCloudEnvironment":              accountsHybridCloudEnvironmentSchema(),
+		"hybridCloudEnvironmentConfiguration": accountsHybridCloudEnvironmentConfigurationSchema(),
+	}
+	for schemaName, schemaMap := range schemas {
+		for fieldName, fieldSchema := range schemaMap {
+			if fieldSchema.Optional && fieldSchema.Deprecated == "" {
+				t.Run(schemaName+"/"+fieldName, func(t *testing.T) {
+					assert.True(t, fieldSchema.Computed,
+						"field %s in %s is Optional but not Computed — the backend may populate this field, "+
+							"causing perpetual Terraform diffs. Change Computed to true.",
+						fieldName, schemaName)
+				})
+			}
+		}
+	}
+}
+
+// TestHCEnvUnorderedCollectionsAreSets guards against the ordering perpetual diff that the
+// cluster-only #181 left behind on the environment resource: key/value and toleration
+// collections must be TypeSet (order-insensitive), because the backend persists them as
+// unordered maps and returns them in a non-deterministic order. TypeList compares order and
+// therefore reports a forever-diff (the node_selector swap in the Discord plan).
+func TestHCEnvUnorderedCollectionsAreSets(t *testing.T) {
+	cfg := accountsHybridCloudEnvironmentConfigurationSchema()
+	for _, field := range []string{
+		hcEnvCfgNodeSelectorFieldName,
+		hcEnvCfgTolerationsFieldName,
+		hcEnvCfgControlPlaneLabelsFieldName,
+	} {
+		t.Run(field, func(t *testing.T) {
+			s, ok := cfg[field]
+			require.True(t, ok, "field %s should exist in the hybrid cloud environment configuration schema", field)
+			assert.Equal(t, schema.TypeSet, s.Type,
+				"field %s must be schema.TypeSet; the backend returns these unordered, and TypeList causes perpetual diffs", field)
+		})
+	}
+}
