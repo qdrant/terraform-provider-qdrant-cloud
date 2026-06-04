@@ -173,10 +173,11 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 		},
 		hcEnvCfgNoProxyConfigsFieldName: {
 			Description: "List of hosts that should not be proxied.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant (matches the cluster allowed_ip_source_ranges pattern).
 			Optional:    true,
 			Computed:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
 		},
 		hcEnvCfgContainerRegistryUrlFieldName: {
 			Description: "Container registry URL.",
@@ -270,6 +271,7 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Elem: &schema.Resource{
 				Schema: keyValSchema(false),
 			},
+			Set: keyValHashFunc,
 		},
 		hcEnvCfgTolerationsFieldName: {
 			Description: "Tolerations for scheduling control plane components.",
@@ -279,6 +281,7 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Elem: &schema.Resource{
 				Schema: tolerationSchema(false),
 			},
+			Set: tolerationHashFunc,
 		},
 		hcEnvCfgControlPlaneLabelsFieldName: {
 			Description: "Additional labels to apply to control plane components.",
@@ -288,6 +291,7 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Elem: &schema.Resource{
 				Schema: keyValSchema(false),
 			},
+			Set: keyValHashFunc,
 		},
 	}
 }
@@ -539,7 +543,7 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 		config.HttpsProxyUrl = newPointer(val.(string))
 	}
 	if val, ok := m[hcEnvCfgNoProxyConfigsFieldName]; ok {
-		config.NoProxyConfigs = interfaceSliceToStringSlice(val.([]interface{}))
+		config.NoProxyConfigs = interfaceSliceToStringSlice(getInterfaceSliceFromSchemaValue(val))
 	}
 	if val, ok := m[hcEnvCfgContainerRegistryUrlFieldName]; ok && val.(string) != "" {
 		config.ContainerRegistryUrl = newPointer(val.(string))

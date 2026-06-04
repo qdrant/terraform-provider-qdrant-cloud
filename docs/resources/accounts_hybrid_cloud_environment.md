@@ -129,7 +129,7 @@ Optional:
 - `http_proxy_url` (String) Optional HTTP proxy URL.
 - `https_proxy_url` (String) Optional HTTPS proxy URL.
 - `log_level` (String) Log level for deployed components.
-- `no_proxy_configs` (List of String) List of hosts that should not be proxied.
+- `no_proxy_configs` (Set of String) List of hosts that should not be proxied.
 - `node_selector` (Block Set) Node selector labels for scheduling control plane components. (see [below for nested schema](#nestedblock--configuration--node_selector))
 - `registry_secret_name` (String) Kubernetes secret name containing registry credentials.
 - `snapshot_storage_class` (String) Default snapshot storage class.
