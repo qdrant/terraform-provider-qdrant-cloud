@@ -155,10 +155,8 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
-		// NOTE: every Optional field below is also Computed. With a gRPC/protobuf backend the
-		// server can populate any of these (defaults, zero-values, normalized values) even when
-		// the user didn't set them; without Computed those backend values read back as drift and
-		// cause perpetual diffs. This mirrors the cluster-resource fix in #186 (CP-393).
+		// Optional fields here are also Computed: the backend can populate any of
+		// them when unset, which otherwise reads back as a perpetual diff (CP-552).
 		hcEnvCfgHttpProxyUrlFieldName: {
 			Description: "Optional HTTP proxy URL.",
 			Type:        schema.TypeString,
@@ -231,11 +229,7 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Description: "Advanced operator settings as a YAML string.",
 			Type:        schema.TypeString,
 			Optional:    true,
-			// Computed: the backend returns operator settings (e.g. default storage classes)
-			// even when the user hasn't set any, so the read-back must not conflict with an
-			// unset config. Otherwise the value is re-derived into state every refresh and
-			// produces a perpetual "<value> -> null" diff.
-			Computed: true,
+			Computed:    true,
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				var oldData, newData interface{}
 				if err := yaml.Unmarshal([]byte(old), &oldData); err != nil {

@@ -325,12 +325,10 @@ func TestConvertMapKeysToStrings(t *testing.T) {
 	}
 }
 
-// TestHCEnvOptionalFieldsMustBeComputed mirrors TestOptionalFieldsMustBeComputed (added for the
-// cluster resource in #186 / CP-393) for the hybrid cloud environment resource. Every Optional,
-// non-deprecated field must also be Computed: with a gRPC/protobuf backend the server can populate
-// any field the user left unset, and without Computed those values read back as drift and produce
-// perpetual diffs. This test is the regression guard that was missing when the cluster-only fix
-// left the hybrid_cloud_environment resource exposed (the Discord report).
+// TestHCEnvOptionalFieldsMustBeComputed is the env-resource counterpart of the
+// cluster-only TestOptionalFieldsMustBeComputed (#186): every Optional,
+// non-deprecated field must also be Computed, or backend-populated values
+// perpetually diff (CP-552).
 func TestHCEnvOptionalFieldsMustBeComputed(t *testing.T) {
 	schemas := map[string]map[string]*schema.Schema{
 		"hybridCloudEnvironment":              accountsHybridCloudEnvironmentSchema(),
@@ -350,11 +348,9 @@ func TestHCEnvOptionalFieldsMustBeComputed(t *testing.T) {
 	}
 }
 
-// TestHCEnvUnorderedCollectionsAreSets guards against the ordering perpetual diff that the
-// cluster-only #181 left behind on the environment resource: key/value and toleration
-// collections must be TypeSet (order-insensitive), because the backend persists them as
-// unordered maps and returns them in a non-deterministic order. TypeList compares order and
-// therefore reports a forever-diff (the node_selector swap in the Discord plan).
+// TestHCEnvUnorderedCollectionsAreSets: the key/value and toleration collections
+// must be TypeSet, because the backend returns them in a non-deterministic order
+// and TypeList would report a forever-diff (CP-552; cf. #181).
 func TestHCEnvUnorderedCollectionsAreSets(t *testing.T) {
 	cfg := accountsHybridCloudEnvironmentConfigurationSchema()
 	for _, field := range []string{

@@ -14,15 +14,17 @@ import (
 // confirmation of backend behavior. Do NOT add a field here to silence the test
 // without understanding whether the backend can populate it — that is exactly
 // the perpetual-diff bug (CP-552). Prefer Computed: true.
+const reasonUnconfirmedBackend = "unconfirmed: verify backend default behavior"
+
 var computedInvariantAllowlist = map[string]string{
 	// Top-level fields in other resources whose backend round-trip behavior is
 	// not yet confirmed. If the API returns a value when the user leaves them
 	// unset, they must become Computed (see CP-552 follow-up). Listed here so the
 	// invariant covers the whole provider without silently flipping behavior.
 	"qdrant-cloud_accounts_cluster.labels":                   "unconfirmed: may be server-augmented; verify before flipping to Computed",
-	"qdrant-cloud_accounts_backup_schedule.retention_period": "unconfirmed: verify backend default behavior",
-	"qdrant-cloud_accounts_manual_backup.retention_period":   "unconfirmed: verify backend default behavior",
-	"qdrant-cloud_accounts_role.description":                 "unconfirmed: verify backend default behavior",
+	"qdrant-cloud_accounts_backup_schedule.retention_period": reasonUnconfirmedBackend,
+	"qdrant-cloud_accounts_manual_backup.retention_period":   reasonUnconfirmedBackend,
+	"qdrant-cloud_accounts_role.description":                 reasonUnconfirmedBackend,
 }
 
 // TestProviderOptionalConfigFieldsAreComputed is the provider-wide generalization

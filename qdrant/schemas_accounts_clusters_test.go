@@ -1133,12 +1133,12 @@ func TestClusterPrivateRegionIDFlatten(t *testing.T) {
 	assert.Equal(t, region, hybrid[clusterPrivateRegionIDFieldName],
 		"hybrid cluster should back-fill private_region_id from the region")
 
-	aws := flattenCluster(&qcCluster.Cluster{
+	nonHybrid := flattenCluster(&qcCluster.Cluster{
 		Id:                    "00000000-0000-0000-0000-000000000011",
-		CloudProviderId:       "aws",
+		CloudProviderId:       "gcp",
 		CloudProviderRegionId: "us-east-1",
 	})
-	assert.Equal(t, "", aws[clusterPrivateRegionIDFieldName],
+	assert.Empty(t, nonHybrid[clusterPrivateRegionIDFieldName],
 		"non-hybrid cluster should not populate private_region_id")
 }
 

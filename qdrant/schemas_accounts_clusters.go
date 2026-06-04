@@ -209,10 +209,8 @@ For hybrid this should be the hybrid cloud environment ID.`),
 		clusterPrivateRegionIDFieldName: {
 			Description: fmt.Sprintf(clusterFieldTemplate, "Identifier of the Hybrid cloud region"),
 			Type:        schema.TypeString,
-			// Computed even as a resource: this deprecated field is merged with cloud_region and
-			// back-filled from the API for hybrid clusters (see flattenCluster). Without Computed,
-			// the re-derived value conflicts with an unset config and produces a perpetual
-			// "<region-id> -> null" diff on every hybrid cluster.
+			// Computed: deprecated field, back-filled from cloud_region for hybrid
+			// clusters in flattenCluster; without it an unset config perpetually diffs (CP-552).
 			Computed:   true,
 			Optional:   !asDataSource,
 			Deprecated: `Please use cloud_provider="hybrid" and the cloud_region field instead`,
