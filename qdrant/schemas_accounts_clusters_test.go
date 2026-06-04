@@ -1101,3 +1101,59 @@ func TestFlattenClusterConfigurationSpecifiedEnums(t *testing.T) {
 	clusterStorageConfig := clusterStorageConfigList[0].(map[string]interface{})
 	assert.Equal(t, "STORAGE_TIER_TYPE_BALANCED", clusterStorageConfig[clusterStorageTierTypeFieldName])
 }
+
+// --- CP-552 path coverage: deprecated private_region_id perpetual-diff fix ---
+
+// TestClusterPrivateRegionIDSchemaComputed verifies the deprecated field is
+// Optional+Computed in resource mode. Without Computed, the value back-filled in
+// flattenCluster (below) conflicts with an unset config and diffs forever. #186's
+// guard skips Deprecated fields, so this is asserted explicitly here.
+func TestClusterPrivateRegionIDSchemaComputed(t *testing.T) {
+	res := accountsClusterSchema(false)[clusterPrivateRegionIDFieldName]
+	require.NotNil(t, res)
+	assert.True(t, res.Optional, "private_region_id must stay Optional in resource mode")
+	assert.True(t, res.Computed, "private_region_id must be Computed so the hybrid back-fill doesn't perpetually diff")
+	assert.NotEmpty(t, res.Deprecated, "private_region_id should remain marked Deprecated")
+
+	ds := accountsClusterSchema(true)[clusterPrivateRegionIDFieldName]
+	assert.True(t, ds.Computed, "private_region_id must be Computed in data-source mode")
+}
+
+// TestClusterPrivateRegionIDFlatten verifies the back-fill behavior that makes
+// Computed necessary: for hybrid clusters the field is derived from the region;
+// for non-hybrid clusters it stays empty.
+func TestClusterPrivateRegionIDFlatten(t *testing.T) {
+	region := "e41cd84c-0464-443a-ac27-7d8daa922c6f"
+
+	hybrid := flattenCluster(&qcCluster.Cluster{
+		Id:                    "00000000-0000-0000-0000-000000000010",
+		CloudProviderId:       hybridCloudClusterID,
+		CloudProviderRegionId: region,
+	})
+	assert.Equal(t, region, hybrid[clusterPrivateRegionIDFieldName],
+		"hybrid cluster should back-fill private_region_id from the region")
+
+	nonHybrid := flattenCluster(&qcCluster.Cluster{
+		Id:                    "00000000-0000-0000-0000-000000000011",
+		CloudProviderId:       "gcp",
+		CloudProviderRegionId: "us-east-1",
+	})
+	assert.Empty(t, nonHybrid[clusterPrivateRegionIDFieldName],
+		"non-hybrid cluster should not populate private_region_id")
+}
+
+// TestClusterPrivateRegionIDExpandHonorsUserValue confirms that a user who still
+// sets the deprecated field gets it honored (mapped onto cloud_region) for hybrid.
+func TestClusterPrivateRegionIDExpandHonorsUserValue(t *testing.T) {
+	region := "e41cd84c-0464-443a-ac27-7d8daa922c6f"
+	d := schema.TestResourceDataRaw(t, accountsClusterSchema(false), map[string]interface{}{
+		clusterAccountIDFieldName:       "00000000-1000-0000-0000-000000000001",
+		clusterNameFieldName:            "c",
+		clusterCloudProviderFieldName:   hybridCloudClusterID,
+		clusterPrivateRegionIDFieldName: region,
+	})
+	cluster, _, err := expandCluster(d, "00000000-1000-0000-0000-000000000001")
+	require.NoError(t, err)
+	assert.Equal(t, region, cluster.GetCloudProviderRegionId(),
+		"a user-set private_region_id must map onto cloud_provider_region_id for hybrid")
+}

@@ -324,3 +324,164 @@ func TestConvertMapKeysToStrings(t *testing.T) {
 		})
 	}
 }
+
+// TestHCEnvOptionalFieldsMustBeComputed is the env-resource counterpart of the
+// cluster-only TestOptionalFieldsMustBeComputed (#186): every Optional,
+// non-deprecated field must also be Computed, or backend-populated values
+// perpetually diff (CP-552).
+func TestHCEnvOptionalFieldsMustBeComputed(t *testing.T) {
+	schemas := map[string]map[string]*schema.Schema{
+		"hybridCloudEnvironment":              accountsHybridCloudEnvironmentSchema(),
+		"hybridCloudEnvironmentConfiguration": accountsHybridCloudEnvironmentConfigurationSchema(),
+	}
+	for schemaName, schemaMap := range schemas {
+		for fieldName, fieldSchema := range schemaMap {
+			if fieldSchema.Optional && fieldSchema.Deprecated == "" {
+				t.Run(schemaName+"/"+fieldName, func(t *testing.T) {
+					assert.True(t, fieldSchema.Computed,
+						"field %s in %s is Optional but not Computed — the backend may populate this field, "+
+							"causing perpetual Terraform diffs. Change Computed to true.",
+						fieldName, schemaName)
+				})
+			}
+		}
+	}
+}
+
+// TestHCEnvUnorderedCollectionsAreSets: the key/value and toleration collections
+// must be TypeSet, because the backend returns them in a non-deterministic order
+// and TypeList would report a forever-diff (CP-552; cf. #181).
+func TestHCEnvUnorderedCollectionsAreSets(t *testing.T) {
+	cfg := accountsHybridCloudEnvironmentConfigurationSchema()
+	for _, field := range []string{
+		hcEnvCfgNodeSelectorFieldName,
+		hcEnvCfgTolerationsFieldName,
+		hcEnvCfgControlPlaneLabelsFieldName,
+	} {
+		t.Run(field, func(t *testing.T) {
+			s, ok := cfg[field]
+			require.True(t, ok, "field %s should exist in the hybrid cloud environment configuration schema", field)
+			assert.Equal(t, schema.TypeSet, s.Type,
+				"field %s must be schema.TypeSet; the backend returns these unordered, and TypeList causes perpetual diffs", field)
+		})
+	}
+}
+
+// --- CP-552 path coverage: hybrid_cloud_environment perpetual-diff fix ------
+
+// TestHCEnvSetFieldsConfigured asserts the unordered collections are TypeSet AND
+// carry the same explicit Set hash funcs as the equivalent cluster fields, so the
+// set membership (not ordering) drives equality.
+func TestHCEnvSetFieldsConfigured(t *testing.T) {
+	cfg := accountsHybridCloudEnvironmentConfigurationSchema()
+	for _, f := range []string{
+		hcEnvCfgNodeSelectorFieldName,
+		hcEnvCfgTolerationsFieldName,
+		hcEnvCfgControlPlaneLabelsFieldName,
+		hcEnvCfgNoProxyConfigsFieldName,
+	} {
+		t.Run(f, func(t *testing.T) {
+			s := cfg[f]
+			require.NotNil(t, s)
+			assert.Equal(t, schema.TypeSet, s.Type, "%s must be TypeSet", f)
+			assert.NotNil(t, s.Set, "%s must define an explicit Set hash func", f)
+		})
+	}
+}
+
+// TestHCEnvUnorderedCollectionsOrderIndependent is the core proof that the
+// backend returning these collections in a different order than configured does
+// NOT produce a diff: two sets built from the same elements in opposite order
+// must be equal under the field's Set func.
+func TestHCEnvUnorderedCollectionsOrderIndependent(t *testing.T) {
+	cfg := accountsHybridCloudEnvironmentConfigurationSchema()
+
+	kv := []interface{}{
+		map[string]interface{}{"key": "node_pool", "value": "qdrant-hybrid-cloud"},
+		map[string]interface{}{"key": "cluster_name", "value": "serving-1"},
+	}
+	tol := []interface{}{
+		map[string]interface{}{tolerationKeyFieldName: "a", tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL", tolerationValueFieldName: "1", tolerationEffectFieldName: "TOLERATION_EFFECT_NO_SCHEDULE"},
+		map[string]interface{}{tolerationKeyFieldName: "b", tolerationOperatorFieldName: "TOLERATION_OPERATOR_EQUAL", tolerationValueFieldName: "2", tolerationEffectFieldName: "TOLERATION_EFFECT_NO_SCHEDULE"},
+	}
+	strs := []interface{}{"localhost", "127.0.0.1", "10.0.0.0/8"}
+
+	cases := []struct {
+		field string
+		items []interface{}
+	}{
+		{hcEnvCfgNodeSelectorFieldName, kv},
+		{hcEnvCfgControlPlaneLabelsFieldName, kv},
+		{hcEnvCfgTolerationsFieldName, tol},
+		{hcEnvCfgNoProxyConfigsFieldName, strs},
+	}
+	for _, c := range cases {
+		t.Run(c.field, func(t *testing.T) {
+			setFn := cfg[c.field].Set
+			forward := schema.NewSet(setFn, c.items)
+			reversed := make([]interface{}, len(c.items))
+			for i, v := range c.items {
+				reversed[len(c.items)-1-i] = v
+			}
+			backward := schema.NewSet(setFn, reversed)
+			assert.Equal(t, forward.Len(), backward.Len())
+			assert.Equal(t, 0, forward.Difference(backward).Len(), "%s: reordering changed set membership", c.field)
+			assert.Equal(t, 0, backward.Difference(forward).Len(), "%s: reordering changed set membership", c.field)
+		})
+	}
+}
+
+// TestHCEnvConfigFlattenExpandRoundTrip pushes a fully-populated backend config
+// through flatten -> ResourceData -> expand and verifies every field survives,
+// including the TypeSet collections (which arrive at expand as *schema.Set).
+func TestHCEnvConfigFlattenExpandRoundTrip(t *testing.T) {
+	orig := &qch.HybridCloudEnvironmentConfiguration{
+		Namespace:                  "qdrant-hc",
+		HttpProxyUrl:               newPointer("http://proxy:3128"),
+		HttpsProxyUrl:              newPointer("https://proxy:3128"),
+		NoProxyConfigs:             []string{"localhost", "127.0.0.1"},
+		ContainerRegistryUrl:       newPointer("registry.example.com"),
+		ChartRepositoryUrl:         newPointer("charts.example.com"),
+		RegistrySecretName:         newPointer("reg-secret"),
+		CaCertificates:             newPointer("ca-data"),
+		DatabaseStorageClass:       newPointer("premium-rwo"),
+		SnapshotStorageClass:       newPointer("premium-rwo"),
+		VolumeSnapshotStorageClass: newPointer("premium-rwo"),
+		LogLevel:                   newPointer(qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO),
+		NodeSelector: []*commonv1.KeyValue{
+			{Key: "node_pool", Value: "qdrant-hybrid-cloud"},
+			{Key: "cluster_name", Value: "serving-1"},
+		},
+		ControlPlaneLabels: []*commonv1.KeyValue{
+			{Key: "team", Value: "search"},
+		},
+	}
+
+	flat := flattenHCEnvConfiguration(orig)
+	// Build state the same way the Read function does (d.Set), which accepts the
+	// []string the flatten emits for set-of-string fields like no_proxy_configs.
+	d := schema.TestResourceDataRaw(t, accountsHybridCloudEnvironmentSchema(), nil)
+	require.NoError(t, d.Set(hcEnvNameFieldName, "rt"))
+	require.NoError(t, d.Set(hcEnvConfigurationFieldName, flat))
+	got := expandHCEnvConfiguration(d.Get(hcEnvConfigurationFieldName).([]interface{}))
+
+	assert.Equal(t, orig.GetNamespace(), got.GetNamespace())
+	assert.Equal(t, orig.GetHttpProxyUrl(), got.GetHttpProxyUrl())
+	assert.Equal(t, orig.GetHttpsProxyUrl(), got.GetHttpsProxyUrl())
+	assert.Equal(t, orig.GetContainerRegistryUrl(), got.GetContainerRegistryUrl())
+	assert.Equal(t, orig.GetDatabaseStorageClass(), got.GetDatabaseStorageClass())
+	assert.Equal(t, orig.GetSnapshotStorageClass(), got.GetSnapshotStorageClass())
+	assert.Equal(t, orig.GetLogLevel(), got.GetLogLevel())
+	assert.ElementsMatch(t, orig.GetNoProxyConfigs(), got.GetNoProxyConfigs())
+
+	// node_selector survives as a set (order-independent).
+	want := map[string]string{}
+	for _, kv := range orig.GetNodeSelector() {
+		want[kv.GetKey()] = kv.GetValue()
+	}
+	gotKV := map[string]string{}
+	for _, kv := range got.GetNodeSelector() {
+		gotKV[kv.GetKey()] = kv.GetValue()
+	}
+	assert.Equal(t, want, gotKV)
+}

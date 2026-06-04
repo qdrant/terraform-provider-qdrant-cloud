@@ -155,66 +155,81 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Type:        schema.TypeString,
 			Computed:    true,
 		},
+		// Optional fields here are also Computed: the backend can populate any of
+		// them when unset, which otherwise reads back as a perpetual diff (CP-552).
 		hcEnvCfgHttpProxyUrlFieldName: {
 			Description: "Optional HTTP proxy URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgHttpsProxyUrlFieldName: {
 			Description: "Optional HTTPS proxy URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgNoProxyConfigsFieldName: {
 			Description: "List of hosts that should not be proxied.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant (matches the cluster allowed_ip_source_ranges pattern).
 			Optional:    true,
+			Computed:    true,
 			Elem:        &schema.Schema{Type: schema.TypeString},
+			Set:         schema.HashString,
 		},
 		hcEnvCfgContainerRegistryUrlFieldName: {
 			Description: "Container registry URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgChartRepositoryUrlFieldName: {
 			Description: "Chart registry URL.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgRegistrySecretNameFieldName: {
 			Description: "Kubernetes secret name containing registry credentials.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgCaCertificatesFieldName: {
 			Description: "CA certificates for custom certificate authorities.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgDatabaseStorageClassFieldName: {
 			Description: "Default database storage class.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgSnapshotStorageClassFieldName: {
 			Description: "Default snapshot storage class.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: {
 			Description: "Default volume snapshot storage class.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgLogLevelFieldName: {
 			Description: "Log level for deployed components.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 		},
 		hcEnvCfgAdvancedOperatorSettingsFieldName: {
 			Description: "Advanced operator settings as a YAML string.",
 			Type:        schema.TypeString,
 			Optional:    true,
+			Computed:    true,
 			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 				var oldData, newData interface{}
 				if err := yaml.Unmarshal([]byte(old), &oldData); err != nil {
@@ -244,27 +259,33 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 		},
 		hcEnvCfgNodeSelectorFieldName: {
 			Description: "Node selector labels for scheduling control plane components.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant; the backend stores these as an unordered map.
 			Optional:    true,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(false),
 			},
+			Set: keyValHashFunc,
 		},
 		hcEnvCfgTolerationsFieldName: {
 			Description: "Tolerations for scheduling control plane components.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant.
 			Optional:    true,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: tolerationSchema(false),
 			},
+			Set: tolerationHashFunc,
 		},
 		hcEnvCfgControlPlaneLabelsFieldName: {
 			Description: "Additional labels to apply to control plane components.",
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet, // Order isn't significant; the backend stores these as an unordered map.
 			Optional:    true,
+			Computed:    true,
 			Elem: &schema.Resource{
 				Schema: keyValSchema(false),
 			},
+			Set: keyValHashFunc,
 		},
 	}
 }
@@ -516,7 +537,7 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 		config.HttpsProxyUrl = newPointer(val.(string))
 	}
 	if val, ok := m[hcEnvCfgNoProxyConfigsFieldName]; ok {
-		config.NoProxyConfigs = interfaceSliceToStringSlice(val.([]interface{}))
+		config.NoProxyConfigs = interfaceSliceToStringSlice(getInterfaceSliceFromSchemaValue(val))
 	}
 	if val, ok := m[hcEnvCfgContainerRegistryUrlFieldName]; ok && val.(string) != "" {
 		config.ContainerRegistryUrl = newPointer(val.(string))
