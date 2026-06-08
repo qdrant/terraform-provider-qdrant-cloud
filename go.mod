@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-docs v0.25.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
-	github.com/qdrant/qdrant-cloud-public-api v0.131.0
+	github.com/qdrant/qdrant-cloud-public-api v0.137.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
