@@ -1271,11 +1271,15 @@ func expandTolerations(v []interface{}) []*qcCluster.Toleration {
 	for _, m := range v {
 		item := m.(map[string]interface{})
 		toleration := &qcCluster.Toleration{}
-		if v, ok := item[tolerationKeyFieldName]; ok {
-			toleration.Key = newPointer(v.(string))
+		// key/value are always present in the set element map (as ""), so only
+		// set the pointers when non-empty. In particular, sending an empty
+		// value pointer makes the API reject the toleration when the operator
+		// is Exists ("value must not be set when operator is Exists").
+		if v, ok := item[tolerationKeyFieldName].(string); ok && v != "" {
+			toleration.Key = newPointer(v)
 		}
-		if v, ok := item[tolerationValueFieldName]; ok {
-			toleration.Value = newPointer(v.(string))
+		if v, ok := item[tolerationValueFieldName].(string); ok && v != "" {
+			toleration.Value = newPointer(v)
 		}
 		if op, ok := item[tolerationOperatorFieldName]; ok {
 			opVal, opOk := qcCluster.TolerationOperator_value[op.(string)]
