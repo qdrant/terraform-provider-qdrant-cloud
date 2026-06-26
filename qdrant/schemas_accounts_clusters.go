@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -772,33 +773,67 @@ func keyValSchema(asDataSource bool) map[string]*schema.Schema {
 
 // tolerationSchema defines the schema for a toleration.
 func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
+	// The operator/effect strings must match the protobuf enum names; any
+	// other value (e.g. the Kubernetes short forms "Exists"/"NoSchedule") is
+	// silently dropped by expandTolerations, leaving the toleration without an
+	// operator/effect. Validate against the enum names so a bad value fails at
+	// plan time instead of producing a misconfigured cluster.
+	validOperators := tolerationEnumNames(qcCluster.TolerationOperator_name)
+	validEffects := tolerationEnumNames(qcCluster.TolerationEffect_name)
+
+	operator := &schema.Schema{
+		Description: fmt.Sprintf("The toleration operator. Should be one of %s.", strings.Join(validOperators, ",")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    asDataSource,
+	}
+	effect := &schema.Schema{
+		Description: fmt.Sprintf("The toleration effect. Should be one of %s.", strings.Join(validEffects, ",")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    asDataSource,
+	}
+	// Only add ValidateFunc for resource mode (when field is Optional).
+	// Data sources are Computed-only and don't need validation.
+	if !asDataSource {
+		operator.ValidateFunc = validation.StringInSlice(validOperators, false)
+		effect.ValidateFunc = validation.StringInSlice(validEffects, false)
+	}
+
 	return map[string]*schema.Schema{
 		tolerationKeyFieldName: {
 			Type:     schema.TypeString,
 			Optional: !asDataSource,
 			Computed: asDataSource,
 		},
-		tolerationOperatorFieldName: {
-			Type:     schema.TypeString,
-			Optional: !asDataSource,
-			Computed: asDataSource,
-		},
+		tolerationOperatorFieldName: operator,
 		tolerationValueFieldName: {
 			Type:     schema.TypeString,
 			Optional: !asDataSource,
 			Computed: asDataSource,
 		},
-		tolerationEffectFieldName: {
-			Type:     schema.TypeString,
-			Optional: !asDataSource,
-			Computed: asDataSource,
-		},
+		tolerationEffectFieldName: effect,
 		tolerationSecondsFieldName: {
 			Type:     schema.TypeInt,
 			Optional: !asDataSource,
 			Computed: asDataSource,
 		},
 	}
+}
+
+// tolerationEnumNames returns the protobuf enum names accepted for a toleration
+// field, excluding the zero-value *_UNSPECIFIED sentinel (which represents an
+// unset value and is not a meaningful user input).
+func tolerationEnumNames(enumName map[int32]string) []string {
+	names := make([]string, 0, len(enumName))
+	for value, name := range enumName {
+		if value == 0 {
+			continue
+		}
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
 }
 
 func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema {
