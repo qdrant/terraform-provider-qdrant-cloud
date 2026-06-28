@@ -345,9 +345,9 @@ Required:
 
 Optional:
 
-- `effect` (String)
+- `effect` (String) The toleration effect. Should be one of TOLERATION_EFFECT_NO_EXECUTE,TOLERATION_EFFECT_NO_SCHEDULE,TOLERATION_EFFECT_PREFER_NO_SCHEDULE.
 - `key` (String)
-- `operator` (String)
+- `operator` (String) The toleration operator. Should be one of TOLERATION_OPERATOR_EQUAL,TOLERATION_OPERATOR_EXISTS.
 - `toleration_seconds` (Number)
 - `value` (String)
 
