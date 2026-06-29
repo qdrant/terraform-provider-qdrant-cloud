@@ -128,7 +128,7 @@ Required:
 
 Optional:
 
-- `allowed_ip_source_ranges` (Set of String) List of allowed IP source ranges for this cluster.
+- `allowed_ip_source_ranges` (Set of String) List of allowed IP source ranges for this cluster. On Hybrid Cloud, this will configure the loadBalancerSourceRanges of a LoadBalancer Service.
 - `annotations` (Block Set) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
 - `cluster_storage_configuration` (Block List, Max: 1) Configuration for cluster storage settings. (see [below for nested schema](#nestedblock--configuration--cluster_storage_configuration))
 - `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))

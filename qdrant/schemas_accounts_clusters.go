@@ -328,7 +328,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Set: keyValHashFunc,
 		},
 		allowedIpSourceRangesFieldName: {
-			Description: "List of allowed IP source ranges for this cluster.",
+			Description: "List of allowed IP source ranges for this cluster. On Hybrid Cloud, this will configure the loadBalancerSourceRanges of a LoadBalancer Service.",
 			Type:        schema.TypeSet,
 			Optional:    !asDataSource,
 			Computed:    true,
