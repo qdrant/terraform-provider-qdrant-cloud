@@ -18,6 +18,6 @@ func TestProviderUserAgent_DefaultDev(t *testing.T) {
 	old := providerVersion
 	t.Cleanup(func() { providerVersion = old })
 
-	providerVersion = "dev"
+	providerVersion = providerVersionDev
 	assert.Equal(t, "terraform-provider-qdrant-cloud/dev", providerUserAgent())
 }

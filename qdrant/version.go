@@ -5,20 +5,23 @@ import (
 	"runtime/debug"
 )
 
-const providerUserAgentPrefix = "terraform-provider-qdrant-cloud"
+const (
+	providerUserAgentPrefix = "terraform-provider-qdrant-cloud"
+	providerVersionDev      = "dev"
+)
 
 // providerVersion is injected at release build time via ldflags.
-var providerVersion = "dev"
+var providerVersion = providerVersionDev
 
 func providerUserAgent() string {
 	version := providerVersion
-	if version == "" || version == "dev" {
+	if version == "" || version == providerVersionDev {
 		if v := versionFromBuildInfo(); v != "" {
 			version = v
 		}
 	}
 	if version == "" {
-		version = "dev"
+		version = providerVersionDev
 	}
 	return fmt.Sprintf("%s/%s", providerUserAgentPrefix, version)
 }
