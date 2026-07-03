@@ -22,6 +22,15 @@ const (
 	requestIDTrailerField = "qc-trace-id"
 )
 
+func grpcClientDialOptions(insecure bool) []grpc.DialOption {
+	return []grpc.DialOption{
+		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			InsecureSkipVerify: insecure,
+		})),
+		grpc.WithUserAgent(providerUserAgent()),
+	}
+}
+
 // getRequestID fetches the humanized Request ID from the provided metadata (or an empty string if not available).
 func getRequestID(metadata metadata.MD) string {
 	reqIDs := metadata.Get(requestIDTrailerField)
@@ -42,11 +51,7 @@ func getClientConnection(ctx context.Context, m interface{}) (*grpc.ClientConn, 
 	if clientConfig.BaseURL == "" {
 		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: provided ClientConfig.BaseURL not set"))
 	}
-	// Set up a connection to the server.
-	tc := credentials.NewTLS(&tls.Config{
-		InsecureSkipVerify: clientConfig.Insecure,
-	})
-	conn, err := grpc.NewClient(clientConfig.BaseURL, grpc.WithTransportCredentials(tc))
+	conn, err := grpc.NewClient(clientConfig.BaseURL, grpcClientDialOptions(clientConfig.Insecure)...)
 	if err != nil {
 		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: cannot create gRPC client: %w", err))
 	}
