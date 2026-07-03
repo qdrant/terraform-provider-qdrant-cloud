@@ -2,7 +2,6 @@ package qdrant
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"os"
 	"strings"
@@ -11,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 
 	qcb "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/backup/v1"
@@ -145,8 +143,7 @@ func newTestAccBackupServiceClient(ctx context.Context) (qcb.BackupServiceClient
 		apiURL = "grpc.cloud.qdrant.io"
 	}
 	insecure := strings.EqualFold(os.Getenv("QDRANT_CLOUD_INSECURE"), "true")
-	creds := credentials.NewTLS(&tls.Config{InsecureSkipVerify: insecure})
-	conn, err := grpc.NewClient(apiURL, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.NewClient(apiURL, grpcClientDialOptions(insecure)...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("dial backup service: %w", err)
 	}
