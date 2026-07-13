@@ -107,7 +107,10 @@ Read-Only:
 
 Read-Only:
 
+- `database_storage_class` (String)
+- `snapshot_storage_class` (String)
 - `storage_tier_type` (String)
+- `volume_snapshot_class` (String)
 
 
 <a id="nestedobjatt--configuration--database_configuration"></a>

@@ -81,6 +81,9 @@ const (
 	podLabelsFieldName                                 = "pod_labels"
 	clusterStorageConfigurationFieldName               = "cluster_storage_configuration"
 	clusterStorageTierTypeFieldName                    = "storage_tier_type"
+	clusterDatabaseStorageClassFieldName               = "database_storage_class"
+	clusterSnapshotStorageClassFieldName               = "snapshot_storage_class"
+	clusterVolumeSnapshotClassFieldName                = "volume_snapshot_class"
 	databaseConfigurationFieldName                     = "database_configuration"
 	dbConfigCollectionFieldName                        = "collection"
 	dbConfigStorageFieldName                           = "storage"
@@ -731,6 +734,24 @@ func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Sch
 	}
 	return map[string]*schema.Schema{
 		clusterStorageTierTypeFieldName: storageTierType,
+		clusterDatabaseStorageClassFieldName: {
+			Description: "The storage class to use for the database storage, if different from the environment default. Hybrid cloud clusters only.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    true,
+		},
+		clusterSnapshotStorageClassFieldName: {
+			Description: "The storage class to use for the snapshot storage, if different from the environment default. Hybrid cloud clusters only.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    true,
+		},
+		clusterVolumeSnapshotClassFieldName: {
+			Description: "The volume snapshot class to use for the database storage, if different from the environment default. Hybrid cloud clusters only.",
+			Type:        schema.TypeString,
+			Optional:    !asDataSource,
+			Computed:    true,
+		},
 	}
 }
 
@@ -1154,9 +1175,21 @@ func expandClusterStorageConfiguration(v []interface{}) *qcCluster.ClusterStorag
 			config.StorageTierType = commonv1.StorageTierType(stt)
 		}
 	}
+	// The backend clears volume_snapshot_class when it is omitted from an update,
+	// so these must always be echoed back when present in state (they are Computed).
+	if val, ok := item[clusterDatabaseStorageClassFieldName]; ok && val.(string) != "" {
+		config.DatabaseStorageClass = newPointer(val.(string))
+	}
+	if val, ok := item[clusterSnapshotStorageClassFieldName]; ok && val.(string) != "" {
+		config.SnapshotStorageClass = newPointer(val.(string))
+	}
+	if val, ok := item[clusterVolumeSnapshotClassFieldName]; ok && val.(string) != "" {
+		config.VolumeSnapshotClass = newPointer(val.(string))
+	}
 
 	// If no fields were set (or only UNSPECIFIED values), return nil
-	if config.StorageTierType == commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED {
+	if config.StorageTierType == commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED &&
+		config.DatabaseStorageClass == nil && config.SnapshotStorageClass == nil && config.VolumeSnapshotClass == nil {
 		return nil
 	}
 
@@ -1461,6 +1494,15 @@ func flattenClusterStorageConfiguration(storageConfig *qcCluster.ClusterStorageC
 	// Only set storage_tier_type when it's not UNSPECIFIED to avoid perpetual diffs
 	if storageTierType := storageConfig.GetStorageTierType(); storageTierType != commonv1.StorageTierType_STORAGE_TIER_TYPE_UNSPECIFIED {
 		m[clusterStorageTierTypeFieldName] = storageTierType.String()
+	}
+	if v := storageConfig.GetDatabaseStorageClass(); v != "" {
+		m[clusterDatabaseStorageClassFieldName] = v
+	}
+	if v := storageConfig.GetSnapshotStorageClass(); v != "" {
+		m[clusterSnapshotStorageClassFieldName] = v
+	}
+	if v := storageConfig.GetVolumeSnapshotClass(); v != "" {
+		m[clusterVolumeSnapshotClassFieldName] = v
 	}
 
 	// If no fields were set (all UNSPECIFIED or nil), return nil
