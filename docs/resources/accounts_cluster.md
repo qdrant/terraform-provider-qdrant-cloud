@@ -185,7 +185,10 @@ Required:
 
 Optional:
 
+- `database_storage_class` (String) The storage class to use for the database storage, if different from the environment default. Hybrid cloud clusters only.
+- `snapshot_storage_class` (String) The storage class to use for the snapshot storage, if different from the environment default. Hybrid cloud clusters only.
 - `storage_tier_type` (String) The storage performance tier for the cluster. Should be one of STORAGE_TIER_TYPE_COST_OPTIMISED,STORAGE_TIER_TYPE_BALANCED,STORAGE_TIER_TYPE_PERFORMANCE.
+- `volume_snapshot_class` (String) The volume snapshot class to use for the database storage, if different from the environment default. Hybrid cloud clusters only.
 
 
 <a id="nestedblock--configuration--database_configuration"></a>
