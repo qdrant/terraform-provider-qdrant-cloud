@@ -2,8 +2,10 @@ package qdrant
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	authv2 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/cluster/auth/v2"
 )
@@ -145,18 +147,35 @@ func accountsAuthKeyV2ResourceSchema(asDataSource bool) map[string]*schema.Schem
 
 // globalAccessRuleSchema defines the schema for a global access rule.
 func globalAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
+	validAccessTypes := protoEnumNames(authv2.GlobalAccessRuleAccessType_name)
+	accessType := &schema.Schema{
+		Description: fmt.Sprintf("Access type for global access. Must be one of: %s.", strings.Join(validAccessTypes, ", ")),
+		Type:        schema.TypeString,
+		Required:    !asDataSource,
+		Computed:    asDataSource,
+	}
+	if !asDataSource {
+		accessType.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validAccessTypes, false))
+	}
+
 	return map[string]*schema.Schema{
-		authKeysV2AccessTypeFieldName: {
-			Description: "Access type for global access. Can be `GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE`.",
-			Type:        schema.TypeString,
-			Required:    !asDataSource,
-			Computed:    asDataSource,
-		},
+		authKeysV2AccessTypeFieldName: accessType,
 	}
 }
 
 // collectionAccessRuleSchema defines the schema for a collection-specific access rule.
 func collectionAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
+	validAccessTypes := protoEnumNames(authv2.CollectionAccessRuleAccessType_name)
+	accessType := &schema.Schema{
+		Description: fmt.Sprintf("Access type for the collection. Must be one of: %s.", strings.Join(validAccessTypes, ", ")),
+		Type:        schema.TypeString,
+		Required:    !asDataSource,
+		Computed:    asDataSource,
+	}
+	if !asDataSource {
+		accessType.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validAccessTypes, false))
+	}
+
 	return map[string]*schema.Schema{
 		authKeysV2CollectionNameFieldName: {
 			Description: "Name of the collection.",
@@ -164,12 +183,7 @@ func collectionAccessRuleSchema(asDataSource bool) map[string]*schema.Schema {
 			Required:    !asDataSource,
 			Computed:    asDataSource,
 		},
-		authKeysV2AccessTypeFieldName: {
-			Description: "Access type for the collection. Can be `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_WRITE`.",
-			Type:        schema.TypeString,
-			Required:    !asDataSource,
-			Computed:    asDataSource,
-		},
+		authKeysV2AccessTypeFieldName: accessType,
 	}
 }
 

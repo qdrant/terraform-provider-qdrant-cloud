@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,6 +16,26 @@ import (
 	commonv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/common/v1"
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
 )
+
+func TestAccountsHybridCloudEnvironmentConfigurationSchema(t *testing.T) {
+	configuration := accountsHybridCloudEnvironmentConfigurationSchema()
+
+	t.Run(hcEnvCfgLogLevelFieldName, func(t *testing.T) {
+		testGeneratedEnumValidation(t, hcEnvCfgLogLevelFieldName, configuration[hcEnvCfgLogLevelFieldName], nil, qch.HybridCloudEnvironmentConfigurationLogLevel_name)
+	})
+	t.Run(hcEnvCfgAdvancedOperatorSettingsFieldName, func(t *testing.T) {
+		validator := configuration[hcEnvCfgAdvancedOperatorSettingsFieldName].ValidateDiagFunc
+		require.NotNil(t, validator)
+
+		path := cty.GetAttrPath(hcEnvCfgAdvancedOperatorSettingsFieldName)
+		t.Run("when valid YAML is provided, it produces no diagnostics", func(t *testing.T) {
+			assert.Empty(t, validator("clusterManager:\n  enabled: true\n", path))
+		})
+		t.Run("when malformed YAML is provided, it produces a diagnostic", func(t *testing.T) {
+			assert.NotEmpty(t, validator("clusterManager: [", path))
+		})
+	})
+}
 
 func TestFlattenHCEnv(t *testing.T) {
 	env := &qch.HybridCloudEnvironment{

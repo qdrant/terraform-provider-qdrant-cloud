@@ -3,9 +3,11 @@ package qdrant
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	qch "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/hybrid/v1"
@@ -143,6 +145,15 @@ func accountsHybridCloudEnvironmentSchema() map[string]*schema.Schema {
 
 // accountsHybridCloudEnvironmentConfigurationSchema defines the schema for the configuration of a hybrid cloud environment.
 func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Schema {
+	validLogLevels := protoEnumNames(qch.HybridCloudEnvironmentConfigurationLogLevel_name)
+	logLevel := &schema.Schema{
+		Description:      fmt.Sprintf("Log level for deployed components. Must be one of: %s.", strings.Join(validLogLevels, ", ")),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Computed:         true,
+		ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(validLogLevels, false)),
+	}
+
 	return map[string]*schema.Schema{
 		hcEnvCfgNamespaceFieldName: {
 			Description: "The Kubernetes namespace where the Qdrant hybrid cloud components will be deployed.",
@@ -219,12 +230,7 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 			Optional:    true,
 			Computed:    true,
 		},
-		hcEnvCfgLogLevelFieldName: {
-			Description: "Log level for deployed components.",
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-		},
+		hcEnvCfgLogLevelFieldName: logLevel,
 		hcEnvCfgAdvancedOperatorSettingsFieldName: {
 			Description: "Advanced operator settings as a YAML string.",
 			Type:        schema.TypeString,
@@ -240,12 +246,12 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 				}
 				return reflect.DeepEqual(oldData, newData)
 			},
-			ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
+			ValidateDiagFunc: validation.ToDiagFunc(func(v interface{}, k string) (ws []string, es []error) {
 				if err := yaml.Unmarshal([]byte(v.(string)), new(interface{})); err != nil {
 					es = append(es, fmt.Errorf("%q contains invalid YAML: %w", k, err))
 				}
 				return
-			},
+			}),
 			// StateFunc normalizes the YAML on save, which is good practice with DiffSuppressFunc.
 			// This ensures the state file has a consistent format, even if user input varies.
 			StateFunc: func(v interface{}) string {

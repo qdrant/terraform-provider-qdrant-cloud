@@ -95,7 +95,7 @@ output "key" {
 
 Required:
 
-- `access_type` (String) Access type for the collection. Can be `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_WRITE`.
+- `access_type` (String) Access type for the collection. Must be one of: COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_ONLY, COLLECTION_ACCESS_RULE_ACCESS_TYPE_READ_WRITE.
 - `collection_name` (String) Name of the collection.
 
 
@@ -104,7 +104,7 @@ Required:
 
 Required:
 
-- `access_type` (String) Access type for global access. Can be `GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY` or `GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE`.
+- `access_type` (String) Access type for global access. Must be one of: GLOBAL_ACCESS_RULE_ACCESS_TYPE_MANAGE, GLOBAL_ACCESS_RULE_ACCESS_TYPE_READ_ONLY.
 
 
 

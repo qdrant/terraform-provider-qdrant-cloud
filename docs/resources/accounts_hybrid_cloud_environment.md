@@ -128,7 +128,7 @@ Optional:
 - `database_storage_class` (String) Default database storage class.
 - `http_proxy_url` (String) Optional HTTP proxy URL.
 - `https_proxy_url` (String) Optional HTTPS proxy URL.
-- `log_level` (String) Log level for deployed components.
+- `log_level` (String) Log level for deployed components. Must be one of: HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_DEBUG, HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_ERROR, HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO, HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_WARN.
 - `no_proxy_configs` (Set of String) List of hosts that should not be proxied.
 - `node_selector` (Block Set) Node selector labels for scheduling control plane components. (see [below for nested schema](#nestedblock--configuration--node_selector))
 - `registry_secret_name` (String) Kubernetes secret name containing registry credentials.
@@ -163,9 +163,9 @@ Required:
 
 Optional:
 
-- `effect` (String) The toleration effect. Should be one of TOLERATION_EFFECT_NO_EXECUTE,TOLERATION_EFFECT_NO_SCHEDULE,TOLERATION_EFFECT_PREFER_NO_SCHEDULE.
+- `effect` (String) The toleration effect. Must be one of: TOLERATION_EFFECT_NO_EXECUTE, TOLERATION_EFFECT_NO_SCHEDULE, TOLERATION_EFFECT_PREFER_NO_SCHEDULE.
 - `key` (String)
-- `operator` (String) The toleration operator. Should be one of TOLERATION_OPERATOR_EQUAL,TOLERATION_OPERATOR_EXISTS.
+- `operator` (String) The toleration operator. Must be one of: TOLERATION_OPERATOR_EQUAL, TOLERATION_OPERATOR_EXISTS.
 - `toleration_seconds` (Number)
 - `value` (String)
 
