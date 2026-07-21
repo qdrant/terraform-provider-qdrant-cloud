@@ -132,15 +132,15 @@ Optional:
 - `annotations` (Block Set) List of annotations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--annotations))
 - `cluster_storage_configuration` (Block List, Max: 1) Configuration for cluster storage settings. (see [below for nested schema](#nestedblock--configuration--cluster_storage_configuration))
 - `database_configuration` (Block List, Max: 1) Configuration for the Qdrant database engine, primarily for hybrid cloud setups. (see [below for nested schema](#nestedblock--configuration--database_configuration))
-- `gpu_type` (String) The GPU type that should be used for the database.
+- `gpu_type` (String) The GPU type that should be used for the database. Must be one of: CLUSTER_CONFIGURATION_GPU_TYPE_AMD, CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA.
 - `node_selector` (Block Set) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
 - `pod_labels` (Block Set) List of labels applied to the pods of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--pod_labels))
-- `rebalance_strategy` (String) The automatic shard rebalancing strategy for the database.
+- `rebalance_strategy` (String) The automatic shard rebalancing strategy for the database. Must be one of: CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT_AND_SIZE, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_SIZE.
 - `reserved_cpu_percentage` (Number) The percentage of CPU resources reserved for system components.
 - `reserved_memory_percentage` (Number) The percentage of RAM resources reserved for system components.
-- `restart_policy` (String) The restart policy for the database.
+- `restart_policy` (String) The restart policy for the database. Must be one of: CLUSTER_CONFIGURATION_RESTART_POLICY_AUTOMATIC, CLUSTER_CONFIGURATION_RESTART_POLICY_PARALLEL, CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING.
 - `service_annotations` (Block Set) List of annotations applied to the service of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--service_annotations))
-- `service_type` (String) The type of service to use for this cluster in a hybrid cloud environment.
+- `service_type` (String) The type of service to use for this cluster in a hybrid cloud environment. Must be one of: CLUSTER_SERVICE_TYPE_CLUSTER_IP, CLUSTER_SERVICE_TYPE_LOAD_BALANCER, CLUSTER_SERVICE_TYPE_NODE_PORT.
 - `tolerations` (Block Set) List of tolerations for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--tolerations))
 - `topology_spread_constraints` (Block Set) List of topology spread constraints for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--topology_spread_constraints))
 - `version` (String) Cluster Schema Version of the Qdrant cluster field
@@ -187,7 +187,7 @@ Optional:
 
 - `database_storage_class` (String) The storage class to use for the database storage, if different from the environment default. Hybrid cloud clusters only.
 - `snapshot_storage_class` (String) The storage class to use for the snapshot storage, if different from the environment default. Hybrid cloud clusters only.
-- `storage_tier_type` (String) The storage performance tier for the cluster. Should be one of STORAGE_TIER_TYPE_COST_OPTIMISED,STORAGE_TIER_TYPE_BALANCED,STORAGE_TIER_TYPE_PERFORMANCE.
+- `storage_tier_type` (String) The storage performance tier for the cluster. Must be one of: STORAGE_TIER_TYPE_BALANCED, STORAGE_TIER_TYPE_COST_OPTIMISED, STORAGE_TIER_TYPE_PERFORMANCE.
 - `volume_snapshot_class` (String) The volume snapshot class to use for the database storage, if different from the environment default. Hybrid cloud clusters only.
 
 
@@ -199,7 +199,7 @@ Optional:
 - `audit_logging` (Block List, Max: 1) Audit logging configuration for the Qdrant database. (see [below for nested schema](#nestedblock--configuration--database_configuration--audit_logging))
 - `collection` (Block List, Max: 1) Default collection parameters. (see [below for nested schema](#nestedblock--configuration--database_configuration--collection))
 - `inference` (Block List, Max: 1) Inference service configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--inference))
-- `log_level` (String) Logging level for the database.
+- `log_level` (String) Logging level for the database. Must be one of: DATABASE_CONFIGURATION_LOG_LEVEL_DEBUG, DATABASE_CONFIGURATION_LOG_LEVEL_ERROR, DATABASE_CONFIGURATION_LOG_LEVEL_INFO, DATABASE_CONFIGURATION_LOG_LEVEL_OFF, DATABASE_CONFIGURATION_LOG_LEVEL_TRACE, DATABASE_CONFIGURATION_LOG_LEVEL_WARN.
 - `service` (Block List, Max: 1) Service-related configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--service))
 - `storage` (Block List, Max: 1) Storage-related configuration. (see [below for nested schema](#nestedblock--configuration--database_configuration--storage))
 - `tls` (Block List, Max: 1) TLS configuration for the database. (see [below for nested schema](#nestedblock--configuration--database_configuration--tls))
@@ -211,7 +211,7 @@ Optional:
 
 - `enabled` (Boolean) If true, the cluster is configured to use audit logging.
 - `max_log_files` (Number) Maximum number of rotated audit log files to keep. Default is 7.
-- `rotation` (String) Rotation interval for audit logs. Possible values: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.
+- `rotation` (String) Rotation interval for audit logs. Must be one of: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.
 - `trust_forwarded_headers` (Boolean) Whether to use the X-Forwarded-For header to determine the client address in audit log entries. Relevant for hybrid cloud clusters only.
 
 
@@ -348,9 +348,9 @@ Required:
 
 Optional:
 
-- `effect` (String) The toleration effect. Should be one of TOLERATION_EFFECT_NO_EXECUTE,TOLERATION_EFFECT_NO_SCHEDULE,TOLERATION_EFFECT_PREFER_NO_SCHEDULE.
+- `effect` (String) The toleration effect. Must be one of: TOLERATION_EFFECT_NO_EXECUTE, TOLERATION_EFFECT_NO_SCHEDULE, TOLERATION_EFFECT_PREFER_NO_SCHEDULE.
 - `key` (String)
-- `operator` (String) The toleration operator. Should be one of TOLERATION_OPERATOR_EQUAL,TOLERATION_OPERATOR_EXISTS.
+- `operator` (String) The toleration operator. Must be one of: TOLERATION_OPERATOR_EQUAL, TOLERATION_OPERATOR_EXISTS.
 - `toleration_seconds` (Number)
 - `value` (String)
 
@@ -362,7 +362,7 @@ Required:
 
 - `max_skew` (Number)
 - `topology_key` (String)
-- `when_unsatisfiable` (String)
+- `when_unsatisfiable` (String) Action to take when the topology spread constraint cannot be satisfied. Must be one of: TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_DO_NOT_SCHEDULE, TOPOLOGY_SPREAD_CONSTRAINT_WHEN_UNSATISFIABLE_SCHEDULE_ANYWAY.
 
 
 

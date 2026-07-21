@@ -258,6 +258,41 @@ For hybrid this should be the hybrid cloud environment ID.`),
 
 // accountsClusterConfigurationSchema defines the schema for a cluster configuration resource or data-source.
 func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	validServiceTypes := protoEnumNames(qcCluster.ClusterServiceType_name)
+	validGpuTypes := protoEnumNames(qcCluster.ClusterConfigurationGpuType_name)
+	validRestartPolicies := protoEnumNames(qcCluster.ClusterConfigurationRestartPolicy_name)
+	validRebalanceStrategies := protoEnumNames(qcCluster.ClusterConfigurationRebalanceStrategy_name)
+	serviceType := &schema.Schema{
+		Description: fmt.Sprintf("The type of service to use for this cluster in a hybrid cloud environment. Must be one of: %s.", strings.Join(validServiceTypes, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	gpuType := &schema.Schema{
+		Description: fmt.Sprintf("The GPU type that should be used for the database. Must be one of: %s.", strings.Join(validGpuTypes, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	restartPolicy := &schema.Schema{
+		Description: fmt.Sprintf("The restart policy for the database. Must be one of: %s.", strings.Join(validRestartPolicies, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	rebalanceStrategy := &schema.Schema{
+		Description: fmt.Sprintf("The automatic shard rebalancing strategy for the database. Must be one of: %s.", strings.Join(validRebalanceStrategies, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	if !asDataSource {
+		serviceType.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validServiceTypes, false))
+		gpuType.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validGpuTypes, false))
+		restartPolicy.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validRestartPolicies, false))
+		rebalanceStrategy.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validRebalanceStrategies, false))
+	}
+
 	maxItems := 1
 	if asDataSource {
 		// We should not set Max Items
@@ -341,12 +376,7 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			},
 			Set: schema.HashString,
 		},
-		serviceTypeFieldName: {
-			Description: "The type of service to use for this cluster in a hybrid cloud environment.",
-			Type:        schema.TypeString,
-			Optional:    !asDataSource,
-			Computed:    true,
-		},
+		serviceTypeFieldName: serviceType,
 		serviceAnnotationsFieldName: {
 			Description: "List of annotations applied to the service of this cluster in a hybrid cloud environment.",
 			Type:        schema.TypeSet,
@@ -389,24 +419,9 @@ func accountsClusterConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Optional:    !asDataSource,
 			Computed:    true,
 		},
-		dbConfigGpuTypeFieldName: {
-			Description: "The GPU type that should be used for the database.",
-			Type:        schema.TypeString,
-			Optional:    !asDataSource,
-			Computed:    true,
-		},
-		dbConfigRestartPolicyFieldName: {
-			Description: "The restart policy for the database.",
-			Type:        schema.TypeString,
-			Optional:    !asDataSource,
-			Computed:    true,
-		},
-		dbConfigRebalanceStrategyFieldName: {
-			Description: "The automatic shard rebalancing strategy for the database.",
-			Type:        schema.TypeString,
-			Optional:    !asDataSource,
-			Computed:    true,
-		},
+		dbConfigGpuTypeFieldName:           gpuType,
+		dbConfigRestartPolicyFieldName:     restartPolicy,
+		dbConfigRebalanceStrategyFieldName: rebalanceStrategy,
 		clusterStorageConfigurationFieldName: {
 			Description: "Configuration for cluster storage settings.",
 			Type:        schema.TypeList,
@@ -467,6 +482,17 @@ func resourceConfigurationsSchema(asDataSource bool) map[string]*schema.Schema {
 
 // databaseConfigurationSchema defines the schema for the database configuration.
 func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
+	validLogLevels := protoEnumNames(qcCluster.DatabaseConfigurationLogLevel_name)
+	logLevel := &schema.Schema{
+		Description: fmt.Sprintf("Logging level for the database. Must be one of: %s.", strings.Join(validLogLevels, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	if !asDataSource {
+		logLevel.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validLogLevels, false))
+	}
+
 	maxItems := 1
 	if asDataSource {
 		maxItems = 0
@@ -502,12 +528,7 @@ func databaseConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
 				Schema: databaseConfigurationServiceSchema(asDataSource),
 			},
 		},
-		dbConfigLogLevelFieldName: {
-			Description: "Logging level for the database.",
-			Type:        schema.TypeString,
-			Optional:    !asDataSource,
-			Computed:    true,
-		},
+		dbConfigLogLevelFieldName: logLevel,
 		dbConfigTlsFieldName: {
 			Description: "TLS configuration for the database.",
 			Type:        schema.TypeList,
@@ -687,6 +708,17 @@ func databaseConfigurationInferenceSchema() map[string]*schema.Schema {
 
 // databaseConfigurationAuditLoggingSchema defines the schema for audit logging configuration.
 func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*schema.Schema {
+	validRotations := protoEnumNames(qcCluster.AuditLogRotation_name)
+	rotation := &schema.Schema{
+		Description: fmt.Sprintf("Rotation interval for audit logs. Must be one of: %s.", strings.Join(validRotations, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	if !asDataSource {
+		rotation.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validRotations, false))
+	}
+
 	return map[string]*schema.Schema{
 		dbConfigAuditLoggingEnabledFieldName: {
 			Description: "If true, the cluster is configured to use audit logging.",
@@ -694,12 +726,7 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 			Optional:    !asDataSource,
 			Computed:    true,
 		},
-		dbConfigAuditLoggingRotationFieldName: {
-			Description: "Rotation interval for audit logs. Possible values: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.",
-			Type:        schema.TypeString,
-			Optional:    !asDataSource,
-			Computed:    true,
-		},
+		dbConfigAuditLoggingRotationFieldName: rotation,
 		dbConfigAuditLoggingMaxLogFilesFieldName: {
 			Description: "Maximum number of rotated audit log files to keep. Default is 7.",
 			Type:        schema.TypeInt,
@@ -717,21 +744,15 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 
 // clusterStorageConfigurationSchema defines the schema for cluster storage configuration.
 func clusterStorageConfigurationSchema(asDataSource bool) map[string]*schema.Schema {
-	validStorageTiers := []string{
-		"STORAGE_TIER_TYPE_COST_OPTIMISED",
-		"STORAGE_TIER_TYPE_BALANCED",
-		"STORAGE_TIER_TYPE_PERFORMANCE",
-	}
+	validStorageTiers := protoEnumNames(commonv1.StorageTierType_name)
 	storageTierType := &schema.Schema{
-		Description: fmt.Sprintf("The storage performance tier for the cluster. Should be one of %s.", strings.Join(validStorageTiers, ",")),
+		Description: fmt.Sprintf("The storage performance tier for the cluster. Must be one of: %s.", strings.Join(validStorageTiers, ", ")),
 		Type:        schema.TypeString,
 		Optional:    !asDataSource,
 		Computed:    true,
 	}
-	// Only add ValidateFunc for resource mode (when field is Optional)
-	// Data sources are Computed-only and don't need validation
 	if !asDataSource {
-		storageTierType.ValidateFunc = validation.StringInSlice(validStorageTiers, false)
+		storageTierType.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validStorageTiers, false))
 	}
 	return map[string]*schema.Schema{
 		clusterStorageTierTypeFieldName: storageTierType,
@@ -799,26 +820,24 @@ func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
 	// silently dropped by expandTolerations, leaving the toleration without an
 	// operator/effect. Validate against the enum names so a bad value fails at
 	// plan time instead of producing a misconfigured cluster.
-	validOperators := tolerationEnumNames(qcCluster.TolerationOperator_name)
-	validEffects := tolerationEnumNames(qcCluster.TolerationEffect_name)
+	validOperators := protoEnumNames(qcCluster.TolerationOperator_name)
+	validEffects := protoEnumNames(qcCluster.TolerationEffect_name)
 
 	operator := &schema.Schema{
-		Description: fmt.Sprintf("The toleration operator. Should be one of %s.", strings.Join(validOperators, ",")),
+		Description: fmt.Sprintf("The toleration operator. Must be one of: %s.", strings.Join(validOperators, ", ")),
 		Type:        schema.TypeString,
 		Optional:    !asDataSource,
 		Computed:    asDataSource,
 	}
 	effect := &schema.Schema{
-		Description: fmt.Sprintf("The toleration effect. Should be one of %s.", strings.Join(validEffects, ",")),
+		Description: fmt.Sprintf("The toleration effect. Must be one of: %s.", strings.Join(validEffects, ", ")),
 		Type:        schema.TypeString,
 		Optional:    !asDataSource,
 		Computed:    asDataSource,
 	}
-	// Only add ValidateFunc for resource mode (when field is Optional).
-	// Data sources are Computed-only and don't need validation.
 	if !asDataSource {
-		operator.ValidateFunc = validation.StringInSlice(validOperators, false)
-		effect.ValidateFunc = validation.StringInSlice(validEffects, false)
+		operator.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validOperators, false))
+		effect.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validEffects, false))
 	}
 
 	return map[string]*schema.Schema{
@@ -842,10 +861,9 @@ func tolerationSchema(asDataSource bool) map[string]*schema.Schema {
 	}
 }
 
-// tolerationEnumNames returns the protobuf enum names accepted for a toleration
-// field, excluding the zero-value *_UNSPECIFIED sentinel (which represents an
-// unset value and is not a meaningful user input).
-func tolerationEnumNames(enumName map[int32]string) []string {
+// protoEnumNames returns accepted protobuf enum names in deterministic order.
+// Generated enum zero represents an unset value, not explicit user input.
+func protoEnumNames(enumName map[int32]string) []string {
 	names := make([]string, 0, len(enumName))
 	for value, name := range enumName {
 		if value == 0 {
@@ -858,6 +876,17 @@ func tolerationEnumNames(enumName map[int32]string) []string {
 }
 
 func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema {
+	validWhenUnsatisfiable := protoEnumNames(commonv1.TopologySpreadConstraintWhenUnsatisfiable_name)
+	whenUnsatisfiable := &schema.Schema{
+		Description: fmt.Sprintf("Action to take when the topology spread constraint cannot be satisfied. Must be one of: %s.", strings.Join(validWhenUnsatisfiable, ", ")),
+		Type:        schema.TypeString,
+		Required:    !asDataSource,
+		Computed:    asDataSource,
+	}
+	if !asDataSource {
+		whenUnsatisfiable.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validWhenUnsatisfiable, false))
+	}
+
 	return map[string]*schema.Schema{
 		topologySpreadConstraintMaxSkewFieldName: {
 			Type:     schema.TypeInt,
@@ -869,11 +898,7 @@ func topologySpreadConstraintSchema(asDataSource bool) map[string]*schema.Schema
 			Required: !asDataSource,
 			Computed: asDataSource,
 		},
-		topologySpreadConstraintWhenUnsatisfiableFieldName: {
-			Type:     schema.TypeString,
-			Required: !asDataSource,
-			Computed: asDataSource,
-		},
+		topologySpreadConstraintWhenUnsatisfiableFieldName: whenUnsatisfiable,
 	}
 }
 
