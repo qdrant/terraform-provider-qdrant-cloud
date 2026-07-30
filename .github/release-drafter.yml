@@ -1,19 +1,22 @@
 categories:
   - title: '🚀 Features'
-    labels:
-      - 'feature'
-      - 'feat'
-      - 'enhancement'
-      - 'enh'
+    when:
+      labels:
+        - 'feature'
+        - 'feat'
+        - 'enhancement'
+        - 'enh'
   - title: '🐛 Bug Fixes'
-    labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
+    when:
+      labels:
+        - 'fix'
+        - 'bugfix'
+        - 'bug'
   - title: '🧰 Maintenance'
-    labels:
-      - 'chore'
-      - 'dependencies'
+    when:
+      labels:
+        - 'chore'
+        - 'dependencies'
 template: |
   # What’s Changed
 
