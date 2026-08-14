@@ -135,7 +135,7 @@ Optional:
 - `gpu_type` (String) The GPU type that should be used for the database. Must be one of: CLUSTER_CONFIGURATION_GPU_TYPE_AMD, CLUSTER_CONFIGURATION_GPU_TYPE_NVIDIA.
 - `node_selector` (Block Set) The node selector for this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--node_selector))
 - `pod_labels` (Block Set) List of labels applied to the pods of this cluster in a hybrid cloud environment. (see [below for nested schema](#nestedblock--configuration--pod_labels))
-- `rebalance_strategy` (String) The automatic shard rebalancing strategy for the database. Must be one of: CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT_AND_SIZE, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_SIZE.
+- `rebalance_strategy` (String) The automatic shard rebalancing strategy for the database. Must be one of: CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_COUNT_AND_SIZE, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_BY_SIZE, CLUSTER_CONFIGURATION_REBALANCE_STRATEGY_DISABLED.
 - `reserved_cpu_percentage` (Number) The percentage of CPU resources reserved for system components.
 - `reserved_memory_percentage` (Number) The percentage of RAM resources reserved for system components.
 - `restart_policy` (String) The restart policy for the database. Must be one of: CLUSTER_CONFIGURATION_RESTART_POLICY_AUTOMATIC, CLUSTER_CONFIGURATION_RESTART_POLICY_PARALLEL, CLUSTER_CONFIGURATION_RESTART_POLICY_ROLLING.
