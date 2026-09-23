@@ -58,6 +58,7 @@ func TestFlattenHCEnv(t *testing.T) {
 			DatabaseStorageClass:       newPointer("db-storage"),
 			SnapshotStorageClass:       newPointer("snap-storage"),
 			VolumeSnapshotStorageClass: newPointer("vol-snap-storage"),
+			ClusterDomain:              newPointer("custom.internal"),
 			LogLevel:                   newPointer(qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_DEBUG),
 			AdvancedOperatorSettings: func() *structpb.Struct {
 				s, err := structpb.NewStruct(map[string]interface{}{"key": "value", "nested": map[string]interface{}{"num": 1}})
@@ -102,6 +103,7 @@ func TestFlattenHCEnv(t *testing.T) {
 				hcEnvCfgDatabaseStorageClassFieldName:       env.GetConfiguration().GetDatabaseStorageClass(),
 				hcEnvCfgSnapshotStorageClassFieldName:       env.GetConfiguration().GetSnapshotStorageClass(),
 				hcEnvCfgVolumeSnapshotStorageClassFieldName: env.GetConfiguration().GetVolumeSnapshotStorageClass(),
+				hcEnvCfgClusterDomainFieldName:              env.GetConfiguration().GetClusterDomain(),
 				hcEnvCfgLogLevelFieldName:                   env.GetConfiguration().GetLogLevel().String(),
 				hcEnvCfgAdvancedOperatorSettingsFieldName: func() string {
 					b, err := yaml.Marshal(env.GetConfiguration().GetAdvancedOperatorSettings().AsMap())
@@ -150,6 +152,7 @@ func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
 		hcEnvCfgDatabaseStorageClassFieldName:       "db-storage",
 		hcEnvCfgSnapshotStorageClassFieldName:       "snap-storage",
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: "vol-snap-storage",
+		hcEnvCfgClusterDomainFieldName:              "custom.internal",
 		hcEnvCfgLogLevelFieldName:                   "HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO",
 		hcEnvCfgAdvancedOperatorSettingsFieldName:   "key: value\nnested:\n  num: 1\n",
 		hcEnvCfgNodeSelectorFieldName: []interface{}{
@@ -190,6 +193,7 @@ func TestExpandHCEnvForCreate_UsesDefaultAccountID(t *testing.T) {
 	assert.Equal(t, configMap[hcEnvCfgDatabaseStorageClassFieldName], env.GetConfiguration().GetDatabaseStorageClass())
 	assert.Equal(t, configMap[hcEnvCfgSnapshotStorageClassFieldName], env.GetConfiguration().GetSnapshotStorageClass())
 	assert.Equal(t, configMap[hcEnvCfgVolumeSnapshotStorageClassFieldName], env.GetConfiguration().GetVolumeSnapshotStorageClass())
+	assert.Equal(t, configMap[hcEnvCfgClusterDomainFieldName], env.GetConfiguration().GetClusterDomain())
 	assert.Equal(t, qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO, env.GetConfiguration().GetLogLevel())
 
 	require.NotNil(t, env.GetConfiguration().GetAdvancedOperatorSettings())
@@ -468,6 +472,7 @@ func TestHCEnvConfigFlattenExpandRoundTrip(t *testing.T) {
 		DatabaseStorageClass:       newPointer("premium-rwo"),
 		SnapshotStorageClass:       newPointer("premium-rwo"),
 		VolumeSnapshotStorageClass: newPointer("premium-rwo"),
+		ClusterDomain:              newPointer("custom.internal"),
 		LogLevel:                   newPointer(qch.HybridCloudEnvironmentConfigurationLogLevel_HYBRID_CLOUD_ENVIRONMENT_CONFIGURATION_LOG_LEVEL_INFO),
 		NodeSelector: []*commonv1.KeyValue{
 			{Key: "node_pool", Value: "qdrant-hybrid-cloud"},
@@ -492,6 +497,7 @@ func TestHCEnvConfigFlattenExpandRoundTrip(t *testing.T) {
 	assert.Equal(t, orig.GetContainerRegistryUrl(), got.GetContainerRegistryUrl())
 	assert.Equal(t, orig.GetDatabaseStorageClass(), got.GetDatabaseStorageClass())
 	assert.Equal(t, orig.GetSnapshotStorageClass(), got.GetSnapshotStorageClass())
+	assert.Equal(t, orig.GetClusterDomain(), got.GetClusterDomain())
 	assert.Equal(t, orig.GetLogLevel(), got.GetLogLevel())
 	assert.ElementsMatch(t, orig.GetNoProxyConfigs(), got.GetNoProxyConfigs())
 
