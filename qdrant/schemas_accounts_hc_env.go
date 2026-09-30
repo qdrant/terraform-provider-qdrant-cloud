@@ -39,6 +39,7 @@ const (
 	hcEnvCfgDatabaseStorageClassFieldName       = "database_storage_class"
 	hcEnvCfgSnapshotStorageClassFieldName       = "snapshot_storage_class"
 	hcEnvCfgVolumeSnapshotStorageClassFieldName = "volume_snapshot_storage_class"
+	hcEnvCfgClusterDomainFieldName              = "cluster_domain"
 	hcEnvCfgLogLevelFieldName                   = "log_level"
 	hcEnvCfgAdvancedOperatorSettingsFieldName   = "advanced_operator_settings"
 	hcEnvCfgNodeSelectorFieldName               = "node_selector"
@@ -226,6 +227,12 @@ func accountsHybridCloudEnvironmentConfigurationSchema() map[string]*schema.Sche
 		},
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: {
 			Description: "Default volume snapshot storage class.",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+		},
+		hcEnvCfgClusterDomainFieldName: {
+			Description: "The Kubernetes cluster domain used to reach in-cluster services. Set this only for clusters configured with a custom cluster domain; when omitted the deployed components fall back to the default cluster.local.",
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
@@ -500,6 +507,7 @@ func flattenHCEnvConfiguration(cfg *qch.HybridCloudEnvironmentConfiguration) []i
 		hcEnvCfgDatabaseStorageClassFieldName:       cfg.GetDatabaseStorageClass(),
 		hcEnvCfgSnapshotStorageClassFieldName:       cfg.GetSnapshotStorageClass(),
 		hcEnvCfgVolumeSnapshotStorageClassFieldName: cfg.GetVolumeSnapshotStorageClass(),
+		hcEnvCfgClusterDomainFieldName:              cfg.GetClusterDomain(),
 		hcEnvCfgTolerationsFieldName:                flattenTolerations(cfg.GetTolerations()),
 		hcEnvCfgNodeSelectorFieldName:               flattenKeyVal(cfg.GetNodeSelector()),
 		hcEnvCfgControlPlaneLabelsFieldName:         flattenKeyVal(cfg.GetControlPlaneLabels()),
@@ -565,6 +573,9 @@ func expandHCEnvConfiguration(v []interface{}) *qch.HybridCloudEnvironmentConfig
 	}
 	if val, ok := m[hcEnvCfgVolumeSnapshotStorageClassFieldName]; ok && val.(string) != "" {
 		config.VolumeSnapshotStorageClass = newPointer(val.(string))
+	}
+	if val, ok := m[hcEnvCfgClusterDomainFieldName]; ok && val.(string) != "" {
+		config.ClusterDomain = newPointer(val.(string))
 	}
 	if val, ok := m[hcEnvCfgLogLevelFieldName]; ok && val.(string) != "" {
 		logLevel, llOK := qch.HybridCloudEnvironmentConfigurationLogLevel_value[val.(string)]

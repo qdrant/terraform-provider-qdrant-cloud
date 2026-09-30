@@ -123,6 +123,7 @@ Optional:
 - `advanced_operator_settings` (String) Advanced operator settings as a YAML string.
 - `ca_certificates` (String) CA certificates for custom certificate authorities.
 - `chart_repository_url` (String) Chart registry URL.
+- `cluster_domain` (String) The Kubernetes cluster domain used to reach in-cluster services. Set this only for clusters configured with a custom cluster domain; when omitted the deployed components fall back to the default cluster.local.
 - `container_registry_url` (String) Container registry URL.
 - `control_plane_labels` (Block Set) Additional labels to apply to control plane components. (see [below for nested schema](#nestedblock--configuration--control_plane_labels))
 - `database_storage_class` (String) Default database storage class.
