@@ -65,6 +65,7 @@ data "qdrant-cloud_serverless_backups" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
+		ErrorCheck:        testAccServerlessErrorCheck(t),
 		Steps: []resource.TestStep{
 			{
 				Config: config,

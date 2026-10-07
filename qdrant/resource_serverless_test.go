@@ -2,6 +2,7 @@ package qdrant
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -12,6 +13,16 @@ import (
 // testAccServerlessCloudRegionID returns the cloud region to create serverless spaces in.
 func testAccServerlessCloudRegionID() string {
 	return getEnvDefault("QDRANT_CLOUD_SERVERLESS_REGION_ID", "eu-north-1")
+}
+
+// testAccServerlessErrorCheck skips the test when the environment has no regional cluster to place serverless spaces on.
+func testAccServerlessErrorCheck(t *testing.T) resource.ErrorCheckFunc {
+	return func(err error) error {
+		if err != nil && strings.Contains(err.Error(), "failed to resolve eligible regional cluster") {
+			t.Skipf("no serverless regional cluster available in this environment: %v", err)
+		}
+		return err
+	}
 }
 
 func testAccServerlessSpaceConfig(regionID, name, extra string) string {
@@ -43,6 +54,7 @@ func TestAccResourceServerlessSpace(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
+		ErrorCheck:        testAccServerlessErrorCheck(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerlessSpaceConfig(regionID, name, ""),
@@ -122,6 +134,7 @@ resource "qdrant-cloud_serverless_backup" "test" {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories,
+		ErrorCheck:        testAccServerlessErrorCheck(t),
 		Steps: []resource.TestStep{
 			{
 				Config: children("0 1 * * *", false),
