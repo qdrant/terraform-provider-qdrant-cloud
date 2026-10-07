@@ -1,51 +1,17 @@
 package qdrant
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
-	slplatformv1 "github.com/qdrant/qdrant-cloud-public-api/gen/go/qdrant/cloud/serverless/platform/v1"
 )
 
 // testAccServerlessCloudRegionID returns the cloud region to create serverless spaces in.
-// It uses QDRANT_CLOUD_SERVERLESS_REGION_ID if set, otherwise the first available region of the account.
-// The test is skipped if the account has no available serverless region.
-func testAccServerlessCloudRegionID(t *testing.T) string {
-	t.Helper()
-	if os.Getenv(resource.EnvTfAcc) == "" {
-		t.Skipf("acceptance tests skipped unless env '%s' set", resource.EnvTfAcc)
-	}
-	if v := os.Getenv("QDRANT_CLOUD_SERVERLESS_REGION_ID"); v != "" {
-		return v
-	}
-	ctx := context.Background()
-	p := Provider()
-	if diags := p.Configure(ctx, terraform.NewResourceConfigRaw(map[string]interface{}{})); diags.HasError() {
-		t.Fatalf("cannot configure provider: %v", diags)
-	}
-	client, clientCtx, diags := getServiceClient(ctx, p.Meta(), slplatformv1.NewPlatformServiceClient)
-	if diags.HasError() {
-		t.Fatalf("cannot create platform client: %v", diags)
-	}
-	resp, err := client.ListCloudRegions(clientCtx, &slplatformv1.ListCloudRegionsRequest{
-		AccountId: getDefaultAccountID(p.Meta()),
-	})
-	if err != nil {
-		t.Fatalf("cannot list serverless cloud regions: %v", err)
-	}
-	for _, r := range resp.GetItems() {
-		if r.GetAvailable() {
-			return r.GetId()
-		}
-	}
-	t.Skip("no serverless cloud region available for the account")
-	return ""
+func testAccServerlessCloudRegionID() string {
+	return getEnvDefault("QDRANT_CLOUD_SERVERLESS_REGION_ID", "eu-north-1")
 }
 
 func testAccServerlessSpaceConfig(regionID, name, extra string) string {
@@ -71,7 +37,7 @@ func testAccImportSpaceChildID(resourceName string) resource.ImportStateIdFunc {
 }
 
 func TestAccResourceServerlessSpace(t *testing.T) {
-	regionID := testAccServerlessCloudRegionID(t)
+	regionID := testAccServerlessCloudRegionID()
 	name := "tf-acc-test-space-" + acctest.RandString(6)
 	resourceName := "qdrant-cloud_serverless_space.test"
 
@@ -121,7 +87,7 @@ func TestAccResourceServerlessSpace(t *testing.T) {
 }
 
 func TestAccResourceServerlessSpaceChildren(t *testing.T) {
-	regionID := testAccServerlessCloudRegionID(t)
+	regionID := testAccServerlessCloudRegionID()
 	name := "tf-acc-test-space-" + acctest.RandString(6)
 	apiKeyName := "qdrant-cloud_serverless_space_api_key.test"
 	scheduleName := "qdrant-cloud_serverless_backup_schedule.test"

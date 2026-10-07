@@ -8,7 +8,7 @@ import (
 )
 
 func TestAccDataSourceServerless(t *testing.T) {
-	regionID := testAccServerlessCloudRegionID(t)
+	regionID := testAccServerlessCloudRegionID()
 	name := "tf-acc-test-space-" + acctest.RandString(6)
 
 	config := testAccServerlessSpaceConfig(regionID, name, "") + `
