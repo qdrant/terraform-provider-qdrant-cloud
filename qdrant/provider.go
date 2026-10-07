@@ -57,18 +57,29 @@ func Provider() *schema.Provider {
 			"qdrant-cloud_accounts_hybrid_cloud_environment": resourceAccountsHybridCloudEnvironment(), // Resource for managing Qdrant Cloud account hybrid cloud environments.
 			"qdrant-cloud_accounts_role":                     resourceAccountsRole(),                   // Resource for managing Qdrant Cloud account roles.
 			"qdrant-cloud_accounts_user_roles":               resourceAccountsUserRoles(),              // Resource for managing role assignments for a user (by email) within an account.
+			"qdrant-cloud_serverless_space":                  resourceServerlessSpace(),                // Resource for managing Qdrant Cloud serverless spaces.
+			"qdrant-cloud_serverless_space_api_key":          resourceServerlessSpaceAPIKey(),          // Resource for managing API keys of a Qdrant Cloud serverless space.
+			"qdrant-cloud_serverless_backup_schedule":        resourceServerlessBackupSchedule(),       // Resource for managing backup schedules of a Qdrant Cloud serverless space.
+			"qdrant-cloud_serverless_backup":                 resourceServerlessBackup(),               // Resource for managing manual backups of a Qdrant Cloud serverless space.
 		},
 		// DataSourcesMap defines all the data sources that this provider offers.
 		DataSourcesMap: map[string]*schema.Resource{
-			"qdrant-cloud_accounts_auth_keys":            dataSourceAccountsAuthKeys(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys.
-			"qdrant-cloud_accounts_database_api_keys_v2": dataSourceAccountsAuthKeysV2(),      // Data source for retrieving Qdrant Cloud accounts' authorization keys v2.
-			"qdrant-cloud_accounts_clusters":             dataSourceAccountsClusters(),        // Data source for listing Qdrant Cloud clusters under an account.
-			"qdrant-cloud_accounts_cluster":              dataSourceAccountsCluster(),         // Data source for retrieving details of a specific Qdrant cluster.
-			"qdrant-cloud_booking_packages":              dataSourceBookingPackages(),         // Data source for Qdrant booking packages.
-			"qdrant-cloud_accounts_backup_schedules":     dataSourceAccountsBackupSchedules(), // Data source for listing Qdrant Cloud backup schedules under an account and cluster.
-			"qdrant-cloud_accounts_backup_schedule":      dataSourceAccountsBackupSchedule(),  // Data source for retrieving Qdrant Cloud accounts' backup schedules (for a cluster).
-			"qdrant-cloud_accounts_members":              dataSourceAccountsMembers(),         // Data source for listing Qdrant Cloud account members.
-			"qdrant-cloud_accounts_roles":                dataSourceAccountsRoles(),           // Data source for listing Qdrant Cloud account roles (system and custom).
+			"qdrant-cloud_accounts_auth_keys":            dataSourceAccountsAuthKeys(),          // Data source for retrieving Qdrant Cloud accounts' authorization keys.
+			"qdrant-cloud_accounts_database_api_keys_v2": dataSourceAccountsAuthKeysV2(),        // Data source for retrieving Qdrant Cloud accounts' authorization keys v2.
+			"qdrant-cloud_accounts_clusters":             dataSourceAccountsClusters(),          // Data source for listing Qdrant Cloud clusters under an account.
+			"qdrant-cloud_accounts_cluster":              dataSourceAccountsCluster(),           // Data source for retrieving details of a specific Qdrant cluster.
+			"qdrant-cloud_booking_packages":              dataSourceBookingPackages(),           // Data source for Qdrant booking packages.
+			"qdrant-cloud_accounts_backup_schedules":     dataSourceAccountsBackupSchedules(),   // Data source for listing Qdrant Cloud backup schedules under an account and cluster.
+			"qdrant-cloud_accounts_backup_schedule":      dataSourceAccountsBackupSchedule(),    // Data source for retrieving Qdrant Cloud accounts' backup schedules (for a cluster).
+			"qdrant-cloud_accounts_members":              dataSourceAccountsMembers(),           // Data source for listing Qdrant Cloud account members.
+			"qdrant-cloud_accounts_roles":                dataSourceAccountsRoles(),             // Data source for listing Qdrant Cloud account roles (system and custom).
+			"qdrant-cloud_serverless_space":              dataSourceServerlessSpace(),           // Data source for retrieving a Qdrant Cloud serverless space.
+			"qdrant-cloud_serverless_spaces":             dataSourceServerlessSpaces(),          // Data source for listing Qdrant Cloud serverless spaces.
+			"qdrant-cloud_serverless_space_api_keys":     dataSourceServerlessSpaceAPIKeys(),    // Data source for listing the API keys of a Qdrant Cloud serverless space.
+			"qdrant-cloud_serverless_backup_schedule":    dataSourceServerlessBackupSchedule(),  // Data source for retrieving a Qdrant Cloud serverless backup schedule.
+			"qdrant-cloud_serverless_backup_schedules":   dataSourceServerlessBackupSchedules(), // Data source for listing Qdrant Cloud serverless backup schedules.
+			"qdrant-cloud_serverless_backups":            dataSourceServerlessBackups(),         // Data source for listing Qdrant Cloud serverless backups.
+			"qdrant-cloud_serverless_cloud_regions":      dataSourceServerlessCloudRegions(),    // Data source for listing cloud regions available for serverless spaces.
 		},
 		// ConfigureContextFunc points to the function used to configure the runtime environment of the provider.
 		ConfigureContextFunc: providerConfigure,
