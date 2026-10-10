@@ -13,8 +13,11 @@ Terraform Provider Qdrant Cloud is a plugin for Terraform that allows for the fu
 
 ## Provider Setup
 
-You need to supply proper credentials to the provider before it can be used.
-API keys serve as the credentials to the provider. You can obtain the keys from [Qdrant Cloud console](https://cloud.qdrant.io/).
+You need to supply credentials before the provider can be used.
+
+**CI / automation (default):** a management API key from the [Qdrant Cloud console](https://cloud.qdrant.io/).
+
+**Local interactive:** after `qcloud auth login`, use `auth = "cli"` (or `QDRANT_CLOUD_AUTH=cli`). No API key in Terraform files or state.
 
 ```hcl
 // Setup Terraform, including the qdrant-cloud providers
@@ -28,12 +31,17 @@ terraform {
   }
 }
 
-// Add the provider to specify some provider wide settings
+// API key (default) — required for CI / non-interactive runs
 provider "qdrant-cloud" {
-  api_key    = "" // API Key generated in Qdrant Cloud (required)
-  account_id = "" // The default account ID you want to use in Qdrant Cloud (can be overriden on resource level)
+  api_key    = "" // API Key generated in Qdrant Cloud
+  account_id = "" // Default account ID (can be overridden per resource)
 }
 
+// Or local CLI session (requires qcloud auth login; OAuth must be enabled in that environment)
+// provider "qdrant-cloud" {
+//   auth       = "cli"
+//   account_id = ""
+// }
 ```
 
 ## Example Usage

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func init() {
@@ -21,18 +22,25 @@ func Provider() *schema.Provider {
 	return &schema.Provider{
 		// Schema defines the provider's configuration options.
 		Schema: map[string]*schema.Schema{
+			"auth": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_AUTH", authModeAPIKey),
+				Description: "Authentication mode: api_key (default, CI/automation) or cli (local: runs `qcloud auth token --json` after `qcloud auth login`). Env: QDRANT_CLOUD_AUTH.",
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{authModeAPIKey, authModeCLI}, false)),
+			},
 			"api_key": {
-				Type:        schema.TypeString,                                  // Data type of the API key.
-				Required:    true,                                               // API key is a required field.
-				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_KEY", nil), // Default can be set via an environment variable.
-				Description: "The API Key for Qdrant Cloud API operations.",     // Description of the API key usage.
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_KEY", nil),
+				Description: "The API Key for Qdrant Cloud API operations. Required when auth is api_key (default). Ignored when auth is cli.",
 				Sensitive:   true,
 			},
 			"api_url": {
-				Type:        schema.TypeString,                                                     // Data type of the API URL.
-				Optional:    true,                                                                  // API URL is an optional field, with a default provided.
-				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "grpc.cloud.qdrant.io"), // Default API URL.
-				Description: "The URL of the Qdrant Cloud API.",                                    // Description of the API URL.
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_API_URL", "grpc.cloud.qdrant.io"),
+				Description: "The URL of the Qdrant Cloud API (gRPC endpoint host:port).",
 			},
 			"account_id": {
 				Type:        schema.TypeString,
@@ -90,11 +98,13 @@ func Provider() *schema.Provider {
 // ctx: Context to carry deadlines, cancellation signals, and other request-scoped values.
 // d: Resource data structure used to configure the client, typically provided by Terraform.
 // Returns a configured client object and any diagnostic information.
-// If api_key or api_url is empty, it returns an error diagnostic.
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	// Retrieve the API key and URL from the schema resource data.
 	apiKey := d.Get("api_key").(string)
 	apiURL := d.Get("api_url").(string)
+	authMode := strings.TrimSpace(d.Get("auth").(string))
+	if authMode == "" {
+		authMode = authModeAPIKey
+	}
 	var accountID string
 	if aid, ok := d.GetOk("account_id"); ok {
 		accountID = aid.(string)
@@ -102,12 +112,6 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	insecure := d.Get("insecure").(bool)
 	var diags diag.Diagnostics
 
-	// Validate that the API key is not empty, returning an error diagnostic if it is.
-	if strings.TrimSpace(apiKey) == "" {
-		return nil, diag.Errorf("api_key must not be empty")
-	}
-
-	// Validate that the API URL is not empty, returning an error diagnostic if it is.
 	if strings.TrimSpace(apiURL) == "" {
 		apiURL = "grpc.cloud.qdrant.io"
 		diags = append(diags, diag.Diagnostic{
@@ -117,23 +121,34 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		})
 	}
 
-	// Create and return the client configuration structure.
 	config := ProviderConfig{
+		AuthMode:  authMode,
 		ApiKey:    apiKey,
 		BaseURL:   apiURL,
 		AccountID: accountID,
 		Insecure:  insecure,
 	}
 
+	switch authMode {
+	case authModeCLI:
+		config.CLITokens = newCLITokenSource(defaultQcloudBinary, apiURL)
+	case authModeAPIKey:
+		if strings.TrimSpace(apiKey) == "" {
+			return nil, diag.Errorf("api_key must not be empty when auth is %q (set auth = %q after qcloud auth login for local use)", authModeAPIKey, authModeCLI)
+		}
+	default:
+		return nil, diag.Errorf("unsupported auth %q (want %q or %q)", authMode, authModeAPIKey, authModeCLI)
+	}
+
 	return &config, diags
 }
 
-// ProviderConfig holds the configuration details for creating HTTP requests to the Qdrant Cloud API.
-// It encapsulates the API key, the base URL, and the HTTP client configured for API communication.
-// As well as the (optional) default account ID.
+// ProviderConfig holds the configuration details for creating gRPC requests to the Qdrant Cloud API.
 type ProviderConfig struct {
-	ApiKey    string // ApiKey represents the authentication token used for Qdrant Cloud API access.
-	BaseURL   string // BaseURL is the root URL for all API requests, typically pointing to the Qdrant Cloud API endpoint.
-	AccountID string // The default Account Identifier for the Qdrant cloud, if any
-	Insecure  bool   // Insecure allows for insecure gRPC connections, useful for development.
+	AuthMode  string          // AuthMode is "api_key" (default) or "cli".
+	ApiKey    string          // ApiKey is used when AuthMode is api_key.
+	BaseURL   string          // BaseURL is the gRPC API endpoint host:port.
+	AccountID string          // Default account ID, if any.
+	Insecure  bool            // Insecure allows insecure TLS for development.
+	CLITokens *cliTokenSource // CLITokens resolves Bearer tokens when AuthMode is cli.
 }
