@@ -55,10 +55,35 @@ func getClientConnection(ctx context.Context, m interface{}) (*grpc.ClientConn, 
 	if err != nil {
 		return nil, nil, diag.FromErr(fmt.Errorf("error initializing client: cannot create gRPC client: %w", err))
 	}
-	// Add Access Token
-	ctxWithToken := metadata.AppendToOutgoingContext(ctx, "Authorization", fmt.Sprintf("apikey %s", clientConfig.ApiKey))
-	// Return result
+	authHeader, err := clientConfig.authorizationHeader(ctx)
+	if err != nil {
+		return nil, nil, diag.FromErr(err)
+	}
+	ctxWithToken := metadata.AppendToOutgoingContext(ctx, "Authorization", authHeader)
 	return conn, ctxWithToken, nil
+}
+
+// authorizationHeader returns the full Authorization metadata value for API calls.
+func (c *ProviderConfig) authorizationHeader(ctx context.Context) (string, error) {
+	if c == nil {
+		return "", fmt.Errorf("provider is not configured")
+	}
+	switch c.AuthMode {
+	case authModeCLI:
+		if c.CLITokens == nil {
+			return "", fmt.Errorf("cli auth is not configured")
+		}
+		token, err := c.CLITokens.Token(ctx)
+		if err != nil {
+			return "", err
+		}
+		return "Bearer " + token, nil
+	default:
+		if strings.TrimSpace(c.ApiKey) == "" {
+			return "", fmt.Errorf("api_key must not be empty")
+		}
+		return "apikey " + c.ApiKey, nil
+	}
 }
 
 // getServiceClient creates a gRPC service client of a specific type.

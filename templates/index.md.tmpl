@@ -44,5 +44,22 @@ The Qdrant Cloud API Key and Account ID can also be provided using these environ
 
 * `QDRANT_CLOUD_API_KEY`
 * `QDRANT_CLOUD_ACCOUNT_ID`
+* `QDRANT_CLOUD_AUTH` (`api_key` or `cli`)
+* `QDRANT_CLOUD_API_URL`
+
+### Local authentication via `qcloud` CLI
+
+For interactive local runs (not CI), set `auth = "cli"` after `qcloud auth login`.
+The provider invokes `qcloud auth token --json` and sends `Authorization: Bearer <token>`.
+Management API keys remain the default for automation.
+
+```hcl
+provider "qdrant-cloud" {
+  auth       = "cli"
+  account_id = "<your_account_id>"
+}
+```
+
+OAuth for CLI/Terraform depends on the Cloud OAuth rollout (Auth0 generic API + IAM/api-gateway `oauth.enabled`); until then keep using `api_key`.
 
 {{ .SchemaMarkdown | trimspace }}
