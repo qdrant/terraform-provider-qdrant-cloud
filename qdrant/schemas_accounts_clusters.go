@@ -104,6 +104,7 @@ const (
 	dbConfigStoragePerformanceFieldName                = "performance"
 	dbConfigStoragePerfOptimizerCpuBudget              = "optimizer_cpu_budget"
 	dbConfigStoragePerfAsyncScorer                     = "async_scorer"
+	dbConfigStoragePerfIOUring                         = "io_uring"
 	dbConfigServiceApiKeyFieldName                     = "api_key"
 	dbConfigServiceReadOnlyApiKeyFieldName             = "read_only_api_key"
 	dbConfigServiceJwtRbacFieldName                    = "jwt_rbac"
@@ -603,6 +604,23 @@ func databaseConfigurationStorageSchema(asDataSource bool) map[string]*schema.Sc
 	if asDataSource {
 		maxItems = 0
 	}
+	// Both fields are hybrid cloud only: a managed cluster ignores them, and from Qdrant v1.20.0
+	// gets `io_uring` set to auto by Qdrant Cloud. `async_scorer` is not marked Deprecated,
+	// because that would warn hybrid cloud users for whom it still works.
+	hybridOnly := "Hybrid cloud clusters only; ignored for managed clusters."
+	validIOUringModes := protoEnumNames(qcCluster.DatabaseConfigurationIoUringMode_name)
+	ioUring := &schema.Schema{
+		Description: fmt.Sprintf(
+			"The async I/O mode of the database, supported from Qdrant v1.19.0. It overrides %s. Must be one of: %s. %s",
+			dbConfigStoragePerfAsyncScorer, strings.Join(validIOUringModes, ", "), hybridOnly,
+		),
+		Type:     schema.TypeString,
+		Optional: !asDataSource,
+		Computed: true,
+	}
+	if !asDataSource {
+		ioUring.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validIOUringModes, false))
+	}
 	return map[string]*schema.Schema{
 		dbConfigStoragePerformanceFieldName: {
 			Type:     schema.TypeList,
@@ -617,10 +635,12 @@ func databaseConfigurationStorageSchema(asDataSource bool) map[string]*schema.Sc
 						Computed: true,
 					},
 					dbConfigStoragePerfAsyncScorer: {
-						Type:     schema.TypeBool,
-						Optional: !asDataSource,
-						Computed: true,
+						Description: fmt.Sprintf("Enable the async scorer, which uses io_uring when rescoring. %s", hybridOnly),
+						Type:        schema.TypeBool,
+						Optional:    !asDataSource,
+						Computed:    true,
 					},
+					dbConfigStoragePerfIOUring: ioUring,
 				},
 			},
 		},
@@ -1662,6 +1682,13 @@ func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConf
 		if scorer, ok := perfItem[dbConfigStoragePerfAsyncScorer]; ok {
 			perfConfig.AsyncScorer = newPointer(scorer.(bool))
 		}
+		// An unset `io_uring` reads back as "", which is not a valid enum name: leave the field
+		// absent so the cluster keeps whatever Qdrant Cloud decides for it.
+		if mode, ok := perfItem[dbConfigStoragePerfIOUring]; ok && mode.(string) != "" {
+			if value, found := qcCluster.DatabaseConfigurationIoUringMode_value[mode.(string)]; found {
+				perfConfig.IoUring = newPointer(qcCluster.DatabaseConfigurationIoUringMode(value))
+			}
+		}
 		storageConfig.Performance = perfConfig
 	}
 	return storageConfig
@@ -1834,6 +1861,9 @@ func flattenDatabaseConfigurationStorage(storage *qcCluster.DatabaseConfiguratio
 		}
 		if perf.AsyncScorer != nil {
 			perfMap[dbConfigStoragePerfAsyncScorer] = perf.GetAsyncScorer()
+		}
+		if perf.IoUring != nil {
+			perfMap[dbConfigStoragePerfIOUring] = perf.GetIoUring().String()
 		}
 		if len(perfMap) > 0 {
 			storageMap[dbConfigStoragePerformanceFieldName] = []interface{}{perfMap}

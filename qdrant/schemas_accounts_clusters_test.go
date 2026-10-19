@@ -1157,3 +1157,62 @@ func TestClusterPrivateRegionIDExpandHonorsUserValue(t *testing.T) {
 	assert.Equal(t, region, cluster.GetCloudProviderRegionId(),
 		"a user-set private_region_id must map onto cloud_provider_region_id for hybrid")
 }
+
+// TestStoragePerformanceIOUringRoundTrip covers the field added for CCL-2382: Terraform state ->
+// proto -> Terraform state. `io_uring` is hybrid cloud only; a managed cluster ignores what is
+// sent and, from Qdrant v1.20.0, gets `auto` from Qdrant Cloud.
+func TestStoragePerformanceIOUringRoundTrip(t *testing.T) {
+	storageBlock := func(perf map[string]interface{}) []interface{} {
+		return []interface{}{
+			map[string]interface{}{
+				dbConfigStoragePerformanceFieldName: []interface{}{perf},
+			},
+		}
+	}
+
+	t.Run("expand and flatten preserve the mode", func(t *testing.T) {
+		expanded := expandDatabaseConfigurationStorage(storageBlock(map[string]interface{}{
+			dbConfigStoragePerfOptimizerCpuBudget: 3,
+			dbConfigStoragePerfAsyncScorer:        true,
+			dbConfigStoragePerfIOUring:            "DATABASE_CONFIGURATION_IO_URING_MODE_AUTO",
+		}))
+
+		require.NotNil(t, expanded.GetPerformance())
+		assert.Equal(t,
+			qcCluster.DatabaseConfigurationIoUringMode_DATABASE_CONFIGURATION_IO_URING_MODE_AUTO,
+			expanded.GetPerformance().GetIoUring(),
+		)
+		// `async_scorer` stays settable next to it: on hybrid cloud both remain configurable.
+		assert.True(t, expanded.GetPerformance().GetAsyncScorer())
+
+		flattened := flattenDatabaseConfigurationStorage(expanded)
+		perf := flattened[0].(map[string]interface{})[dbConfigStoragePerformanceFieldName].([]interface{})[0]
+		assert.Equal(t, "DATABASE_CONFIGURATION_IO_URING_MODE_AUTO", perf.(map[string]interface{})[dbConfigStoragePerfIOUring])
+	})
+
+	t.Run("an unset mode is left absent rather than sent as empty", func(t *testing.T) {
+		expanded := expandDatabaseConfigurationStorage(storageBlock(map[string]interface{}{
+			dbConfigStoragePerfOptimizerCpuBudget: 3,
+		}))
+
+		require.NotNil(t, expanded.GetPerformance())
+		assert.Nil(t, expanded.GetPerformance().IoUring)
+
+		flattened := flattenDatabaseConfigurationStorage(expanded)
+		perf := flattened[0].(map[string]interface{})[dbConfigStoragePerformanceFieldName].([]interface{})[0]
+		assert.NotContains(t, perf.(map[string]interface{}), dbConfigStoragePerfIOUring)
+	})
+
+	t.Run("the schema accepts only the enum names", func(t *testing.T) {
+		perfSchema := databaseConfigurationStorageSchema(false)[dbConfigStoragePerformanceFieldName]
+		ioUring := perfSchema.Elem.(*schema.Resource).Schema[dbConfigStoragePerfIOUring]
+
+		require.NotNil(t, ioUring.ValidateDiagFunc)
+		assert.Empty(t, ioUring.ValidateDiagFunc("DATABASE_CONFIGURATION_IO_URING_MODE_DISABLED", nil))
+		assert.NotEmpty(t, ioUring.ValidateDiagFunc("auto", nil))
+		// Optional + Computed, so a managed cluster that gets the default server-side does not
+		// produce a perpetual diff.
+		assert.True(t, ioUring.Optional)
+		assert.True(t, ioUring.Computed)
+	})
+}
