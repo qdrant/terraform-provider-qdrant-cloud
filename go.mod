@@ -1,6 +1,6 @@
 module github.com/qdrant/terraform-provider-qdrant-cloud
 
-go 1.26.6
+go 1.26.10
 
 require (
 	github.com/goccy/go-yaml v1.19.2
