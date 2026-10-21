@@ -617,6 +617,15 @@ func databaseConfigurationStorageSchema(asDataSource bool) map[string]*schema.Sc
 						Computed: true,
 					},
 					dbConfigStoragePerfAsyncScorer: {
+						Description: "Enable the async scorer, which uses io_uring when rescoring. " +
+							"Superseded from Qdrant v1.19.0 by the database's async I/O mode, which takes " +
+							"precedence over this field. On managed cloud clusters the platform sets that " +
+							"mode from Qdrant v1.20.0, so this field stops having an effect there. Below " +
+							"Qdrant v1.19.0 it is still the only async I/O control and is honoured.",
+						Deprecated: "Superseded from Qdrant v1.19.0 by the database's async I/O mode. " +
+							"On managed cloud clusters the platform sets that mode from Qdrant v1.20.0, " +
+							"so this field no longer has an effect there. It is still honoured below " +
+							"Qdrant v1.19.0 and is not scheduled for removal.",
 						Type:     schema.TypeBool,
 						Optional: !asDataSource,
 						Computed: true,
