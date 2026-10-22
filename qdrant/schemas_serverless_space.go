@@ -25,8 +25,6 @@ const (
 	slSpaceCreatedAtFieldName           = "created_at"
 	slSpaceStateFieldName               = "state"
 	slSpaceURLFieldName                 = "url"
-	slSpaceRestPortFieldName            = "rest_port"
-	slSpaceGrpcPortFieldName            = "grpc_port"
 	slSpacesFieldName                   = "spaces"
 
 	slSpaceCfgLastModifiedAtFieldName         = "last_modified_at"
@@ -116,16 +114,6 @@ func serverlessSpaceSchema(asDataSource bool) map[string]*schema.Schema {
 		slSpaceURLFieldName: {
 			Description: fmt.Sprintf(slSpaceFieldTemplate, "URL (without port) to access the space"),
 			Type:        schema.TypeString,
-			Computed:    true,
-		},
-		slSpaceRestPortFieldName: {
-			Description: fmt.Sprintf(slSpaceFieldTemplate, "Port for HTTP REST calls"),
-			Type:        schema.TypeInt,
-			Computed:    true,
-		},
-		slSpaceGrpcPortFieldName: {
-			Description: fmt.Sprintf(slSpaceFieldTemplate, "Port for gRPC calls"),
-			Type:        schema.TypeInt,
 			Computed:    true,
 		},
 	}
@@ -296,8 +284,6 @@ func flattenServerlessSpace(space *spacev1.Space) map[string]interface{} {
 		slSpaceCreatedAtFieldName:           formatTime(space.GetCreatedAt()),
 		slSpaceStateFieldName:               flattenServerlessState(flattenProtoEnum(space.GetState().GetPhase()), space.GetState().GetReason()),
 		slSpaceURLFieldName:                 endpoint.GetUrl(),
-		slSpaceRestPortFieldName:            int(endpoint.GetRestPort()),
-		slSpaceGrpcPortFieldName:            int(endpoint.GetGrpcPort()),
 	}
 }
 
