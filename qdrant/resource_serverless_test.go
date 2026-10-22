@@ -12,7 +12,7 @@ import (
 
 // testAccServerlessCloudRegionID returns the cloud region to create serverless spaces in.
 func testAccServerlessCloudRegionID() string {
-	return getEnvDefault("QDRANT_CLOUD_SERVERLESS_REGION_ID", "eu-central-1")
+	return getEnvDefault("QDRANT_CLOUD_SERVERLESS_REGION_ID", "eu-north-1")
 }
 
 // testAccServerlessErrorCheck skips the test when the environment has no regional cluster to place serverless spaces on.
