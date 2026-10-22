@@ -38,7 +38,7 @@ func TestFlattenServerlessSpace(t *testing.T) {
 		},
 		State: &spacev1.SpaceState{
 			Phase:    spacev1.SpaceStatePhase_SPACE_STATE_PHASE_READY,
-			Endpoint: &spacev1.SpaceEndpoint{Url: "https://space.example.com", RestPort: 443, GrpcPort: 6334},
+			Endpoint: &spacev1.SpaceEndpoint{Url: "https://space.example.com"},
 		},
 	}
 
@@ -51,8 +51,6 @@ func TestFlattenServerlessSpace(t *testing.T) {
 	assert.Equal(t, "env", flat[slSpaceCostAllocationLabelFieldName])
 	assert.Equal(t, formatTime(timestamppb.New(created)), flat[slSpaceCreatedAtFieldName])
 	assert.Equal(t, "https://space.example.com", flat[slSpaceURLFieldName])
-	assert.Equal(t, 443, flat[slSpaceRestPortFieldName])
-	assert.Equal(t, 6334, flat[slSpaceGrpcPortFieldName])
 	assert.Equal(t, []interface{}{map[string]interface{}{
 		slStatePhaseFieldName:  "SPACE_STATE_PHASE_READY",
 		slStateReasonFieldName: "",

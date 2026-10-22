@@ -83,9 +83,7 @@ output "space_url" {
 ### Read-Only
 
 - `created_at` (String) Serverless Space Schema Creation time field
-- `grpc_port` (Number) Serverless Space Schema Port for gRPC calls field
 - `id` (String) Serverless Space Schema Space ID field
-- `rest_port` (Number) Serverless Space Schema Port for HTTP REST calls field
 - `state` (List of Object) Serverless Space Schema Current state of the space field (see [below for nested schema](#nestedatt--state))
 - `url` (String) Serverless Space Schema URL (without port) to access the space field
 
