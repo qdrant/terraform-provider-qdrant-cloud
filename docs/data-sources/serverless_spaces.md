@@ -62,11 +62,9 @@ Read-Only:
 - `configuration` (List of Object) (see [below for nested schema](#nestedobjatt--spaces--configuration))
 - `cost_allocation_label` (String)
 - `created_at` (String)
-- `grpc_port` (Number)
 - `id` (String)
 - `labels` (Set of Object) (see [below for nested schema](#nestedobjatt--spaces--labels))
 - `name` (String)
-- `rest_port` (Number)
 - `state` (List of Object) (see [below for nested schema](#nestedobjatt--spaces--state))
 - `url` (String)
 

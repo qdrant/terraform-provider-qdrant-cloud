@@ -56,10 +56,8 @@ output "space" {
 - `configuration` (List of Object) Serverless Space Schema Configuration of the space field (see [below for nested schema](#nestedatt--configuration))
 - `cost_allocation_label` (String) Serverless Space Schema Key of the label sent as metadata when metering usage through cloud marketplaces, for cost allocation field
 - `created_at` (String) Serverless Space Schema Creation time field
-- `grpc_port` (Number) Serverless Space Schema Port for gRPC calls field
 - `labels` (Set of Object) Serverless Space Schema Labels of the space, used in the cloud UI and billing reports (max 10) field (see [below for nested schema](#nestedatt--labels))
 - `name` (String) Serverless Space Schema Name of the space (4-64 characters: letters, numbers, `-` and `_`). Unique within the account field
-- `rest_port` (Number) Serverless Space Schema Port for HTTP REST calls field
 - `state` (List of Object) Serverless Space Schema Current state of the space field (see [below for nested schema](#nestedatt--state))
 - `url` (String) Serverless Space Schema URL (without port) to access the space field
 
