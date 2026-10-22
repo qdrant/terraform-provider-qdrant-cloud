@@ -119,6 +119,7 @@ const (
 	dbConfigAuditLoggingRotationFieldName              = "rotation"
 	dbConfigAuditLoggingMaxLogFilesFieldName           = "max_log_files"
 	dbConfigAuditLoggingTrustForwardedHeadersFieldName = "trust_forwarded_headers"
+	dbConfigAuditLoggingOutputFieldName                = "output"
 
 	// Backward compatibility.
 	fieldAmount       = "amount"
@@ -719,6 +720,17 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 		rotation.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validRotations, false))
 	}
 
+	validOutputs := protoEnumNames(qcCluster.AuditLogOutput_name)
+	output := &schema.Schema{
+		Description: fmt.Sprintf("Where audit log entries are written. Hybrid cloud clusters only; unset means file. Requires Qdrant v1.20.0 or later for any value other than file. Must be one of: %s.", strings.Join(validOutputs, ", ")),
+		Type:        schema.TypeString,
+		Optional:    !asDataSource,
+		Computed:    true,
+	}
+	if !asDataSource {
+		output.ValidateDiagFunc = validation.ToDiagFunc(validation.StringInSlice(validOutputs, false))
+	}
+
 	return map[string]*schema.Schema{
 		dbConfigAuditLoggingEnabledFieldName: {
 			Description: "If true, the cluster is configured to use audit logging.",
@@ -739,6 +751,7 @@ func databaseConfigurationAuditLoggingSchema(asDataSource bool) map[string]*sche
 			Optional:    !asDataSource,
 			Computed:    true,
 		},
+		dbConfigAuditLoggingOutputFieldName: output,
 	}
 }
 
@@ -1751,6 +1764,15 @@ func expandDatabaseConfigurationAuditLogging(v []interface{}) *qcCluster.Databas
 	if trust, ok := item[dbConfigAuditLoggingTrustForwardedHeadersFieldName]; ok {
 		auditConfig.TrustForwardedHeaders = newPointer(trust.(bool))
 	}
+	if output, ok := item[dbConfigAuditLoggingOutputFieldName]; ok {
+		strVal := output.(string)
+		if strVal != "" {
+			o, oOK := qcCluster.AuditLogOutput_value[strVal]
+			if oOK && o != int32(qcCluster.AuditLogOutput_AUDIT_LOG_OUTPUT_UNSPECIFIED) {
+				auditConfig.Output = newPointer(qcCluster.AuditLogOutput(o))
+			}
+		}
+	}
 	return auditConfig
 }
 
@@ -1907,6 +1929,12 @@ func flattenDatabaseConfigurationAuditLogging(auditLogging *qcCluster.DatabaseCo
 	}
 	if auditLogging.TrustForwardedHeaders != nil {
 		m[dbConfigAuditLoggingTrustForwardedHeadersFieldName] = auditLogging.GetTrustForwardedHeaders()
+	}
+	if auditLogging.Output != nil {
+		output := auditLogging.GetOutput()
+		if output != qcCluster.AuditLogOutput_AUDIT_LOG_OUTPUT_UNSPECIFIED {
+			m[dbConfigAuditLoggingOutputFieldName] = output.String()
+		}
 	}
 	return []interface{}{m}
 }
