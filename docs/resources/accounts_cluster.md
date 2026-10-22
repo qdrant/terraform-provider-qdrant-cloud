@@ -283,7 +283,7 @@ Optional:
 
 Optional:
 
-- `async_scorer` (Boolean)
+- `async_scorer` (Boolean, Deprecated) Enable the async scorer, which uses io_uring when rescoring. Superseded from Qdrant v1.19.0 by the database's async I/O mode, which takes precedence over this field. On managed cloud clusters the platform sets that mode from Qdrant v1.20.0, so this field stops having an effect there. Below Qdrant v1.19.0 it is still the only async I/O control and is honoured.
 - `optimizer_cpu_budget` (Number)
 
 
