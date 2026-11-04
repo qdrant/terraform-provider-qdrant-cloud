@@ -48,8 +48,13 @@ resource "qdrant-cloud_serverless_space" "example" {
 
   configuration {
     allowed_ip_source_ranges = ["10.0.0.0/8"]
+    collection_settings {
+      max_size                       = 4294967296 // 4 GiB per collection
+      max_indexed_size               = 2147483648 // 2 GiB indexed per collection
+      size_warning_threshold_percent = 90         // Warn at 90% of the maximum size
+    }
     searcher_settings {
-      idle_timeout = "15m"
+      max_workers = 2
     }
   }
 
@@ -107,10 +112,13 @@ Read-Only:
 
 Optional:
 
-- `max_size` (Number) Customer-defined maximum size in bytes per collection, used for cost control. Must not exceed `platform_max_size`.
+- `max_indexed_size` (Number) Customer-defined maximum indexed size in bytes per collection. Must not exceed `platform_max_indexed_size` or the effective maximum size (`max_size`, or `platform_max_size` when `max_size` is unset). Defaults to 1 GiB, capped by `platform_max_indexed_size`.
+- `max_size` (Number) Customer-defined maximum size in bytes per collection, used for cost control. Must not exceed `platform_max_size` (defaults to 2 GiB, capped by `platform_max_size`).
+- `size_warning_threshold_percent` (Number) Percentage of the effective maximum size at which a size warning is sent for a collection (between 40 and 100, defaults to 80).
 
 Read-Only:
 
+- `platform_max_indexed_size` (Number) Platform-enforced maximum indexed size in bytes per collection (0 means unlimited).
 - `platform_max_size` (Number) Platform-enforced maximum size in bytes per collection (0 means unlimited).
 
 
@@ -119,11 +127,11 @@ Read-Only:
 
 Optional:
 
-- `idle_timeout` (String) Idle timeout after which idle search workers may be scaled down, as a Go duration string (between "1m" and "15m", defaults to "5m").
 - `max_workers` (Number) Maximum number of search workers per collection in this space (defaults to 2).
 
 Read-Only:
 
+- `min_idle_timeout` (String) Platform-defined minimum time a search worker stays idle before it may be scaled down, as a Go duration string (defaults to "5m").
 - `platform_max_workers` (Number) Platform-enforced maximum number of search workers per collection (0 means unlimited).
 
 

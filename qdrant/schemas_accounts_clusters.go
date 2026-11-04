@@ -1660,7 +1660,7 @@ func expandDatabaseConfigurationStorage(v []interface{}) *qcCluster.DatabaseConf
 			perfConfig.OptimizerCpuBudget = newPointer(int32(budget.(int)))
 		}
 		if scorer, ok := perfItem[dbConfigStoragePerfAsyncScorer]; ok {
-			perfConfig.AsyncScorer = newPointer(scorer.(bool))
+			perfConfig.AsyncScorer = newPointer(scorer.(bool)) //nolint:staticcheck // SA1019: async_scorer is deprecated in the API but still honored below Qdrant v1.19.0.
 		}
 		storageConfig.Performance = perfConfig
 	}
@@ -1832,8 +1832,8 @@ func flattenDatabaseConfigurationStorage(storage *qcCluster.DatabaseConfiguratio
 		if perf.OptimizerCpuBudget != nil {
 			perfMap[dbConfigStoragePerfOptimizerCpuBudget] = int(perf.GetOptimizerCpuBudget())
 		}
-		if perf.AsyncScorer != nil {
-			perfMap[dbConfigStoragePerfAsyncScorer] = perf.GetAsyncScorer()
+		if perf.AsyncScorer != nil { //nolint:staticcheck // SA1019: async_scorer is deprecated in the API but still honored below Qdrant v1.19.0.
+			perfMap[dbConfigStoragePerfAsyncScorer] = perf.GetAsyncScorer() //nolint:staticcheck // SA1019: async_scorer is deprecated in the API but still honored below Qdrant v1.19.0.
 		}
 		if len(perfMap) > 0 {
 			storageMap[dbConfigStoragePerformanceFieldName] = []interface{}{perfMap}

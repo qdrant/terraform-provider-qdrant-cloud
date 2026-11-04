@@ -75,8 +75,12 @@ func TestAccResourceServerlessSpace(t *testing.T) {
   configuration {
     allowed_ip_source_ranges = ["10.0.0.0/8"]
     allowed_origins          = ["https://example.com"]
+    collection_settings {
+      max_indexed_size               = 536870912
+      size_warning_threshold_percent = 90
+    }
     searcher_settings {
-      idle_timeout = "10m"
+      max_workers = 2
     }
   }
 `),
@@ -85,6 +89,9 @@ func TestAccResourceServerlessSpace(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "labels.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_ip_source_ranges.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_origins.0", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.collection_settings.0.max_indexed_size", "536870912"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.collection_settings.0.size_warning_threshold_percent", "90"),
+					resource.TestCheckResourceAttrSet(resourceName, "configuration.0.searcher_settings.0.min_idle_timeout"),
 					resource.TestCheckResourceAttr(resourceName, "state.0.phase", "SPACE_STATE_PHASE_READY"),
 				),
 			},
