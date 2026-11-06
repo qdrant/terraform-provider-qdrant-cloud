@@ -33,8 +33,13 @@ resource "qdrant-cloud_serverless_space" "example" {
 
   configuration {
     allowed_ip_source_ranges = ["10.0.0.0/8"]
+    collection_settings {
+      max_size                       = 4294967296 // 4 GiB per collection
+      max_indexed_size               = 2147483648 // 2 GiB indexed per collection
+      size_warning_threshold_percent = 90         // Warn at 90% of the maximum size
+    }
     searcher_settings {
-      idle_timeout = "15m"
+      max_workers = 2
     }
   }
 

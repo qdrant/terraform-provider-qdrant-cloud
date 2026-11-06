@@ -34,10 +34,13 @@ const (
 	slSpaceCfgCollectionSettingsFieldName     = "collection_settings"
 	slSpaceCfgSearcherSettingsFieldName       = "searcher_settings"
 
-	slCollectionSettingsPlatformMaxSizeFieldName = "platform_max_size"
-	slCollectionSettingsMaxSizeFieldName         = "max_size"
+	slCollectionSettingsPlatformMaxSizeFieldName             = "platform_max_size"
+	slCollectionSettingsMaxSizeFieldName                     = "max_size"
+	slCollectionSettingsMaxIndexedSizeFieldName              = "max_indexed_size"
+	slCollectionSettingsPlatformMaxIndexedSizeFieldName      = "platform_max_indexed_size"
+	slCollectionSettingsSizeWarningThresholdPercentFieldName = "size_warning_threshold_percent"
 
-	slSearcherSettingsIdleTimeoutFieldName        = "idle_timeout"
+	slSearcherSettingsMinIdleTimeoutFieldName     = "min_idle_timeout"
 	slSearcherSettingsPlatformMaxWorkersFieldName = "platform_max_workers"
 	slSearcherSettingsMaxWorkersFieldName         = "max_workers"
 
@@ -184,7 +187,24 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 					Computed:    true,
 				},
 				slCollectionSettingsMaxSizeFieldName: {
-					Description: "Customer-defined maximum size in bytes per collection, used for cost control. Must not exceed `platform_max_size`.",
+					Description: "Customer-defined maximum size in bytes per collection, used for cost control. Must not exceed `platform_max_size` (defaults to 2 GiB, capped by `platform_max_size`).",
+					Type:        schema.TypeInt,
+					Optional:    !asDataSource,
+					Computed:    true,
+				},
+				slCollectionSettingsMaxIndexedSizeFieldName: {
+					Description: "Customer-defined maximum indexed size in bytes per collection. Must not exceed `platform_max_indexed_size` or the effective maximum size (`max_size`, or `platform_max_size` when `max_size` is unset). Defaults to 1 GiB, capped by `platform_max_indexed_size`.",
+					Type:        schema.TypeInt,
+					Optional:    !asDataSource,
+					Computed:    true,
+				},
+				slCollectionSettingsPlatformMaxIndexedSizeFieldName: {
+					Description: "Platform-enforced maximum indexed size in bytes per collection (0 means unlimited).",
+					Type:        schema.TypeInt,
+					Computed:    true,
+				},
+				slCollectionSettingsSizeWarningThresholdPercentFieldName: {
+					Description: "Percentage of the effective maximum size at which a size warning is sent for a collection (between 40 and 100, defaults to 80).",
 					Type:        schema.TypeInt,
 					Optional:    !asDataSource,
 					Computed:    true,
@@ -198,10 +218,9 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			Computed:    true,
 			MaxItems:    maxItems,
 			Elem: &schema.Resource{Schema: map[string]*schema.Schema{
-				slSearcherSettingsIdleTimeoutFieldName: {
-					Description: `Idle timeout after which idle search workers may be scaled down, as a Go duration string (between "1m" and "15m", defaults to "5m").`,
+				slSearcherSettingsMinIdleTimeoutFieldName: {
+					Description: `Platform-defined minimum time a search worker stays idle before it may be scaled down, as a Go duration string (defaults to "5m").`,
 					Type:        schema.TypeString,
-					Optional:    !asDataSource,
 					Computed:    true,
 				},
 				slSearcherSettingsPlatformMaxWorkersFieldName: {
@@ -224,10 +243,11 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			ValidateDiagFunc: validation.ToDiagFunc(validation.IsCIDR),
 		}
 		searcher := s[slSpaceCfgSearcherSettingsFieldName].Elem.(*schema.Resource).Schema
-		searcher[slSearcherSettingsIdleTimeoutFieldName].DiffSuppressFunc = suppressDurationDiff
 		searcher[slSearcherSettingsMaxWorkersFieldName].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(1))
 		collection := s[slSpaceCfgCollectionSettingsFieldName].Elem.(*schema.Resource).Schema
 		collection[slCollectionSettingsMaxSizeFieldName].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
+		collection[slCollectionSettingsMaxIndexedSizeFieldName].ValidateDiagFunc = validation.ToDiagFunc(validation.IntAtLeast(0))
+		collection[slCollectionSettingsSizeWarningThresholdPercentFieldName].ValidateDiagFunc = validation.ToDiagFunc(validation.IntBetween(40, 100))
 	}
 	return s
 }
@@ -305,11 +325,14 @@ func flattenServerlessSpaceConfiguration(cfg *spacev1.SpaceConfiguration) []inte
 		slSpaceCfgAllowedOriginsFieldName:         cfg.GetAllowedOrigins(),
 		slSpaceCfgMaxCollectionsPerSpaceFieldName: int(cfg.GetMaxCollectionsPerSpace()),
 		slSpaceCfgCollectionSettingsFieldName: []interface{}{map[string]interface{}{
-			slCollectionSettingsPlatformMaxSizeFieldName: int(cfg.GetCollectionSettings().GetPlatformMaxSize()),
-			slCollectionSettingsMaxSizeFieldName:         int(cfg.GetCollectionSettings().GetMaxSize()),
+			slCollectionSettingsPlatformMaxSizeFieldName:             int(cfg.GetCollectionSettings().GetPlatformMaxSize()),
+			slCollectionSettingsMaxSizeFieldName:                     int(cfg.GetCollectionSettings().GetMaxSize()),
+			slCollectionSettingsMaxIndexedSizeFieldName:              int(cfg.GetCollectionSettings().GetMaxIndexedSize()),
+			slCollectionSettingsPlatformMaxIndexedSizeFieldName:      int(cfg.GetCollectionSettings().GetPlatformMaxIndexedSize()),
+			slCollectionSettingsSizeWarningThresholdPercentFieldName: int(cfg.GetCollectionSettings().GetSizeWarningThresholdPercent()),
 		}},
 		slSpaceCfgSearcherSettingsFieldName: []interface{}{map[string]interface{}{
-			slSearcherSettingsIdleTimeoutFieldName:        formatDuration(cfg.GetSearcherSettings().GetIdleTimeout()),
+			slSearcherSettingsMinIdleTimeoutFieldName:     formatDuration(cfg.GetSearcherSettings().GetMinIdleTimeout()),
 			slSearcherSettingsPlatformMaxWorkersFieldName: int(cfg.GetSearcherSettings().GetPlatformMaxWorkers()),
 			slSearcherSettingsMaxWorkersFieldName:         int(cfg.GetSearcherSettings().GetMaxWorkers()),
 		}},
@@ -352,13 +375,16 @@ func expandServerlessSpaceConfiguration(v []interface{}) *spacev1.SpaceConfigura
 		if maxSize, ok := csItem[slCollectionSettingsMaxSizeFieldName].(int); ok && maxSize > 0 {
 			cfg.CollectionSettings.MaxSize = newPointer(uint64(maxSize))
 		}
+		if maxIndexedSize, ok := csItem[slCollectionSettingsMaxIndexedSizeFieldName].(int); ok && maxIndexedSize > 0 {
+			cfg.CollectionSettings.MaxIndexedSize = newPointer(uint64(maxIndexedSize))
+		}
+		if threshold, ok := csItem[slCollectionSettingsSizeWarningThresholdPercentFieldName].(int); ok && threshold > 0 {
+			cfg.CollectionSettings.SizeWarningThresholdPercent = newPointer(uint32(threshold))
+		}
 	}
 	if ss, ok := item[slSpaceCfgSearcherSettingsFieldName].([]interface{}); ok && len(ss) > 0 && ss[0] != nil {
 		ssItem := ss[0].(map[string]interface{})
 		cfg.SearcherSettings = &spacev1.SearcherSettings{}
-		if idle, ok := ssItem[slSearcherSettingsIdleTimeoutFieldName].(string); ok && idle != "" {
-			cfg.SearcherSettings.IdleTimeout = parseDuration(idle)
-		}
 		if maxWorkers, ok := ssItem[slSearcherSettingsMaxWorkersFieldName].(int); ok && maxWorkers > 0 {
 			cfg.SearcherSettings.MaxWorkers = newPointer(uint64(maxWorkers))
 		}
@@ -377,7 +403,8 @@ var serverlessSpaceUpdateMaskPaths = []struct {
 	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgAllowedIPSourceRangesFieldName, "configuration.allowed_ip_source_ranges"},
 	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgAllowedOriginsFieldName, "configuration.allowed_origins"},
 	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgCollectionSettingsFieldName + ".0." + slCollectionSettingsMaxSizeFieldName, "configuration.collection_settings.max_size"},
-	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgSearcherSettingsFieldName + ".0." + slSearcherSettingsIdleTimeoutFieldName, "configuration.searcher_settings.idle_timeout"},
+	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgCollectionSettingsFieldName + ".0." + slCollectionSettingsMaxIndexedSizeFieldName, "configuration.collection_settings.max_indexed_size"},
+	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgCollectionSettingsFieldName + ".0." + slCollectionSettingsSizeWarningThresholdPercentFieldName, "configuration.collection_settings.size_warning_threshold_percent"},
 	{slSpaceConfigurationFieldName + ".0." + slSpaceCfgSearcherSettingsFieldName + ".0." + slSearcherSettingsMaxWorkersFieldName, "configuration.searcher_settings.max_workers"},
 }
 

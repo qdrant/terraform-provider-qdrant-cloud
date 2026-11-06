@@ -85,8 +85,11 @@ Read-Only:
 
 Read-Only:
 
+- `max_indexed_size` (Number)
 - `max_size` (Number)
+- `platform_max_indexed_size` (Number)
 - `platform_max_size` (Number)
+- `size_warning_threshold_percent` (Number)
 
 
 <a id="nestedobjatt--spaces--configuration--searcher_settings"></a>
@@ -94,8 +97,8 @@ Read-Only:
 
 Read-Only:
 
-- `idle_timeout` (String)
 - `max_workers` (Number)
+- `min_idle_timeout` (String)
 - `platform_max_workers` (Number)
 
 

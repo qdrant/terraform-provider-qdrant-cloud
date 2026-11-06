@@ -29,9 +29,15 @@ func TestFlattenServerlessSpace(t *testing.T) {
 			AllowedIpSourceRanges:  []string{"10.0.0.0/8"},
 			AllowedOrigins:         []string{"https://app.example.com"},
 			MaxCollectionsPerSpace: 100,
-			CollectionSettings:     &spacev1.CollectionSettings{PlatformMaxSize: 2048, MaxSize: newPointer(uint64(1024))},
+			CollectionSettings: &spacev1.CollectionSettings{
+				PlatformMaxSize:             2048,
+				MaxSize:                     newPointer(uint64(1024)),
+				MaxIndexedSize:              newPointer(uint64(512)),
+				PlatformMaxIndexedSize:      1536,
+				SizeWarningThresholdPercent: newPointer(uint32(90)),
+			},
 			SearcherSettings: &spacev1.SearcherSettings{
-				IdleTimeout:        durationpb.New(10 * time.Minute),
+				MinIdleTimeout:     durationpb.New(5 * time.Minute),
 				PlatformMaxWorkers: 8,
 				MaxWorkers:         newPointer(uint64(4)),
 			},
@@ -63,8 +69,11 @@ func TestFlattenServerlessSpace(t *testing.T) {
 	cs := cfg[slSpaceCfgCollectionSettingsFieldName].([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, 2048, cs[slCollectionSettingsPlatformMaxSizeFieldName])
 	assert.Equal(t, 1024, cs[slCollectionSettingsMaxSizeFieldName])
+	assert.Equal(t, 512, cs[slCollectionSettingsMaxIndexedSizeFieldName])
+	assert.Equal(t, 1536, cs[slCollectionSettingsPlatformMaxIndexedSizeFieldName])
+	assert.Equal(t, 90, cs[slCollectionSettingsSizeWarningThresholdPercentFieldName])
 	ss := cfg[slSpaceCfgSearcherSettingsFieldName].([]interface{})[0].(map[string]interface{})
-	assert.Equal(t, "10m0s", ss[slSearcherSettingsIdleTimeoutFieldName])
+	assert.Equal(t, "5m0s", ss[slSearcherSettingsMinIdleTimeoutFieldName])
 	assert.Equal(t, 8, ss[slSearcherSettingsPlatformMaxWorkersFieldName])
 	assert.Equal(t, 4, ss[slSearcherSettingsMaxWorkersFieldName])
 
@@ -94,11 +103,12 @@ func TestExpandServerlessSpace(t *testing.T) {
 			slSpaceCfgAllowedIPSourceRangesFieldName: []interface{}{"10.0.0.0/8"},
 			slSpaceCfgAllowedOriginsFieldName:        []interface{}{"https://app.example.com"},
 			slSpaceCfgCollectionSettingsFieldName: []interface{}{map[string]interface{}{
-				slCollectionSettingsMaxSizeFieldName: 1024,
+				slCollectionSettingsMaxSizeFieldName:                     1024,
+				slCollectionSettingsMaxIndexedSizeFieldName:              512,
+				slCollectionSettingsSizeWarningThresholdPercentFieldName: 90,
 			}},
 			slSpaceCfgSearcherSettingsFieldName: []interface{}{map[string]interface{}{
-				slSearcherSettingsIdleTimeoutFieldName: "10m",
-				slSearcherSettingsMaxWorkersFieldName:  4,
+				slSearcherSettingsMaxWorkersFieldName: 4,
 			}},
 		}},
 	})
@@ -116,7 +126,9 @@ func TestExpandServerlessSpace(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.0/8"}, cfg.GetAllowedIpSourceRanges())
 	assert.Equal(t, []string{"https://app.example.com"}, cfg.GetAllowedOrigins())
 	assert.Equal(t, uint64(1024), cfg.GetCollectionSettings().GetMaxSize())
-	assert.Equal(t, 10*time.Minute, cfg.GetSearcherSettings().GetIdleTimeout().AsDuration())
+	assert.Equal(t, uint64(512), cfg.GetCollectionSettings().GetMaxIndexedSize())
+	assert.Equal(t, uint32(90), cfg.GetCollectionSettings().GetSizeWarningThresholdPercent())
+	assert.Nil(t, cfg.GetSearcherSettings().GetMinIdleTimeout())
 	assert.Equal(t, uint64(4), cfg.GetSearcherSettings().GetMaxWorkers())
 
 	t.Run("when optional fields are not set, it leaves them unset", func(t *testing.T) {
@@ -130,6 +142,34 @@ func TestExpandServerlessSpace(t *testing.T) {
 		assert.Nil(t, space.GetConfiguration().GetCollectionSettings())
 		assert.Nil(t, space.GetConfiguration().GetSearcherSettings())
 	})
+
+	t.Run("when collection settings are set without the new limits, it leaves them unset", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, serverlessSpaceSchema(false), map[string]interface{}{
+			slSpaceNameFieldName:          "my-space",
+			slSpaceCloudRegionIDFieldName: "eu-central",
+			slSpaceConfigurationFieldName: []interface{}{map[string]interface{}{
+				slSpaceCfgCollectionSettingsFieldName: []interface{}{map[string]interface{}{
+					slCollectionSettingsMaxSizeFieldName: 1024,
+				}},
+			}},
+		})
+		cs := expandServerlessSpace(d, "account-id").GetConfiguration().GetCollectionSettings()
+		require.NotNil(t, cs)
+		assert.Nil(t, cs.MaxIndexedSize)
+		assert.Nil(t, cs.SizeWarningThresholdPercent)
+	})
+}
+
+func TestServerlessSpaceSizeWarningThresholdValidation(t *testing.T) {
+	collection := serverlessSpaceConfigurationSchema(false)[slSpaceCfgCollectionSettingsFieldName].Elem.(*schema.Resource).Schema
+	validate := collection[slCollectionSettingsSizeWarningThresholdPercentFieldName].ValidateDiagFunc
+	require.NotNil(t, validate)
+	for _, v := range []int{40, 80, 100} {
+		assert.False(t, validate(v, nil).HasError(), v)
+	}
+	for _, v := range []int{0, 39, 101} {
+		assert.True(t, validate(v, nil).HasError(), v)
+	}
 }
 
 func TestServerlessSpaceUpdateMask(t *testing.T) {
@@ -142,8 +182,9 @@ func TestServerlessSpaceUpdateMask(t *testing.T) {
 		assert.Equal(t, []string{
 			"configuration.allowed_ip_source_ranges",
 			"configuration.allowed_origins",
+			"configuration.collection_settings.max_indexed_size",
 			"configuration.collection_settings.max_size",
-			"configuration.searcher_settings.idle_timeout",
+			"configuration.collection_settings.size_warning_threshold_percent",
 			"configuration.searcher_settings.max_workers",
 			"cost_allocation_label",
 			"labels",
