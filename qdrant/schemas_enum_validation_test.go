@@ -48,6 +48,10 @@ func TestDatabaseConfigurationAuditLoggingSchema(t *testing.T) {
 	t.Run(dbConfigAuditLoggingRotationFieldName, func(t *testing.T) {
 		testGeneratedEnumValidation(t, dbConfigAuditLoggingRotationFieldName, resource[dbConfigAuditLoggingRotationFieldName], dataSource[dbConfigAuditLoggingRotationFieldName], qcCluster.AuditLogRotation_name)
 	})
+
+	t.Run(dbConfigAuditLoggingOutputFieldName, func(t *testing.T) {
+		testGeneratedEnumValidation(t, dbConfigAuditLoggingOutputFieldName, resource[dbConfigAuditLoggingOutputFieldName], dataSource[dbConfigAuditLoggingOutputFieldName], qcCluster.AuditLogOutput_name)
+	})
 }
 
 func TestClusterStorageConfigurationSchema(t *testing.T) {
