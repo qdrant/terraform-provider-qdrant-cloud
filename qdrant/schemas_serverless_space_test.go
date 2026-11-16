@@ -58,8 +58,9 @@ func TestFlattenServerlessSpace(t *testing.T) {
 	assert.Equal(t, formatTime(timestamppb.New(created)), flat[slSpaceCreatedAtFieldName])
 	assert.Equal(t, "https://space.example.com", flat[slSpaceURLFieldName])
 	assert.Equal(t, []interface{}{map[string]interface{}{
-		slStatePhaseFieldName:  "SPACE_STATE_PHASE_READY",
-		slStateReasonFieldName: "",
+		slStatePhaseFieldName:       "SPACE_STATE_PHASE_READY",
+		slStateReasonFieldName:      "",
+		slSpaceStateLimitsFieldName: []interface{}{},
 	}}, flat[slSpaceStateFieldName])
 
 	cfg := flat[slSpaceConfigurationFieldName].([]interface{})[0].(map[string]interface{})
@@ -185,7 +186,9 @@ func TestServerlessSpaceUpdateMask(t *testing.T) {
 			"configuration.collection_settings.max_indexed_size",
 			"configuration.collection_settings.max_size",
 			"configuration.collection_settings.size_warning_threshold_percent",
+			"configuration.monthly_spend_limit",
 			"configuration.searcher_settings.max_workers",
+			"configuration.storage_limit",
 			"cost_allocation_label",
 			"labels",
 			"name",
@@ -204,4 +207,187 @@ func TestServerlessSpaceUpdateMask(t *testing.T) {
 			assert.NotNil(t, d.Get(p.attribute), p.attribute)
 		}
 	})
+}
+
+func TestFlattenServerlessSpaceLimits(t *testing.T) {
+	periodStart := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	periodEnd := time.Date(2026, 12, 1, 0, 0, 0, 0, time.UTC)
+	space := &spacev1.Space{
+		Id: "space-id",
+		Configuration: &spacev1.SpaceConfiguration{
+			StorageLimit: &spacev1.StorageLimit{
+				MaxSize:               10 << 30,
+				Type:                  spacev1.LimitType_LIMIT_TYPE_HARD,
+				AlertThresholdPercent: newPointer(uint32(80)),
+			},
+			MonthlySpendLimit: &spacev1.SpendLimit{
+				MaxAmountMillicents:   5_000_000,
+				Type:                  spacev1.LimitType_LIMIT_TYPE_SOFT,
+				AlertThresholdPercent: newPointer(uint32(90)),
+				Currency:              "USD",
+			},
+		},
+		State: &spacev1.SpaceState{
+			Phase: spacev1.SpaceStatePhase_SPACE_STATE_PHASE_READY,
+			Limits: &spacev1.SpaceLimitsStatus{
+				AccessMode: spacev1.SpaceAccessMode_SPACE_ACCESS_MODE_WRITES_BLOCKED,
+				Storage: &spacev1.StorageLimitStatus{
+					UsedSize: 10 << 30,
+					Level:    spacev1.LimitUsageLevel_LIMIT_USAGE_LEVEL_LIMIT_REACHED,
+				},
+				MonthlySpend: &spacev1.SpendLimitStatus{
+					UsedAmountMillicents: 4_600_000,
+					Level:                spacev1.LimitUsageLevel_LIMIT_USAGE_LEVEL_THRESHOLD_REACHED,
+					PeriodStart:          timestamppb.New(periodStart),
+					PeriodEnd:            timestamppb.New(periodEnd),
+					Currency:             "USD",
+				},
+			},
+		},
+	}
+
+	flat := flattenServerlessSpace(space)
+
+	cfg := flat[slSpaceConfigurationFieldName].([]interface{})[0].(map[string]interface{})
+	assert.Equal(t, []interface{}{map[string]interface{}{
+		slLimitMaxSizeFieldName:               10 << 30,
+		slLimitTypeFieldName:                  "LIMIT_TYPE_HARD",
+		slLimitAlertThresholdPercentFieldName: 80,
+	}}, cfg[slSpaceCfgStorageLimitFieldName])
+	assert.Equal(t, []interface{}{map[string]interface{}{
+		slLimitMaxAmountMillicentsFieldName:   5_000_000,
+		slLimitTypeFieldName:                  "LIMIT_TYPE_SOFT",
+		slLimitAlertThresholdPercentFieldName: 90,
+		slLimitCurrencyFieldName:              "USD",
+	}}, cfg[slSpaceCfgMonthlySpendLimitFieldName])
+
+	state := flat[slSpaceStateFieldName].([]interface{})[0].(map[string]interface{})
+	assert.Equal(t, "SPACE_STATE_PHASE_READY", state[slStatePhaseFieldName])
+	assert.Equal(t, []interface{}{map[string]interface{}{
+		slLimitsStatusAccessModeFieldName: "SPACE_ACCESS_MODE_WRITES_BLOCKED",
+		slLimitsStatusStorageFieldName: []interface{}{map[string]interface{}{
+			slLimitStatusUsedSizeFieldName: 10 << 30,
+			slLimitStatusLevelFieldName:    "LIMIT_USAGE_LEVEL_LIMIT_REACHED",
+		}},
+		slLimitsStatusMonthlySpendFieldName: []interface{}{map[string]interface{}{
+			slLimitStatusUsedAmountMillicentsFieldName: 4_600_000,
+			slLimitStatusLevelFieldName:                "LIMIT_USAGE_LEVEL_THRESHOLD_REACHED",
+			slLimitStatusPeriodStartFieldName:          formatTime(timestamppb.New(periodStart)),
+			slLimitStatusPeriodEndFieldName:            formatTime(timestamppb.New(periodEnd)),
+			slLimitCurrencyFieldName:                   "USD",
+		}},
+	}}, state[slSpaceStateLimitsFieldName])
+
+	t.Run("when flattened values are set on the resource and data source, they are accepted by the schema", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, serverlessSpaceSchema(false), map[string]interface{}{})
+		require.NoError(t, setFlattened(d, flat))
+		assert.Equal(t, 10<<30, d.Get("configuration.0.storage_limit.0.max_size"))
+		assert.Equal(t, "SPACE_ACCESS_MODE_WRITES_BLOCKED", d.Get("state.0.limits.0.access_mode"))
+		ds := schema.TestResourceDataRaw(t, serverlessSpaceSchema(true), map[string]interface{}{})
+		require.NoError(t, setFlattened(ds, flat))
+		assert.Equal(t, 5_000_000, ds.Get("configuration.0.monthly_spend_limit.0.max_amount_millicents"))
+	})
+
+	t.Run("when the limits are unset, they flatten to empty blocks", func(t *testing.T) {
+		flat := flattenServerlessSpace(&spacev1.Space{Id: "x", Configuration: &spacev1.SpaceConfiguration{}})
+		cfg := flat[slSpaceConfigurationFieldName].([]interface{})[0].(map[string]interface{})
+		assert.Equal(t, []interface{}{}, cfg[slSpaceCfgStorageLimitFieldName])
+		assert.Equal(t, []interface{}{}, cfg[slSpaceCfgMonthlySpendLimitFieldName])
+		state := flat[slSpaceStateFieldName].([]interface{})[0].(map[string]interface{})
+		assert.Equal(t, []interface{}{}, state[slSpaceStateLimitsFieldName])
+	})
+}
+
+func TestExpandServerlessSpaceLimits(t *testing.T) {
+	t.Run("when the limits are set, they are sent", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, serverlessSpaceSchema(false), map[string]interface{}{
+			slSpaceNameFieldName:          "my-space",
+			slSpaceCloudRegionIDFieldName: "eu-central",
+			slSpaceConfigurationFieldName: []interface{}{map[string]interface{}{
+				slSpaceCfgStorageLimitFieldName: []interface{}{map[string]interface{}{
+					slLimitMaxSizeFieldName:               10 << 30,
+					slLimitTypeFieldName:                  "LIMIT_TYPE_SOFT",
+					slLimitAlertThresholdPercentFieldName: 90,
+				}},
+				slSpaceCfgMonthlySpendLimitFieldName: []interface{}{map[string]interface{}{
+					slLimitMaxAmountMillicentsFieldName: 5_000_000,
+				}},
+			}},
+		})
+		cfg := expandServerlessSpace(d, "account-id").GetConfiguration()
+		require.NotNil(t, cfg.GetStorageLimit())
+		assert.Equal(t, uint64(10<<30), cfg.GetStorageLimit().GetMaxSize())
+		assert.Equal(t, spacev1.LimitType_LIMIT_TYPE_SOFT, cfg.GetStorageLimit().GetType())
+		assert.Equal(t, uint32(90), cfg.GetStorageLimit().GetAlertThresholdPercent())
+
+		require.NotNil(t, cfg.GetMonthlySpendLimit())
+		assert.Equal(t, uint64(5_000_000), cfg.GetMonthlySpendLimit().GetMaxAmountMillicents())
+		assert.Equal(t, spacev1.LimitType_LIMIT_TYPE_HARD, cfg.GetMonthlySpendLimit().GetType(), "defaults to a hard limit")
+		assert.Equal(t, uint32(80), cfg.GetMonthlySpendLimit().GetAlertThresholdPercent(), "defaults to 80 percent")
+		assert.Empty(t, cfg.GetMonthlySpendLimit().GetCurrency(), "currency is read-only")
+	})
+
+	t.Run("when the limits are not set, they are unset (unlimited)", func(t *testing.T) {
+		d := schema.TestResourceDataRaw(t, serverlessSpaceSchema(false), map[string]interface{}{
+			slSpaceNameFieldName:          "my-space",
+			slSpaceCloudRegionIDFieldName: "eu-central",
+			slSpaceConfigurationFieldName: []interface{}{map[string]interface{}{
+				slSpaceCfgAllowedOriginsFieldName: []interface{}{"https://app.example.com"},
+			}},
+		})
+		cfg := expandServerlessSpace(d, "account-id").GetConfiguration()
+		assert.Nil(t, cfg.GetStorageLimit())
+		assert.Nil(t, cfg.GetMonthlySpendLimit())
+	})
+}
+
+func TestServerlessSpaceLimitValidation(t *testing.T) {
+	cfg := serverlessSpaceConfigurationSchema(false)
+	for _, block := range []string{slSpaceCfgStorageLimitFieldName, slSpaceCfgMonthlySpendLimitFieldName} {
+		limit := cfg[block]
+		assert.True(t, limit.Optional, block)
+		assert.False(t, limit.Computed, "%s: an absent block must mean unlimited, not keep the server value", block)
+		assert.Equal(t, 1, limit.MaxItems, block)
+
+		elem := limit.Elem.(*schema.Resource).Schema
+		threshold := elem[slLimitAlertThresholdPercentFieldName]
+		assert.Equal(t, 80, threshold.Default, block)
+		for _, v := range []int{1, 80, 99} {
+			assert.False(t, threshold.ValidateDiagFunc(v, nil).HasError(), "%s %d", block, v)
+		}
+		for _, v := range []int{0, 100} {
+			assert.True(t, threshold.ValidateDiagFunc(v, nil).HasError(), "%s %d", block, v)
+		}
+
+		limitType := elem[slLimitTypeFieldName]
+		assert.Equal(t, "LIMIT_TYPE_HARD", limitType.Default, block)
+		for _, v := range []string{"LIMIT_TYPE_HARD", "LIMIT_TYPE_SOFT"} {
+			assert.False(t, limitType.ValidateDiagFunc(v, nil).HasError(), "%s %s", block, v)
+		}
+		for _, v := range []string{"", "hard", "LIMIT_TYPE_UNSPECIFIED"} {
+			assert.True(t, limitType.ValidateDiagFunc(v, nil).HasError(), "%s %q", block, v)
+		}
+	}
+	maxSize := cfg[slSpaceCfgStorageLimitFieldName].Elem.(*schema.Resource).Schema[slLimitMaxSizeFieldName]
+	assert.True(t, maxSize.Required)
+	assert.True(t, maxSize.ValidateDiagFunc(0, nil).HasError())
+	assert.False(t, maxSize.ValidateDiagFunc(1, nil).HasError())
+	maxAmount := cfg[slSpaceCfgMonthlySpendLimitFieldName].Elem.(*schema.Resource).Schema[slLimitMaxAmountMillicentsFieldName]
+	assert.True(t, maxAmount.Required)
+	assert.True(t, maxAmount.ValidateDiagFunc(0, nil).HasError())
+}
+
+func TestServerlessSpaceUpdateMask_RemovingALimitSendsItUnset(t *testing.T) {
+	// A changed limit block maps to the whole limit, so removing the block sends an unset limit (unlimited).
+	paths := serverlessSpaceUpdateMask(func(attr string) bool {
+		return attr == "configuration.0.storage_limit"
+	})
+	assert.Equal(t, []string{"configuration.storage_limit"}, paths)
+
+	d := schema.TestResourceDataRaw(t, serverlessSpaceSchema(false), map[string]interface{}{
+		slSpaceNameFieldName:          "my-space",
+		slSpaceCloudRegionIDFieldName: "eu-central",
+		slSpaceConfigurationFieldName: []interface{}{map[string]interface{}{}},
+	})
+	assert.Nil(t, expandServerlessSpace(d, "account-id").GetConfiguration().GetStorageLimit())
 }
