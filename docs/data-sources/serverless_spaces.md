@@ -101,7 +101,7 @@ Read-Only:
 
 - `alert_threshold_percent` (Number)
 - `currency` (String)
-- `max_amount_millicents` (Number)
+- `max_amount_dollar` (Number)
 - `type` (String)
 
 
@@ -121,7 +121,7 @@ Read-Only:
 Read-Only:
 
 - `alert_threshold_percent` (Number)
-- `max_size` (Number)
+- `max_size_mib` (Number)
 - `type` (String)
 
 

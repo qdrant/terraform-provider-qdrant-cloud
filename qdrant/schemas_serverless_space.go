@@ -44,8 +44,8 @@ const (
 	slSpaceCfgStorageLimitFieldName      = "storage_limit"
 	slSpaceCfgMonthlySpendLimitFieldName = "monthly_spend_limit"
 
-	slLimitMaxSizeFieldName               = "max_size"
-	slLimitMaxAmountMillicentsFieldName   = "max_amount_millicents"
+	slLimitMaxSizeMiBFieldName            = "max_size_mib"
+	slLimitMaxAmountDollarFieldName       = "max_amount_dollar"
 	slLimitTypeFieldName                  = "type"
 	slLimitAlertThresholdPercentFieldName = "alert_threshold_percent"
 	slLimitCurrencyFieldName              = "currency"
@@ -62,6 +62,10 @@ const (
 
 	// slLimitDefaultAlertThresholdPercent is the alert threshold the API applies when a limit is set without one.
 	slLimitDefaultAlertThresholdPercent = 80
+
+	// Unit conversions between Terraform-facing values and the API (bytes / millicents).
+	bytesPerMiB         = 1024 * 1024
+	millicentsPerDollar = 100_000 // 1 USD = 100 cents = 100000 millicents
 
 	slSearcherSettingsMinIdleTimeoutFieldName     = "min_idle_timeout"
 	slSearcherSettingsPlatformMaxWorkersFieldName = "platform_max_workers"
@@ -263,11 +267,12 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 	s[slSpaceCfgStorageLimitFieldName] = serverlessSpaceLimitSchema(asDataSource,
 		"Limit on the total storage of the space. When not set, storage is unlimited (the default). "+
 			"Removing the block removes the limit.",
-		slLimitMaxSizeFieldName, &schema.Schema{
-			Description: "Maximum total storage of the space, in bytes. It may be set below the current usage, in which case it takes effect immediately.",
-			Type:        schema.TypeInt,
-			Required:    !asDataSource,
-			Computed:    asDataSource,
+		slLimitMaxSizeMiBFieldName, &schema.Schema{
+			Description: "Maximum total storage of the space, in mebibytes (MiB). Converted to bytes for the API " +
+				"(1 MiB = 1048576 bytes). It may be set below the current usage, in which case it takes effect immediately.",
+			Type:     schema.TypeInt,
+			Required: !asDataSource,
+			Computed: asDataSource,
 		},
 		"With a hard limit, upserts are rejected once storage reaches the limit, while searches and deletes keep working. "+
 			"Writes resume once storage drops below the limit, or when the limit is raised, switched to a soft limit, or removed. "+
@@ -276,10 +281,9 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 		"Limit on the monthly spend of the space for searches and writes combined (storage cost is not included). "+
 			"The spend period is the calendar month in UTC. When not set, spend is unlimited (the default). "+
 			"Removing the block removes the limit.",
-		slLimitMaxAmountMillicentsFieldName, &schema.Schema{
-			Description: "Maximum spend per calendar month, in millicents of `currency`. A millicent is 1/1000 of a cent " +
-				"(0.00001 USD), so 1 USD is 100000 millicents and 50 USD is 5000000. " +
-				"It may be set below the current spend, in which case it takes effect immediately.",
+		slLimitMaxAmountDollarFieldName, &schema.Schema{
+			Description: "Maximum spend per calendar month, in whole dollars of `currency`. Converted to millicents for the API " +
+				"(1 USD = 100000 millicents). It may be set below the current spend, in which case it takes effect immediately.",
 			Type:     schema.TypeInt,
 			Required: !asDataSource,
 			Computed: asDataSource,
@@ -288,7 +292,7 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 			"until the next month starts, or until the limit is raised, switched to a soft limit, or removed. "+
 			"With a soft limit, an alert is sent and all operations keep working.")
 	spend.Elem.(*schema.Resource).Schema[slLimitCurrencyFieldName] = &schema.Schema{
-		Description: "Currency of `max_amount_millicents`, as a 3-letter ISO 4217 code (currently always `USD`).",
+		Description: "Currency of `max_amount_dollar`, as a 3-letter ISO 4217 code (currently always `USD`).",
 		Type:        schema.TypeString,
 		Computed:    true,
 	}
@@ -517,7 +521,7 @@ func flattenServerlessStorageLimit(l *spacev1.StorageLimit) []interface{} {
 		return []interface{}{}
 	}
 	return []interface{}{map[string]interface{}{
-		slLimitMaxSizeFieldName:               int(l.GetMaxSize()),
+		slLimitMaxSizeMiBFieldName:            bytesToMiB(l.GetMaxSize()),
 		slLimitTypeFieldName:                  flattenProtoEnum(l.GetType()),
 		slLimitAlertThresholdPercentFieldName: int(l.GetAlertThresholdPercent()),
 	}}
@@ -529,7 +533,7 @@ func flattenServerlessSpendLimit(l *spacev1.SpendLimit) []interface{} {
 		return []interface{}{}
 	}
 	return []interface{}{map[string]interface{}{
-		slLimitMaxAmountMillicentsFieldName:   int(l.GetMaxAmountMillicents()),
+		slLimitMaxAmountDollarFieldName:       millicentsToDollars(l.GetMaxAmountMillicents()),
 		slLimitTypeFieldName:                  flattenProtoEnum(l.GetType()),
 		slLimitAlertThresholdPercentFieldName: int(l.GetAlertThresholdPercent()),
 		slLimitCurrencyFieldName:              l.GetCurrency(),
@@ -614,14 +618,14 @@ func expandServerlessSpaceConfiguration(v []interface{}) *spacev1.SpaceConfigura
 	}
 	if l, ok := firstBlock(item[slSpaceCfgStorageLimitFieldName]); ok {
 		cfg.StorageLimit = &spacev1.StorageLimit{
-			MaxSize:               uint64(intOf(l[slLimitMaxSizeFieldName])),
+			MaxSize:               mibToBytes(intOf(l[slLimitMaxSizeMiBFieldName])),
 			Type:                  expandLimitType(l[slLimitTypeFieldName]),
 			AlertThresholdPercent: expandAlertThresholdPercent(l[slLimitAlertThresholdPercentFieldName]),
 		}
 	}
 	if l, ok := firstBlock(item[slSpaceCfgMonthlySpendLimitFieldName]); ok {
 		cfg.MonthlySpendLimit = &spacev1.SpendLimit{
-			MaxAmountMillicents:   uint64(intOf(l[slLimitMaxAmountMillicentsFieldName])),
+			MaxAmountMillicents:   dollarsToMillicents(intOf(l[slLimitMaxAmountDollarFieldName])),
 			Type:                  expandLimitType(l[slLimitTypeFieldName]),
 			AlertThresholdPercent: expandAlertThresholdPercent(l[slLimitAlertThresholdPercentFieldName]),
 		}
@@ -643,6 +647,22 @@ func firstBlock(v interface{}) (map[string]interface{}, bool) {
 func intOf(v interface{}) int {
 	i, _ := v.(int)
 	return i
+}
+
+func mibToBytes(mib int) uint64 {
+	return uint64(mib) * bytesPerMiB
+}
+
+func bytesToMiB(bytes uint64) int {
+	return int(bytes / bytesPerMiB)
+}
+
+func dollarsToMillicents(dollars int) uint64 {
+	return uint64(dollars) * millicentsPerDollar
+}
+
+func millicentsToDollars(millicents uint64) int {
+	return int(millicents / millicentsPerDollar)
 }
 
 // expandLimitType maps the configured limit type to the API enum; empty leaves it to the API default (hard).

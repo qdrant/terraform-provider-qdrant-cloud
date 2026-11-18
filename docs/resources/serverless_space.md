@@ -58,13 +58,13 @@ resource "qdrant-cloud_serverless_space" "example" {
     }
     // Cap the total storage of the space (leave out for unlimited)
     storage_limit {
-      max_size                = 10737418240       // 10 GiB
+      max_size_mib            = 1024              // 1 GiB (converted to bytes for the API)
       type                    = "LIMIT_TYPE_HARD" // Reject upserts at the limit (default)
       alert_threshold_percent = 80                // Alert at 80% of the limit (default)
     }
     // Cap the monthly spend on searches and writes (leave out for unlimited)
     monthly_spend_limit {
-      max_amount_millicents   = 5000000           // 50 USD (1 USD = 100000 millicents)
+      max_amount_dollar       = 50                // 50 USD (converted to millicents for the API)
       type                    = "LIMIT_TYPE_SOFT" // Only alert at the limit
       alert_threshold_percent = 90
     }
@@ -141,7 +141,7 @@ Read-Only:
 
 Required:
 
-- `max_amount_millicents` (Number) Maximum spend per calendar month, in millicents of `currency`. A millicent is 1/1000 of a cent (0.00001 USD), so 1 USD is 100000 millicents and 50 USD is 5000000. It may be set below the current spend, in which case it takes effect immediately.
+- `max_amount_dollar` (Number) Maximum spend per calendar month, in whole dollars of `currency`. Converted to millicents for the API (1 USD = 100000 millicents). It may be set below the current spend, in which case it takes effect immediately.
 
 Optional:
 
@@ -150,7 +150,7 @@ Optional:
 
 Read-Only:
 
-- `currency` (String) Currency of `max_amount_millicents`, as a 3-letter ISO 4217 code (currently always `USD`).
+- `currency` (String) Currency of `max_amount_dollar`, as a 3-letter ISO 4217 code (currently always `USD`).
 
 
 <a id="nestedblock--configuration--searcher_settings"></a>
@@ -171,7 +171,7 @@ Read-Only:
 
 Required:
 
-- `max_size` (Number) Maximum total storage of the space, in bytes. It may be set below the current usage, in which case it takes effect immediately.
+- `max_size_mib` (Number) Maximum total storage of the space, in mebibytes (MiB). Converted to bytes for the API (1 MiB = 1048576 bytes). It may be set below the current usage, in which case it takes effect immediately.
 
 Optional:
 

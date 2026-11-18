@@ -250,12 +250,12 @@ func TestFlattenServerlessSpaceLimits(t *testing.T) {
 
 	cfg := flat[slSpaceConfigurationFieldName].([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, []interface{}{map[string]interface{}{
-		slLimitMaxSizeFieldName:               10 << 30,
+		slLimitMaxSizeMiBFieldName:            10 * 1024, // 10 GiB in MiB
 		slLimitTypeFieldName:                  "LIMIT_TYPE_HARD",
 		slLimitAlertThresholdPercentFieldName: 80,
 	}}, cfg[slSpaceCfgStorageLimitFieldName])
 	assert.Equal(t, []interface{}{map[string]interface{}{
-		slLimitMaxAmountMillicentsFieldName:   5_000_000,
+		slLimitMaxAmountDollarFieldName:       50,
 		slLimitTypeFieldName:                  "LIMIT_TYPE_SOFT",
 		slLimitAlertThresholdPercentFieldName: 90,
 		slLimitCurrencyFieldName:              "USD",
@@ -281,11 +281,11 @@ func TestFlattenServerlessSpaceLimits(t *testing.T) {
 	t.Run("when flattened values are set on the resource and data source, they are accepted by the schema", func(t *testing.T) {
 		d := schema.TestResourceDataRaw(t, serverlessSpaceSchema(false), map[string]interface{}{})
 		require.NoError(t, setFlattened(d, flat))
-		assert.Equal(t, 10<<30, d.Get("configuration.0.storage_limit.0.max_size"))
+		assert.Equal(t, 10*1024, d.Get("configuration.0.storage_limit.0.max_size_mib"))
 		assert.Equal(t, "SPACE_ACCESS_MODE_WRITES_BLOCKED", d.Get("state.0.limits.0.access_mode"))
 		ds := schema.TestResourceDataRaw(t, serverlessSpaceSchema(true), map[string]interface{}{})
 		require.NoError(t, setFlattened(ds, flat))
-		assert.Equal(t, 5_000_000, ds.Get("configuration.0.monthly_spend_limit.0.max_amount_millicents"))
+		assert.Equal(t, 50, ds.Get("configuration.0.monthly_spend_limit.0.max_amount_dollar"))
 	})
 
 	t.Run("when the limits are unset, they flatten to empty blocks", func(t *testing.T) {
@@ -305,12 +305,12 @@ func TestExpandServerlessSpaceLimits(t *testing.T) {
 			slSpaceCloudRegionIDFieldName: "eu-central",
 			slSpaceConfigurationFieldName: []interface{}{map[string]interface{}{
 				slSpaceCfgStorageLimitFieldName: []interface{}{map[string]interface{}{
-					slLimitMaxSizeFieldName:               10 << 30,
+					slLimitMaxSizeMiBFieldName:            10 * 1024, // 10 GiB
 					slLimitTypeFieldName:                  "LIMIT_TYPE_SOFT",
 					slLimitAlertThresholdPercentFieldName: 90,
 				}},
 				slSpaceCfgMonthlySpendLimitFieldName: []interface{}{map[string]interface{}{
-					slLimitMaxAmountMillicentsFieldName: 5_000_000,
+					slLimitMaxAmountDollarFieldName: 50,
 				}},
 			}},
 		})
@@ -368,11 +368,11 @@ func TestServerlessSpaceLimitValidation(t *testing.T) {
 			assert.True(t, limitType.ValidateDiagFunc(v, nil).HasError(), "%s %q", block, v)
 		}
 	}
-	maxSize := cfg[slSpaceCfgStorageLimitFieldName].Elem.(*schema.Resource).Schema[slLimitMaxSizeFieldName]
+	maxSize := cfg[slSpaceCfgStorageLimitFieldName].Elem.(*schema.Resource).Schema[slLimitMaxSizeMiBFieldName]
 	assert.True(t, maxSize.Required)
 	assert.True(t, maxSize.ValidateDiagFunc(0, nil).HasError())
 	assert.False(t, maxSize.ValidateDiagFunc(1, nil).HasError())
-	maxAmount := cfg[slSpaceCfgMonthlySpendLimitFieldName].Elem.(*schema.Resource).Schema[slLimitMaxAmountMillicentsFieldName]
+	maxAmount := cfg[slSpaceCfgMonthlySpendLimitFieldName].Elem.(*schema.Resource).Schema[slLimitMaxAmountDollarFieldName]
 	assert.True(t, maxAmount.Required)
 	assert.True(t, maxAmount.ValidateDiagFunc(0, nil).HasError())
 }
