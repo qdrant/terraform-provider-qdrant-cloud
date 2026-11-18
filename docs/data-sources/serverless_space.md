@@ -71,7 +71,9 @@ Read-Only:
 - `collection_settings` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--collection_settings))
 - `last_modified_at` (String)
 - `max_collections_per_space` (Number)
+- `monthly_spend_limit` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--monthly_spend_limit))
 - `searcher_settings` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--searcher_settings))
+- `storage_limit` (List of Object) (see [below for nested schema](#nestedobjatt--configuration--storage_limit))
 
 <a id="nestedobjatt--configuration--collection_settings"></a>
 ### Nested Schema for `configuration.collection_settings`
@@ -85,6 +87,17 @@ Read-Only:
 - `size_warning_threshold_percent` (Number)
 
 
+<a id="nestedobjatt--configuration--monthly_spend_limit"></a>
+### Nested Schema for `configuration.monthly_spend_limit`
+
+Read-Only:
+
+- `alert_threshold_percent` (Number)
+- `currency` (String)
+- `max_amount_dollar` (Number)
+- `type` (String)
+
+
 <a id="nestedobjatt--configuration--searcher_settings"></a>
 ### Nested Schema for `configuration.searcher_settings`
 
@@ -93,6 +106,16 @@ Read-Only:
 - `max_workers` (Number)
 - `min_idle_timeout` (String)
 - `platform_max_workers` (Number)
+
+
+<a id="nestedobjatt--configuration--storage_limit"></a>
+### Nested Schema for `configuration.storage_limit`
+
+Read-Only:
+
+- `alert_threshold_percent` (Number)
+- `max_size_mib` (Number)
+- `type` (String)
 
 
 
@@ -110,5 +133,35 @@ Read-Only:
 
 Read-Only:
 
+- `limits` (List of Object) (see [below for nested schema](#nestedobjatt--state--limits))
 - `phase` (String)
 - `reason` (String)
+
+<a id="nestedobjatt--state--limits"></a>
+### Nested Schema for `state.limits`
+
+Read-Only:
+
+- `access_mode` (String)
+- `monthly_spend` (List of Object) (see [below for nested schema](#nestedobjatt--state--limits--monthly_spend))
+- `storage` (List of Object) (see [below for nested schema](#nestedobjatt--state--limits--storage))
+
+<a id="nestedobjatt--state--limits--monthly_spend"></a>
+### Nested Schema for `state.limits.monthly_spend`
+
+Read-Only:
+
+- `currency` (String)
+- `level` (String)
+- `period_end` (String)
+- `period_start` (String)
+- `used_amount_millicents` (Number)
+
+
+<a id="nestedobjatt--state--limits--storage"></a>
+### Nested Schema for `state.limits.storage`
+
+Read-Only:
+
+- `level` (String)
+- `used_size` (Number)

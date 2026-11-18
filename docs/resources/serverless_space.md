@@ -56,6 +56,18 @@ resource "qdrant-cloud_serverless_space" "example" {
     searcher_settings {
       max_workers = 2
     }
+    // Cap the total storage of the space (leave out for unlimited)
+    storage_limit {
+      max_size_mib            = 1024              // 1 GiB (converted to bytes for the API)
+      type                    = "LIMIT_TYPE_HARD" // Reject upserts at the limit (default)
+      alert_threshold_percent = 80                // Alert at 80% of the limit (default)
+    }
+    // Cap the monthly spend on searches and writes (leave out for unlimited)
+    monthly_spend_limit {
+      max_amount_dollar       = 50                // 50 USD (converted to millicents for the API)
+      type                    = "LIMIT_TYPE_SOFT" // Only alert at the limit
+      alert_threshold_percent = 90
+    }
   }
 
   delete_backups = true // Delete the backups of the space when it is destroyed
@@ -100,7 +112,9 @@ Optional:
 - `allowed_ip_source_ranges` (List of String) List of allowed IPv4 source ranges (CIDR) for this space (max 40).
 - `allowed_origins` (List of String) List of origins (scheme + host + optional port, e.g. `https://app.example.com`) from which browser-based clients are allowed to call the space via CORS (max 10).
 - `collection_settings` (Block List, Max: 1) Per-collection size limits for this space. (see [below for nested schema](#nestedblock--configuration--collection_settings))
+- `monthly_spend_limit` (Block List, Max: 1) Limit on the monthly spend of the space for searches and writes combined (storage cost is not included). The spend period is the calendar month in UTC. When not set, spend is unlimited (the default). Removing the block removes the limit. (see [below for nested schema](#nestedblock--configuration--monthly_spend_limit))
 - `searcher_settings` (Block List, Max: 1) Search-worker settings for this space. (see [below for nested schema](#nestedblock--configuration--searcher_settings))
+- `storage_limit` (Block List, Max: 1) Limit on the total storage of the space. When not set, storage is unlimited (the default). Removing the block removes the limit. (see [below for nested schema](#nestedblock--configuration--storage_limit))
 
 Read-Only:
 
@@ -122,6 +136,23 @@ Read-Only:
 - `platform_max_size` (Number) Platform-enforced maximum size in bytes per collection (0 means unlimited).
 
 
+<a id="nestedblock--configuration--monthly_spend_limit"></a>
+### Nested Schema for `configuration.monthly_spend_limit`
+
+Required:
+
+- `max_amount_dollar` (Number) Maximum spend per calendar month, in whole dollars of `currency`. Converted to millicents for the API (1 USD = 100000 millicents). It may be set below the current spend, in which case it takes effect immediately.
+
+Optional:
+
+- `alert_threshold_percent` (Number) Percentage of the limit at which an alert is sent to the account owner (between 1 and 99, defaults to 80).
+- `type` (String) What happens when usage reaches the limit. Must be one of: LIMIT_TYPE_HARD, LIMIT_TYPE_SOFT (defaults to `LIMIT_TYPE_HARD`). With a hard limit, all read and write operations (including deletes) are rejected once spend reaches the limit, until the next month starts, or until the limit is raised, switched to a soft limit, or removed. With a soft limit, an alert is sent and all operations keep working.
+
+Read-Only:
+
+- `currency` (String) Currency of `max_amount_dollar`, as a 3-letter ISO 4217 code (currently always `USD`).
+
+
 <a id="nestedblock--configuration--searcher_settings"></a>
 ### Nested Schema for `configuration.searcher_settings`
 
@@ -133,6 +164,19 @@ Read-Only:
 
 - `min_idle_timeout` (String) Platform-defined minimum time a search worker stays idle before it may be scaled down, as a Go duration string (defaults to "5m").
 - `platform_max_workers` (Number) Platform-enforced maximum number of search workers per collection (0 means unlimited).
+
+
+<a id="nestedblock--configuration--storage_limit"></a>
+### Nested Schema for `configuration.storage_limit`
+
+Required:
+
+- `max_size_mib` (Number) Maximum total storage of the space, in mebibytes (MiB). Converted to bytes for the API (1 MiB = 1048576 bytes). It may be set below the current usage, in which case it takes effect immediately.
+
+Optional:
+
+- `alert_threshold_percent` (Number) Percentage of the limit at which an alert is sent to the account owner (between 1 and 99, defaults to 80).
+- `type` (String) What happens when usage reaches the limit. Must be one of: LIMIT_TYPE_HARD, LIMIT_TYPE_SOFT (defaults to `LIMIT_TYPE_HARD`). With a hard limit, upserts are rejected once storage reaches the limit, while searches and deletes keep working. Writes resume once storage drops below the limit, or when the limit is raised, switched to a soft limit, or removed. With a soft limit, an alert is sent and all operations keep working.
 
 
 
@@ -160,8 +204,40 @@ Optional:
 
 Read-Only:
 
+- `limits` (List of Object) (see [below for nested schema](#nestedobjatt--state--limits))
 - `phase` (String)
 - `reason` (String)
+
+<a id="nestedobjatt--state--limits"></a>
+### Nested Schema for `state.limits`
+
+Read-Only:
+
+- `access_mode` (String)
+- `monthly_spend` (List of Object) (see [below for nested schema](#nestedobjatt--state--limits--monthly_spend))
+- `storage` (List of Object) (see [below for nested schema](#nestedobjatt--state--limits--storage))
+
+<a id="nestedobjatt--state--limits--monthly_spend"></a>
+### Nested Schema for `state.limits.monthly_spend`
+
+Read-Only:
+
+- `currency` (String)
+- `level` (String)
+- `period_end` (String)
+- `period_start` (String)
+- `used_amount_millicents` (Number)
+
+
+<a id="nestedobjatt--state--limits--storage"></a>
+### Nested Schema for `state.limits.storage`
+
+Read-Only:
+
+- `level` (String)
+- `used_size` (Number)
+
+
 
 
 

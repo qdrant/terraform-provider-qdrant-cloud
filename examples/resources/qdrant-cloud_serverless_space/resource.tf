@@ -41,6 +41,18 @@ resource "qdrant-cloud_serverless_space" "example" {
     searcher_settings {
       max_workers = 2
     }
+    // Cap the total storage of the space (leave out for unlimited)
+    storage_limit {
+      max_size_mib            = 1024              // 1 GiB (converted to bytes for the API)
+      type                    = "LIMIT_TYPE_HARD" // Reject upserts at the limit (default)
+      alert_threshold_percent = 80                // Alert at 80% of the limit (default)
+    }
+    // Cap the monthly spend on searches and writes (leave out for unlimited)
+    monthly_spend_limit {
+      max_amount_dollar       = 50                // 50 USD (converted to millicents for the API)
+      type                    = "LIMIT_TYPE_SOFT" // Only alert at the limit
+      alert_threshold_percent = 90
+    }
   }
 
   delete_backups = true // Delete the backups of the space when it is destroyed
