@@ -133,6 +133,7 @@ Read-Only:
 
 - `enabled` (Boolean)
 - `max_log_files` (Number)
+- `output` (String)
 - `rotation` (String)
 - `trust_forwarded_headers` (Boolean)
 

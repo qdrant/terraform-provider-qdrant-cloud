@@ -56,6 +56,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 					Rotation:              newPointer(qcCluster.AuditLogRotation_AUDIT_LOG_ROTATION_DAILY),
 					MaxLogFiles:           newPointer(uint32(7)),
 					TrustForwardedHeaders: newPointer(true),
+					Output:                newPointer(qcCluster.AuditLogOutput_AUDIT_LOG_OUTPUT_FILE_AND_STDOUT),
 				},
 			},
 			AdditionalResources: &qcCluster.AdditionalResources{
@@ -299,6 +300,7 @@ func TestResourceClusterFlatten(t *testing.T) {
 								dbConfigAuditLoggingRotationFieldName:              "AUDIT_LOG_ROTATION_DAILY",
 								dbConfigAuditLoggingMaxLogFilesFieldName:           7,
 								dbConfigAuditLoggingTrustForwardedHeadersFieldName: true,
+								dbConfigAuditLoggingOutputFieldName:                "AUDIT_LOG_OUTPUT_FILE_AND_STDOUT",
 							},
 						},
 					},
@@ -385,6 +387,7 @@ func TestExpandCluster(t *testing.T) {
 					Rotation:              newPointer(qcCluster.AuditLogRotation_AUDIT_LOG_ROTATION_HOURLY),
 					MaxLogFiles:           newPointer(uint32(14)),
 					TrustForwardedHeaders: newPointer(false),
+					Output:                newPointer(qcCluster.AuditLogOutput_AUDIT_LOG_OUTPUT_STDOUT),
 				},
 			},
 			NodeSelector: []*commonv1.KeyValue{
@@ -482,6 +485,7 @@ func TestExpandCluster(t *testing.T) {
 								dbConfigAuditLoggingRotationFieldName:              "AUDIT_LOG_ROTATION_HOURLY",
 								dbConfigAuditLoggingMaxLogFilesFieldName:           14,
 								dbConfigAuditLoggingTrustForwardedHeadersFieldName: false,
+								dbConfigAuditLoggingOutputFieldName:                "AUDIT_LOG_OUTPUT_STDOUT",
 							},
 						},
 					},

@@ -211,6 +211,7 @@ Optional:
 
 - `enabled` (Boolean) If true, the cluster is configured to use audit logging.
 - `max_log_files` (Number) Maximum number of rotated audit log files to keep. Default is 7.
+- `output` (String) Where audit log entries are written. Hybrid cloud clusters only; unset means file. Requires Qdrant v1.20.0 or later for any value other than file. Must be one of: AUDIT_LOG_OUTPUT_FILE, AUDIT_LOG_OUTPUT_FILE_AND_STDOUT, AUDIT_LOG_OUTPUT_STDOUT.
 - `rotation` (String) Rotation interval for audit logs. Must be one of: AUDIT_LOG_ROTATION_DAILY, AUDIT_LOG_ROTATION_HOURLY.
 - `trust_forwarded_headers` (Boolean) Whether to use the X-Forwarded-For header to determine the client address in audit log entries. Relevant for hybrid cloud clusters only.
 
