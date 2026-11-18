@@ -17,7 +17,7 @@ const (
 	authModeCLI    = "cli"
 
 	defaultQcloudBinary = "qcloud"
-	cliTokenSkew       = 60 * time.Second
+	cliTokenSkew        = 60 * time.Second
 )
 
 // cliTokenSource fetches short-lived OAuth access tokens via `qcloud auth token --json`.
@@ -34,12 +34,9 @@ type cliTokenSource struct {
 	run func(ctx context.Context, name string, args ...string) ([]byte, error)
 }
 
-func newCLITokenSource(binary, endpoint string) *cliTokenSource {
-	if binary == "" {
-		binary = defaultQcloudBinary
-	}
+func newCLITokenSource(endpoint string) *cliTokenSource {
 	return &cliTokenSource{
-		binary:   binary,
+		binary:   defaultQcloudBinary,
 		endpoint: endpoint,
 		run: func(ctx context.Context, name string, args ...string) ([]byte, error) {
 			cmd := exec.CommandContext(ctx, name, args...)

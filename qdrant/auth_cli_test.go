@@ -33,7 +33,7 @@ func TestCLITokenSource_CachesUntilExpiry(t *testing.T) {
 	exp := time.Now().Add(10 * time.Minute).Unix()
 	token := fakeJWT(t, exp)
 
-	src := newCLITokenSource("qcloud", "grpc.cloud.qdrant.io:443")
+	src := newCLITokenSource("grpc.cloud.qdrant.io:443")
 	src.run = func(_ context.Context, name string, args ...string) ([]byte, error) {
 		calls++
 		assert.Equal(t, "qcloud", name)
@@ -58,7 +58,7 @@ func TestCLITokenSource_RefetchesNearExpiry(t *testing.T) {
 	exp := time.Now().Add(30 * time.Second).Unix() // within cliTokenSkew
 	token := fakeJWT(t, exp)
 
-	src := newCLITokenSource("qcloud", "")
+	src := newCLITokenSource("")
 	src.run = func(_ context.Context, _ string, args ...string) ([]byte, error) {
 		calls++
 		assert.Equal(t, []string{"auth", "token", "--json"}, args)
@@ -80,7 +80,7 @@ func TestProviderConfig_AuthorizationHeader(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "apikey secret", h)
 
-	src := newCLITokenSource("qcloud", "")
+	src := newCLITokenSource("")
 	src.run = func(context.Context, string, ...string) ([]byte, error) {
 		return []byte(`{"access_token":"oauth-tok"}`), nil
 	}

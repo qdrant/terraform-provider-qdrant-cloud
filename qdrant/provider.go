@@ -23,10 +23,10 @@ func Provider() *schema.Provider {
 		// Schema defines the provider's configuration options.
 		Schema: map[string]*schema.Schema{
 			"auth": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("QDRANT_CLOUD_AUTH", authModeAPIKey),
-				Description: "Authentication mode: api_key (default, CI/automation) or cli (local: runs `qcloud auth token --json` after `qcloud auth login`). Env: QDRANT_CLOUD_AUTH.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				DefaultFunc:      schema.EnvDefaultFunc("QDRANT_CLOUD_AUTH", authModeAPIKey),
+				Description:      "Authentication mode: api_key (default, CI/automation) or cli (local: runs `qcloud auth token --json` after `qcloud auth login`). Env: QDRANT_CLOUD_AUTH.",
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice([]string{authModeAPIKey, authModeCLI}, false)),
 			},
 			"api_key": {
@@ -131,7 +131,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 
 	switch authMode {
 	case authModeCLI:
-		config.CLITokens = newCLITokenSource(defaultQcloudBinary, apiURL)
+		config.CLITokens = newCLITokenSource(apiURL)
 	case authModeAPIKey:
 		if strings.TrimSpace(apiKey) == "" {
 			return nil, diag.Errorf("api_key must not be empty when auth is %q (set auth = %q after qcloud auth login for local use)", authModeAPIKey, authModeCLI)
