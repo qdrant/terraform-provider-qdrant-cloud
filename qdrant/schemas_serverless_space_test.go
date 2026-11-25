@@ -29,6 +29,7 @@ func TestFlattenServerlessSpace(t *testing.T) {
 			AllowedIpSourceRanges:  []string{"10.0.0.0/8"},
 			AllowedOrigins:         []string{"https://app.example.com"},
 			MaxCollectionsPerSpace: 100,
+			MaxApiKeysPerSpace:     20,
 			CollectionSettings: &spacev1.CollectionSettings{
 				PlatformMaxSize:             2048,
 				MaxSize:                     newPointer(uint64(1024)),
@@ -67,6 +68,7 @@ func TestFlattenServerlessSpace(t *testing.T) {
 	assert.Equal(t, []string{"10.0.0.0/8"}, cfg[slSpaceCfgAllowedIPSourceRangesFieldName])
 	assert.Equal(t, []string{"https://app.example.com"}, cfg[slSpaceCfgAllowedOriginsFieldName])
 	assert.Equal(t, 100, cfg[slSpaceCfgMaxCollectionsPerSpaceFieldName])
+	assert.Equal(t, 20, cfg[slSpaceCfgMaxAPIKeysPerSpaceFieldName])
 	cs := cfg[slSpaceCfgCollectionSettingsFieldName].([]interface{})[0].(map[string]interface{})
 	assert.Equal(t, 2048, cs[slCollectionSettingsPlatformMaxSizeFieldName])
 	assert.Equal(t, 1024, cs[slCollectionSettingsMaxSizeFieldName])

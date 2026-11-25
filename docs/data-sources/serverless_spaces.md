@@ -77,6 +77,7 @@ Read-Only:
 - `allowed_origins` (List of String)
 - `collection_settings` (List of Object) (see [below for nested schema](#nestedobjatt--spaces--configuration--collection_settings))
 - `last_modified_at` (String)
+- `max_api_keys_per_space` (Number)
 - `max_collections_per_space` (Number)
 - `monthly_spend_limit` (List of Object) (see [below for nested schema](#nestedobjatt--spaces--configuration--monthly_spend_limit))
 - `searcher_settings` (List of Object) (see [below for nested schema](#nestedobjatt--spaces--configuration--searcher_settings))

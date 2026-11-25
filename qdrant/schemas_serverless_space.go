@@ -32,6 +32,7 @@ const (
 	slSpaceCfgAllowedIPSourceRangesFieldName  = "allowed_ip_source_ranges"
 	slSpaceCfgAllowedOriginsFieldName         = "allowed_origins"
 	slSpaceCfgMaxCollectionsPerSpaceFieldName = "max_collections_per_space"
+	slSpaceCfgMaxAPIKeysPerSpaceFieldName     = "max_api_keys_per_space"
 	slSpaceCfgCollectionSettingsFieldName     = "collection_settings"
 	slSpaceCfgSearcherSettingsFieldName       = "searcher_settings"
 
@@ -198,6 +199,11 @@ func serverlessSpaceConfigurationSchema(asDataSource bool) map[string]*schema.Sc
 		},
 		slSpaceCfgMaxCollectionsPerSpaceFieldName: {
 			Description: "Platform-enforced limit on the number of collections for this space (0 means unlimited).",
+			Type:        schema.TypeInt,
+			Computed:    true,
+		},
+		slSpaceCfgMaxAPIKeysPerSpaceFieldName: {
+			Description: "Platform-enforced limit on the number of API keys for this space (0 means unlimited).",
 			Type:        schema.TypeInt,
 			Computed:    true,
 		},
@@ -498,6 +504,7 @@ func flattenServerlessSpaceConfiguration(cfg *spacev1.SpaceConfiguration) []inte
 		slSpaceCfgAllowedIPSourceRangesFieldName:  cfg.GetAllowedIpSourceRanges(),
 		slSpaceCfgAllowedOriginsFieldName:         cfg.GetAllowedOrigins(),
 		slSpaceCfgMaxCollectionsPerSpaceFieldName: int(cfg.GetMaxCollectionsPerSpace()),
+		slSpaceCfgMaxAPIKeysPerSpaceFieldName:     int(cfg.GetMaxApiKeysPerSpace()),
 		slSpaceCfgCollectionSettingsFieldName: []interface{}{map[string]interface{}{
 			slCollectionSettingsPlatformMaxSizeFieldName:             int(cfg.GetCollectionSettings().GetPlatformMaxSize()),
 			slCollectionSettingsMaxSizeFieldName:                     int(cfg.GetCollectionSettings().GetMaxSize()),
