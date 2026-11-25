@@ -119,6 +119,7 @@ Optional:
 Read-Only:
 
 - `last_modified_at` (String) Time when the configuration was last updated.
+- `max_api_keys_per_space` (Number) Platform-enforced limit on the number of API keys for this space (0 means unlimited).
 - `max_collections_per_space` (Number) Platform-enforced limit on the number of collections for this space (0 means unlimited).
 
 <a id="nestedblock--configuration--collection_settings"></a>
